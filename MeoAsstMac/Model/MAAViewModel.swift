@@ -466,6 +466,15 @@ extension MAAViewModel {
             tasks[index] = .init(id: task.id, task: .closedown(config), enabled: task.enabled)
         }
 
+        for (index, task) in tasks.enumerated() {
+            guard case .mall(var config) = task.task else {
+                continue
+            }
+
+            config.clientChannel = clientChannel
+            tasks[index] = .init(id: task.id, task: .mall(config), enabled: task.enabled)
+        }
+
         try await ensureHandle()
 
         for task in tasks {

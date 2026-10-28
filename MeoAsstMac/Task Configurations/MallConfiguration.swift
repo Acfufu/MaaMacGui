@@ -21,6 +21,7 @@ struct MallConfiguration: MAATaskConfiguration {
     var visitFriends: Bool
     var creditFight: Bool
     var formationIndex: Int
+    var clientChannel: MAAClientChannel
 
     var creditFightDate: Date
     var friendVisitDate: Date
@@ -45,18 +46,28 @@ struct MallConfiguration: MAATaskConfiguration {
         .mall(self)
     }
 
-    // TODO: Run credit fight at most once per game day.
-    // TODO: Skip friend visits after reaching the daily limit.
+    private func isSameGameDay(as date: Date) -> Bool {
+        clientChannel.calendar.isDate(date, inSameDayAs: .now)
+    }
+
+    private var shouldCreditFight: Bool {
+        creditFight && !isSameGameDay(as: creditFightDate)
+    }
+
+    private var shouldVisitFriends: Bool {
+        visitFriends && !isSameGameDay(as: friendVisitDate)
+    }
+
     @JSON.Builder var params: JSON {
-        "visit_friends" => visitFriends
+        "visit_friends" => shouldVisitFriends
         "shopping" => shopping
         "buy_first" => buy_first
         "blacklist" => blacklist
         "force_shopping_if_credit_full" => force_shopping_if_credit_full
         "only_buy_discount" => only_buy_discount
         "reserve_max_credit" => reserve_max_credit
-        "credit_fight" => creditFight
-        if creditFight {
+        "credit_fight" => shouldCreditFight
+        if shouldCreditFight {
             "formation_index" => formationIndex
         }
     }
@@ -76,6 +87,7 @@ extension MallConfiguration {
         self.visitFriends = container[.visitFriends, default: true]
         self.creditFight = container[.creditFight, default: false]
         self.formationIndex = container[.formationIndex, default: 0]
+        self.clientChannel = container[.clientChannel, default: .Official]
 
         self.creditFightDate = container[.creditFightDate, default: .distantPast]
         self.friendVisitDate = container[.friendVisitDate, default: .distantPast]
