@@ -427,6 +427,10 @@ extension MAAViewModel {
 
 extension MAAViewModel {
     func tryStartTasks() async {
+        guard status == .idle else {
+            return
+        }
+
         do {
             logStore?.setDailyTasksDetailMode(.log)
             try await startTasks()
