@@ -202,6 +202,8 @@ struct RoguelikeSettingsView: View {
             Text("疾速飞行需要满天赋机械师；本次使用特勤分队、稳扎稳打、不借助战。关闭后恢复原开局配置。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
 
         if config.theme == .BlackFlow, config.mode == .babyAnimal {
