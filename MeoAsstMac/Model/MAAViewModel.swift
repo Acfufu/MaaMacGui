@@ -81,7 +81,7 @@ import SwiftUI
     @Published private var stageActivities = [String: MAAStageActivity]()
 
     var stageActivity: MAAStageActivity? {
-        stageActivities[clientChannel.rawValue]
+        stageActivities[clientChannel.stageActivityKey]
     }
 
     // MARK: - Recognition
@@ -471,7 +471,19 @@ extension MAAViewModel {
         for task in tasks {
             guard task.enabled else { continue }
 
-            if let coreID = try await handle?.appendTask(task.task) {
+            let coreID: Int32?
+            if case .fight(let config) = task.task {
+                let now = Date.now
+                let context = StageActivityContext(channel: clientChannel, activities: stageActivity)
+                if context.medicineWindow(at: now, enabled: config.useActivityMedicine) == .unavailable {
+                    logInfo("活动数据不可用，沿用原临期药设置")
+                }
+                coreID = try await handle?.appendTask(
+                    type: .Fight, params: config.params(at: now, stageActivity: context).jsonString())
+            } else {
+                coreID = try await handle?.appendTask(task.task)
+            }
+            if let coreID {
                 taskIDMap[coreID] = task.id
             }
         }
