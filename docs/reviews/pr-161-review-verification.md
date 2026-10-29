@@ -105,6 +105,12 @@ Sourcery 在 `c4dae14` 新增 [4411856833](https://github.com/MaaAssistantArknig
 - 变异验证仍准确定位缺失停止日志：旧断言 242/0，新断言 305/1、且唯一失败为目标日志断言（[旧](../../artifacts/pr-161-post-start/mutation-old.log)、[新](../../artifacts/pr-161-post-start/mutation-fixed.log)）。
 - 最终完整 macOS Debug arm64 构建成功（[xcodebuild.log](../../artifacts/pr-161-post-start/xcodebuild.log)，只移除行尾空白）；当前源码摘要见 [manifest.json](../../artifacts/pr-161-post-start/manifest.json)。
 
-## 证据边界
+## 模型验证的证据边界（真实 GUI 补测前）
 
-这些测试复现并锁定 GUI 模型的准入、异步时序与通知行为，完整构建检查真实类型和 SwiftUI 调用点。未启动正式应用、连接游戏、实际执行识别 / 作业 / 寻访，未验证游戏端停止时延或真实 Core 回调次序，也未声称完成连接游戏后的 GUI 并发验收。没有修改真实偏好或任务文件；评审线程的 resolved 状态不能代替代码与测试核实。
+此前这些测试复现并锁定 GUI 模型的准入、异步时序与通知行为，完整构建检查真实类型和 SwiftUI 调用点。截至该阶段，未启动正式应用、连接游戏、实际执行识别 / 作业 / 寻访，未验证游戏端停止时延或真实 Core 回调次序，也未声称完成连接游戏后的 GUI 并发验收。没有修改真实偏好或任务文件；评审线程的 resolved 状态不能代替代码与测试核实。
+
+## 真实游戏 GUI 补测（21:04–21:15）
+
+在最终源码 `71af78f` 的独立 Debug 实例中，连接 Arknight AVD 上已登录的 Bilibili 2.7.81 游戏，实际验证重复 ⌘R、启动期停止及重试、短任务 / 空队列快速收尾后的重启、自然触发定时器的连接失败及恢复。**三项通过，启动期停止的互斥和重试通过但界面忙碌提示被清掉，该项部分通过。** 本轮没有修改生产代码。
+
+详见 [真实 GUI 回归报告](pr-161-live-gui-regression.md) 和 [证据目录](../../artifacts/pr-161-live-gui/README.md)。实际 Core 为本机 `DEBUG_VERSION` 开发构建；没有验证 PlayCover、实体设备、发布包或全部工具入口，不宣称关闭全部 GUI 验收。
