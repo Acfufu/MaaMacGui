@@ -70,7 +70,7 @@ import Observation
             check(!model.operationInFlightForTest, "startup releases operation flag")
             model.connectionGate = nil
             try! await model.stop()
-            check(model.status == .idle && model.handle?.running == false, "retry stop actually stops core")
+            check(model.status == .idle && model.handle?.isRunning == false, "retry stop actually stops core")
             check(!model.menuStartDisabled, "menu reenabled after settled stop")
         }
 
@@ -183,6 +183,140 @@ import Observation
             do { try await bridge.startCopilot() } catch {}
             check(bridge.copilotStartToken == nil, "core start failure emits no token")
             check(!model.operationInFlightForTest && model.status == .idle, "core start failure releases ownership")
+        }
+        #endif
+        // Review 4410030637: the UI can report idle after ownership is released
+        // even though the core is still running. Reject before publishing pending.
+        for (name, start) in starts {
+            let model = MAAViewModel()
+            _ = await model.tryStartTasks()
+            model.reportIdleCallback()
+            let count = model.ensureCount
+            var states = [MAAViewModel.Status]()
+            let subscription = model.$status.sink { states.append($0) }
+            var rejected = false
+            do { try await start(model) } catch { rejected = true }
+            check(rejected, "\(name) rejects running core despite idle callback")
+            check(model.status == .busy, "\(name) reconciles idle UI to running core")
+            check(model.menuStartDisabled, "\(name) disables start after running-core rejection")
+            check(!states.contains(.pending), "\(name) rejects running core before publishing pending")
+            check(model.ensureCount == count, "\(name) checks running core before ensureHandle")
+            check(model.handle?.appendCount == 0, "\(name) never appends to running core")
+            check(!model.operationInFlightForTest, "\(name) releases reservation on running-core rejection")
+            withExtendedLifetime(subscription) {}
+            try! await model.stop()
+            do { try await start(model) } catch { check(false, "\(name) retry after stop failed") }
+            check(model.status == .busy, "\(name) can start again after core stops")
+        }
+        do {
+            let model = MAAViewModel()
+            _ = await model.tryStartTasks()
+            model.reportIdleCallback()
+            let count = model.ensureCount
+            var states = [MAAViewModel.Status]()
+            let subscription = model.$status.sink { states.append($0) }
+            let started = await model.tryStartTasks()
+            check(!started, "Daily rejects running core despite idle callback")
+            check(model.status == .busy, "Daily reconciles idle UI to running core")
+            check(model.menuStartDisabled, "Daily disables start after running-core rejection")
+            check(!states.contains(.pending), "Daily rejects before publishing pending")
+            check(model.ensureCount == count, "Daily checks running core before ensureHandle")
+            check(!model.operationInFlightForTest, "Daily releases rejected reservation")
+            withExtendedLifetime(subscription) {}
+        }
+        #if CORE_RUNNING_PREFLIGHT
+        // Each entry must reserve ownership before the new core-state await.
+        let allStarts =
+            [
+                (
+                    "Daily",
+                    { @MainActor (model: MAAViewModel) async throws in
+                        if !(await model.tryStartTasks()) { throw FixtureError.connection }
+                    }
+                )
+            ] + starts
+        for (name, start) in allStarts {
+            let model = MAAViewModel()
+            let gate = Gate()
+            model.handle?.runningGate = gate
+            let startup = Task { try await start(model) }
+            await waitFor(gate)
+            check(model.status == .idle, "\(name) checks core before publishing pending")
+            check(model.operationInFlightForTest && model.menuStartDisabled, "\(name) reserves across core-state await")
+            let duplicate = await model.tryStartTasks()
+            check(!duplicate, "\(name) blocks duplicate during core-state await")
+            var stopRejected = false
+            do { try await model.stop() } catch { stopRejected = true }
+            check(stopRejected && model.handle?.stopCount == 0, "\(name) blocks stop during core-state await")
+            gate.release()
+            try! await startup.value
+            check(model.status == .busy && !model.operationInFlightForTest, "\(name) transfers and releases ownership")
+        }
+        // Core running changes during the probe: rejection still releases ownership.
+        do {
+            let model = MAAViewModel()
+            let gate = Gate()
+            model.handle?.runningGate = gate
+            let startup = Task { try await model.recognizeDepot() }
+            await waitFor(gate)
+            model.handle?.isRunning = true
+            gate.release()
+            var rejected = false
+            do { try await startup.value } catch { rejected = true }
+            check(rejected && model.status == .busy, "running result restores busy UI after suspended probe")
+            check(
+                !model.operationInFlightForTest && model.ensureCount == 0,
+                "rejected probe releases ownership without preparing core")
+        }
+        // An idle core can still receive a state callback while queried.
+        do {
+            let model = MAAViewModel()
+            let gate = Gate()
+            model.handle?.runningGate = gate
+            let startup = Task { try await model.recognizeDepot() }
+            await waitFor(gate)
+            model.reportBusyCallback()
+            gate.release()
+            var rejected = false
+            do { try await startup.value } catch { rejected = true }
+            check(
+                rejected && model.status == .busy && model.ensureCount == 0,
+                "admission rechecks status after awaiting core")
+            check(!model.operationInFlightForTest, "status-change rejection releases reservation")
+        }
+        // Cancellation at the newly introduced suspension cannot leak the reservation.
+        do {
+            let model = MAAViewModel()
+            let gate = Gate()
+            model.handle?.runningGate = gate
+            let startup = Task { try await model.recognizeDepot() }
+            await waitFor(gate)
+            startup.cancel()
+            gate.release()
+            var cancelled = false
+            do { try await startup.value } catch is CancellationError { cancelled = true } catch {}
+            check(cancelled && !model.operationInFlightForTest, "cancelled probe releases ownership")
+            check(model.status == .idle && model.ensureCount == 0, "cancelled probe never prepares or starts core")
+        }
+        // Defensive ensureHandle rejection must also preserve busy if core changes later.
+        for (name, start) in allStarts {
+            let model = MAAViewModel()
+            model.makeCoreBusyDuringEnsure = true
+            do { try await start(model) } catch {}
+            check(
+                model.status == .busy && model.menuStartDisabled,
+                "\(name) preserves busy on late running-core rejection")
+            check(
+                !model.operationInFlightForTest && model.handle?.appendCount == 0,
+                "\(name) releases ownership without appending after late rejection")
+        }
+        // A first launch without a handle must still be admitted.
+        do {
+            let model = MAAViewModel()
+            model.handle = nil
+            let started = await model.tryStartTasks()
+            check(started && model.status == .busy, "first launch without a handle still starts")
+            check(!model.operationInFlightForTest, "first launch releases ownership")
         }
         #endif
         print("\(assertions) assertions; \(failures) failures")

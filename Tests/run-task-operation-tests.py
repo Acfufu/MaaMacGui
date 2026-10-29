@@ -42,6 +42,7 @@ model_source = '\n'.join(parts)
 bridge_source = declaration(bridge, r'^    nonisolated\(nonsending\) func startCopilot\(')
 support = (root / 'Tests/TaskOperationTestSupport.swift').read_text()
 support = support.replace('// PRODUCTION_MODEL_MEMBERS', model_source)
+support = support.replace('// PRODUCTION_CORE_RUNNING_GUARD', declaration(model, r'^        guard await handle\?\.running == false else'))
 support = support.replace('// PRODUCTION_COPILOT_BRIDGE', bridge_source)
 bridge_state = declaration(bridge, r'^    @MainActor var status:')
 if 'var canStartTasks:' in bridge:
@@ -50,6 +51,8 @@ subscriptions = '\n'.join(re.findall(r'        parent\.\$\w+\.sink.*?        \.s
 support = support.replace('// PRODUCTION_BRIDGE_STATE', bridge_state)
 support = support.replace('// PRODUCTION_BRIDGE_SUBSCRIPTIONS', subscriptions)
 flags = ['-D', 'TASK_OPERATION_OBSERVATION'] if 'var canStartTasks:' in bridge else []
+if 'func beginTaskOperation(requiresIdle: Bool = true) async throws' in model:
+    flags += ['-D', 'CORE_RUNNING_PREFLIGHT']
 errors = (source_root / 'MeoAsstMac/Model/MAAError.swift').read_text()
 with tempfile.TemporaryDirectory(prefix='maa-task-operation-tests-') as tmp:
     tmp = Path(tmp)
@@ -57,6 +60,6 @@ with tempfile.TemporaryDirectory(prefix='maa-task-operation-tests-') as tmp:
     (tmp / 'MAAError.swift').write_text(errors)
     binary = tmp / 'task-operation-tests'
     subprocess.run(['xcrun', 'swiftc', '-swift-version', '5', '-strict-concurrency=complete',
-                    *flags, '-parse-as-library', str(tmp / 'MAAError.swift'), str(tmp / 'Harness.swift'),
+                    *flags, '-module-cache-path', str(tmp / 'ModuleCache'), '-parse-as-library', str(tmp / 'MAAError.swift'), str(tmp / 'Harness.swift'),
                     str(root / 'Tests/TaskOperationTests.swift'), '-o', str(binary)], check=True)
     raise SystemExit(subprocess.run([str(binary)], timeout=45).returncode)

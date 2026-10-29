@@ -20,7 +20,16 @@ import Observation
 enum FixtureError: Error { case connection }
 enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot, Recruit, Depot, VideoRecognition, OperBox, Custom }
 @MainActor final class Core {
-    var running = false
+    var isRunning = false
+    var runningGate: Gate?
+    var running: Bool {
+        get async {
+            let gate = runningGate
+            runningGate = nil
+            if let gate { await gate.wait() }
+            return isRunning
+        }
+    }
     var appendCount = 0
     var stopCount = 0
     var startGate: Gate?
@@ -38,13 +47,13 @@ enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot, Recruit, Depot, Vid
     func start() async throws {
         if let startGate { await startGate.wait() }
         if failStart { throw FixtureError.connection }
-        running = true
+        isRunning = true
     }
     func stop() async throws {
         stopCount += 1
         if let stopGate { await stopGate.wait() }
         if failStop { throw FixtureError.connection }
-        running = false
+        isRunning = false
     }
 }
 struct RecruitConfiguration {
@@ -88,17 +97,20 @@ struct DailyTask {
     var recruitConfig = RecruitConfiguration()
     var connectionGate: Gate?
     var failConnection = false
+    var makeCoreBusyDuringEnsure = false
     var ensureCount = 0
     var errors = [String]()
     var infos = [String]()
     var operationInFlightForTest: Bool { isStartStopInFlight }
     func reportIdleCallback() { status = .idle }
+    func reportBusyCallback() { status = .busy }
     func logError(_ text: String) { errors.append(text) }
     func logInfo(_ text: String) { infos.append(text) }
     func ensureHandle(requireConnect: Bool = true) async throws {
         ensureCount += 1
-        // Same running-state rejection as production ensureHandle(), before connection.
-        guard handle?.running == false else { throw MAAError.handleNotRunning }
+        if handle == nil { handle = Core() }
+        if makeCoreBusyDuringEnsure { handle?.isRunning = true }
+        // PRODUCTION_CORE_RUNNING_GUARD
         if let connectionGate { await connectionGate.wait() }
         if failConnection { throw FixtureError.connection }
     }

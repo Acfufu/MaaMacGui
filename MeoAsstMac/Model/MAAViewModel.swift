@@ -35,7 +35,7 @@ import SwiftUI
         status == .idle && !isStartStopInFlight
     }
 
-    private func beginTaskOperation(requiresIdle: Bool = true) throws {
+    private func beginTaskOperation(requiresIdle: Bool = true) async throws {
         guard !isStartStopInFlight else {
             logError("当前正在启动或停止任务，请稍后重试。")
             throw MAAError.taskOperationInProgress
@@ -44,7 +44,24 @@ import SwiftUI
             logError("任务正在运行，请先停止当前任务。")
             throw MAAError.taskAlreadyRunning
         }
+        // Reserve before querying the core actor: the await must not admit
+        // another start or stop even if a callback has exposed idle.
         isStartStopInFlight = true
+        var accepted = false
+        defer {
+            if !accepted { isStartStopInFlight = false }
+        }
+
+        if requiresIdle {
+            let coreIsRunning = await handle?.running == true
+            guard !coreIsRunning, status == .idle else {
+                if coreIsRunning { status = .busy }
+                logError("任务正在运行，请先停止当前任务。")
+                throw MAAError.taskAlreadyRunning
+            }
+            try Task.checkCancellation()
+        }
+        accepted = true
     }
 
     // MARK: - Core Callback
@@ -218,7 +235,9 @@ extension MAAViewModel {
         }
 
         guard await handle?.running == false else {
-            throw MAAError.handleNotRunning
+            status = .busy
+            logError("任务正在运行，请先停止当前任务。")
+            throw MAAError.taskAlreadyRunning
         }
 
         logStore?.clearLogs()
@@ -255,7 +274,7 @@ extension MAAViewModel {
     }
 
     func stop() async throws {
-        try beginTaskOperation(requiresIdle: false)
+        try await beginTaskOperation(requiresIdle: false)
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -454,7 +473,11 @@ extension MAAViewModel {
             return false
         }
 
-        isStartStopInFlight = true
+        do {
+            try await beginTaskOperation()
+        } catch {
+            return false
+        }
         defer { isStartStopInFlight = false }
 
         do {
@@ -551,7 +574,7 @@ extension MAAViewModel {
 
 extension MAAViewModel {
     func startCopilot(type: MAATaskType, params: String) async throws {
-        try beginTaskOperation()
+        try await beginTaskOperation()
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -569,7 +592,7 @@ extension MAAViewModel {
 
 extension MAAViewModel {
     func recognizeRecruit() async throws {
-        try beginTaskOperation()
+        try await beginTaskOperation()
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -587,7 +610,7 @@ extension MAAViewModel {
     }
 
     func recognizeDepot() async throws {
-        try beginTaskOperation()
+        try await beginTaskOperation()
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -601,7 +624,7 @@ extension MAAViewModel {
     }
 
     func recognizeVideo(video url: URL) async throws {
-        try beginTaskOperation()
+        try await beginTaskOperation()
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -620,7 +643,7 @@ extension MAAViewModel {
     }
 
     func recognizeOperBox() async throws {
-        try beginTaskOperation()
+        try await beginTaskOperation()
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -634,7 +657,7 @@ extension MAAViewModel {
     }
 
     func gachaPoll(once: Bool) async throws {
-        try beginTaskOperation()
+        try await beginTaskOperation()
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -654,7 +677,7 @@ extension MAAViewModel {
     }
 
     func miniGame(name: String, params: Any? = nil) async throws {
-        try beginTaskOperation()
+        try await beginTaskOperation()
         defer { isStartStopInFlight = false }
 
         status = .pending
