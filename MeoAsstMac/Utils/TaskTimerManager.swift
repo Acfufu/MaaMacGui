@@ -138,8 +138,11 @@ import Foundation
         }
 
         Task {
-            await viewModel.tryStartTasks()
-            print("Started daily task by shcedmed timer (\(config.uniqueKey)")
+            if await viewModel.tryStartTasks() {
+                print("Started daily task by shcedmed timer (\(config.uniqueKey)")
+            } else {
+                print("Skip scheduled daily task timer, status changed before start. Timer id: \(config.id)")
+            }
         }
     }
 

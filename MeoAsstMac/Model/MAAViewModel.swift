@@ -28,6 +28,10 @@ import SwiftUI
     private var handle: MAAHandle?
     private var cancellables = Set<AnyCancellable>()
 
+    // stop() 可能在某次启动仍挂起于 await 时把 status 置回 .idle，
+    // 仅凭 status 无法阻止两次启动重叠，需独立标记串行化所有启动/停止入口。
+    private var isStartStopInFlight = false
+
     // MARK: - Core Callback
 
     private var messageTask: Task<Void, Never>?
@@ -236,6 +240,11 @@ extension MAAViewModel {
     }
 
     func stop() async throws {
+        guard !isStartStopInFlight else { return }
+
+        isStartStopInFlight = true
+        defer { isStartStopInFlight = false }
+
         status = .pending
         defer { handleEarlyReturn(backTo: .busy) }
 
@@ -426,17 +435,23 @@ extension MAAViewModel {
 // MARK: Daily Tasks
 
 extension MAAViewModel {
-    func tryStartTasks() async {
-        guard status == .idle else {
-            return
+    @discardableResult
+    func tryStartTasks() async -> Bool {
+        guard status == .idle, !isStartStopInFlight else {
+            return false
         }
+
+        isStartStopInFlight = true
+        defer { isStartStopInFlight = false }
 
         do {
             logStore?.setDailyTasksDetailMode(.log)
             try await startTasks()
+            return true
         } catch {
             logError("StartTasksFailed: \(String(describing: error))")
             logInfo("CheckSettings")
+            return false
         }
     }
 
@@ -523,6 +538,11 @@ extension MAAViewModel {
 
 extension MAAViewModel {
     func startCopilot(type: MAATaskType, params: String) async throws {
+        guard !isStartStopInFlight else { return }
+
+        isStartStopInFlight = true
+        defer { isStartStopInFlight = false }
+
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
@@ -538,6 +558,11 @@ extension MAAViewModel {
 
 extension MAAViewModel {
     func recognizeRecruit() async throws {
+        guard !isStartStopInFlight else { return }
+
+        isStartStopInFlight = true
+        defer { isStartStopInFlight = false }
+
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
@@ -553,6 +578,11 @@ extension MAAViewModel {
     }
 
     func recognizeDepot() async throws {
+        guard !isStartStopInFlight else { return }
+
+        isStartStopInFlight = true
+        defer { isStartStopInFlight = false }
+
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
@@ -564,6 +594,11 @@ extension MAAViewModel {
     }
 
     func recognizeVideo(video url: URL) async throws {
+        guard !isStartStopInFlight else { return }
+
+        isStartStopInFlight = true
+        defer { isStartStopInFlight = false }
+
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
