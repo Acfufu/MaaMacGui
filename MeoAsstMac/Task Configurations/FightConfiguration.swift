@@ -62,13 +62,22 @@ struct FightConfiguration: MAATaskConfiguration {
 
     // The core matches stage names case-sensitively. Fully lowercase input is
     // treated as a standard code ("ap-5" -> "AP-5"); mixed-case special names
-    // like "AveMujica-8" are preserved as-is.
+    // like "AveMujica-8" are preserved as-is. "Annihilation" is the one
+    // mixed-case name users reach by typing, so any casing maps back to it.
+    static func normalizedStage(_ stage: String) -> String {
+        let trimmed = stage.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.lowercased() == "annihilation" {
+            return "Annihilation"
+        }
+        if trimmed == trimmed.lowercased() {
+            return trimmed.uppercased()
+        }
+        return trimmed
+    }
+
     var params: Self {
         var config = self
-        config.stage = config.stage.trimmingCharacters(in: .whitespacesAndNewlines)
-        if config.stage == config.stage.lowercased() {
-            config.stage = config.stage.uppercased()
-        }
+        config.stage = Self.normalizedStage(config.stage)
         return config
     }
 
