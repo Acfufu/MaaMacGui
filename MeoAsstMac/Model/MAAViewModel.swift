@@ -28,9 +28,24 @@ import SwiftUI
     private var handle: MAAHandle?
     private var cancellables = Set<AnyCancellable>()
 
-    // stop() 可能在某次启动仍挂起于 await 时把 status 置回 .idle，
-    // 仅凭 status 无法阻止两次启动重叠，需独立标记串行化所有启动/停止入口。
-    private var isStartStopInFlight = false
+    // 核心回调可能在异步操作返回前重置 status，独立标记防止入口重叠。
+    @Published private(set) var isStartStopInFlight = false
+
+    var canStartTasks: Bool {
+        status == .idle && !isStartStopInFlight
+    }
+
+    private func beginTaskOperation(requiresIdle: Bool = true) throws {
+        guard !isStartStopInFlight else {
+            logError("当前正在启动或停止任务，请稍后重试。")
+            throw MAAError.taskOperationInProgress
+        }
+        guard !requiresIdle || status == .idle else {
+            logError("任务正在运行，请先停止当前任务。")
+            throw MAAError.taskAlreadyRunning
+        }
+        isStartStopInFlight = true
+    }
 
     // MARK: - Core Callback
 
@@ -240,9 +255,7 @@ extension MAAViewModel {
     }
 
     func stop() async throws {
-        guard !isStartStopInFlight else { return }
-
-        isStartStopInFlight = true
+        try beginTaskOperation(requiresIdle: false)
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -437,7 +450,7 @@ extension MAAViewModel {
 extension MAAViewModel {
     @discardableResult
     func tryStartTasks() async -> Bool {
-        guard status == .idle, !isStartStopInFlight else {
+        guard canStartTasks else {
             return false
         }
 
@@ -538,9 +551,7 @@ extension MAAViewModel {
 
 extension MAAViewModel {
     func startCopilot(type: MAATaskType, params: String) async throws {
-        guard !isStartStopInFlight else { return }
-
-        isStartStopInFlight = true
+        try beginTaskOperation()
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -558,9 +569,7 @@ extension MAAViewModel {
 
 extension MAAViewModel {
     func recognizeRecruit() async throws {
-        guard !isStartStopInFlight else { return }
-
-        isStartStopInFlight = true
+        try beginTaskOperation()
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -578,9 +587,7 @@ extension MAAViewModel {
     }
 
     func recognizeDepot() async throws {
-        guard !isStartStopInFlight else { return }
-
-        isStartStopInFlight = true
+        try beginTaskOperation()
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -594,9 +601,7 @@ extension MAAViewModel {
     }
 
     func recognizeVideo(video url: URL) async throws {
-        guard !isStartStopInFlight else { return }
-
-        isStartStopInFlight = true
+        try beginTaskOperation()
         defer { isStartStopInFlight = false }
 
         status = .pending
@@ -615,6 +620,9 @@ extension MAAViewModel {
     }
 
     func recognizeOperBox() async throws {
+        try beginTaskOperation()
+        defer { isStartStopInFlight = false }
+
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
@@ -626,6 +634,9 @@ extension MAAViewModel {
     }
 
     func gachaPoll(once: Bool) async throws {
+        try beginTaskOperation()
+        defer { isStartStopInFlight = false }
+
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
@@ -643,6 +654,9 @@ extension MAAViewModel {
     }
 
     func miniGame(name: String, params: Any? = nil) async throws {
+        try beginTaskOperation()
+        defer { isStartStopInFlight = false }
+
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
