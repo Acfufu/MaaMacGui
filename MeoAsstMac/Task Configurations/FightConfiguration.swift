@@ -60,16 +60,15 @@ struct FightConfiguration: MAATaskConfiguration {
 
     typealias Params = Self
 
-    // The core matches stage names case-sensitively. Fully lowercase input is
-    // treated as a standard code ("ap-5" -> "AP-5"); mixed-case special names
-    // like "AveMujica-8" are preserved as-is. "Annihilation" is the one
-    // mixed-case name users reach by typing, so any casing maps back to it.
+    // Normalize short stage codes (AP-5, PR-A-1, JT8-2, OF-F3) regardless of input case.
+    // Preserve special task names such as AveMujica-8 and difficulty suffixes;
+    // the core already handles the latter case-insensitively.
     static func normalizedStage(_ stage: String) -> String {
         let trimmed = stage.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.lowercased() == "annihilation" {
             return "Annihilation"
         }
-        if trimmed == trimmed.lowercased() {
+        if trimmed.range(of: "^[A-Za-z0-9]{1,3}(?:-[A-Za-z])?-[A-Za-z]?[0-9]+$", options: .regularExpression) != nil {
             return trimmed.uppercased()
         }
         return trimmed
