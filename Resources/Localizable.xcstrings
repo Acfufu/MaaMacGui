@@ -45,24 +45,24 @@
         }
       }
     },
-    "种子仅适用于萨卡兹投资模式的点刺成锭分队或后勤分队。" : {
+    "种子仅适用于萨卡兹投资模式的点刺成锭分队或后勤分队。需当前游戏提供“启用参数”入口，并使用有效种子；开放情况与账号条件以游戏内提示为准。" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seeds require Sarkaz investment mode with the Point-and-Click or Logistics Squad."
+            "value" : "Seeds require Sarkaz investment mode with the Point-and-Click or Logistics Squad. Requires a currently visible “启用参数” entry and a valid seed. Check in-game prompts for current availability and account requirements."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "시드는 살카즈 투자 모드의 점철성금 분대 또는 후방 지원 분대에서 사용할 수 있습니다."
+            "value" : "시드는 살카즈 투자 모드의 점철성금 분대 또는 후방 지원 분대에서 사용할 수 있습니다. 현재 게임에 “启用参数” 항목이 표시되어야 하며 유효한 시드가 필요합니다. 개방 여부와 계정 조건은 현재 게임 내 안내를 확인하세요."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "种子仅适用于萨卡兹投资模式的点刺成锭分队或后勤分队。"
+            "value" : "种子仅适用于萨卡兹投资模式的点刺成锭分队或后勤分队。需当前游戏提供“启用参数”入口，并使用有效种子；开放情况与账号条件以游戏内提示为准。"
           }
         }
       }

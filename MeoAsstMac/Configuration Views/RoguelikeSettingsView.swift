@@ -179,7 +179,7 @@ struct RoguelikeSettingsView: View {
                     .disabled(!config.supportsSeedConfiguration || !supportsSeedInput)
             }
             Text(supportsSeedInput
-                 ? String(localized: "种子仅适用于萨卡兹投资模式的点刺成锭分队或后勤分队。")
+                 ? String(localized: "种子仅适用于萨卡兹投资模式的点刺成锭分队或后勤分队。需当前游戏提供“启用参数”入口，并使用有效种子；开放情况与账号条件以游戏内提示为准。")
                  : String(localized: "当前连接不支持种子文本输入；请选择 ADB 控制通路。PlayTools 与 MacSCK 暂不支持。"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
