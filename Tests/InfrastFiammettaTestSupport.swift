@@ -12,7 +12,11 @@ enum MAATaskType {
     case Infrast
     var description: String { "Infrast" }
 }
-enum MAATask { case infrast(InfrastConfiguration) }
+enum MAATask: Codable, Equatable {
+    case infrast(InfrastConfiguration)
+    // An unrelated payload ensures preference recovery ignores other task types.
+    case closedown(String)
+}
 struct MAAInfrast {
     struct Plan { let name: String? }
     let title: String? = nil

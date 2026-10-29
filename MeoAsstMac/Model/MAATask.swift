@@ -120,7 +120,10 @@ extension Array where Element == DailyTask {
 
 extension MAAViewModel {
     func writeBack(_ newValue: [DailyTask]) {
-        let data = try? PropertyListEncoder().encode(newValue)
-        try? data?.write(to: tasksURL)
+        do {
+            try DailyTaskProfileStore(profileURL: tasksURL).save(newValue)
+        } catch {
+            print("Failed to save daily task profile: \(error)")
+        }
     }
 }
