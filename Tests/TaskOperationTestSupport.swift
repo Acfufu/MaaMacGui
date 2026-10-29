@@ -45,9 +45,9 @@ enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot, Recruit, Depot, Vid
         return Int32(appendCount)
     }
     func start() async throws {
-        if let startGate { await startGate.wait() }
         if failStart { throw FixtureError.connection }
         isRunning = true
+        if let startGate { await startGate.wait() }
     }
     func stop() async throws {
         stopCount += 1
@@ -66,6 +66,13 @@ struct VideoRecognitionConfiguration {
 }
 @MainActor final class TestLogStore {
     var taskStartTime: Date?
+    var screencapCost: Int?
+    var lastScreencapWarningLevel = 0
+    var hasPrintedFPSHighTip = false
+    var sanityReport: Int?
+    var fightReport: Int?
+    var stoneUsedTimes = 0
+    var recruitConfirmTimes = 0
     func setDailyTasksDetailMode(_ mode: MAAViewModel.DailyTasksDetailMode) {}
 }
 enum ClientChannel { case official }
@@ -87,6 +94,12 @@ struct DailyTask {
 @MainActor final class MAAViewModel: ObservableObject {
     // PRODUCTION_MODEL_MEMBERS
     enum DailyTasksDetailMode { case log }
+    struct DailyTaskTimer {
+        var id = UUID()
+        var uniqueKey: String { id.uuidString }
+    }
+    var medicineUsedTimes = 0
+    var expiringMedicineUsedTimes = 0
     var handle: Core? = Core()
     var logStore: TestLogStore? = TestLogStore()
     var tasks: [DailyTask] = []
@@ -102,7 +115,7 @@ struct DailyTask {
     var errors = [String]()
     var infos = [String]()
     var operationInFlightForTest: Bool { isStartStopInFlight }
-    func reportIdleCallback() { status = .idle }
+    func reportIdleCallback() { resetStatus() }
     func reportBusyCallback() { status = .busy }
     func logError(_ text: String) { errors.append(text) }
     func logInfo(_ text: String) { infos.append(text) }

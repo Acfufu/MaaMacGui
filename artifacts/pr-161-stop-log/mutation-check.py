@@ -5,6 +5,7 @@ Only temporary copies are mutated. The production worktree is never edited.
 from pathlib import Path
 import subprocess
 import tempfile
+import re
 
 root = Path(__file__).resolve().parents[2]
 out = Path(__file__).resolve().parent
@@ -13,6 +14,7 @@ paths = [
     'Tests/run-task-operation-tests.py', 'Tests/TaskOperationTestSupport.swift',
     'MeoAsstMac/Model/MAAViewModel.swift', 'MeoAsstMac/Model/NewViewModel.swift',
     'MeoAsstMac/Model/MAAError.swift', 'MeoAsstMac/Views/TaskButtons.swift',
+    'MeoAsstMac/Utils/TaskTimerManager.swift',
 ]
 old_test = subprocess.check_output(
     ['git', 'show', baseline + ':Tests/TaskOperationTests.swift'], cwd=root, text=True)
@@ -42,7 +44,7 @@ with tempfile.TemporaryDirectory(prefix='maa-stop-log-mutation-') as tmp:
         assert result.returncode == expected, 'Unexpected mutation verdict: ' + name
         if name == 'fixed-oracle':
             assert 'FAIL: stop rejection appends its own busy log' in result.stdout
-            assert '242 assertions; 1 failures' in result.stdout
+            assert re.search(r'^\d+ assertions; 1 failures$', result.stdout, re.M)
         else:
             assert '242 assertions; 0 failures' in result.stdout
 print('PASS: old oracle masks the missing stop log; fixed oracle detects it.')

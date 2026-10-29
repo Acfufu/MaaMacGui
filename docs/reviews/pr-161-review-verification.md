@@ -76,6 +76,24 @@ Sourcery 在 `c4dae14` 新增 [4411856833](https://github.com/MaaAssistantArknig
 
 重跑变异验证通过：旧断言在缺失停止日志时误通过，新断言准确失败一次。AST 检查也确认该调用 argv 全为字符串字面量且 shell=False，见 [static-command.log](../../artifacts/pr-161-stop-log/static-command.log)。生产代码、任务测试和工程均未变化；本轮只重新运行受调整影响的变异验证，没有重复应用构建。
 
+## 完整重审：快速完成回调与定时器结果
+
+自动复查通过及旧线程关闭，并不代表已经重新进行完整代码审查。2026-10-29 对 `c6da345` 单独发送 `@sourcery-ai review` 后，Sourcery 发布了 [完整审查 5697457563](https://github.com/MaaAssistantArknights/MaaMacGui/pull/161#pullrequestreview-5697457563)，新增两条有效意见：
+
+- [4412137251](https://github.com/MaaAssistantArknights/MaaMacGui/pull/161#discussion_r4412137251)：核心快速完成，resetStatus 在 handle.start 返回前已清理状态，随后恢复的启动代码却重新写入 busy 和日常启动时间。
+- [4412137260](https://github.com/MaaAssistantArknights/MaaMacGui/pull/161#discussion_r4412137260)：Bool 无法区分准入跳过与实际启动失败，定时器错误地把连接 / 核心启动失败记为跳过。
+
+修复：resetStatus 推进完成代次；所有八类启动共用 startCoreTasks，在实际调用核心 start 前捕获代次，返回后若已完成则不复活 busy 或启动元数据。连接准备期间的先前回调不会错误取消随后真正发起的启动。
+
+日常执行新增 started / skipped / failed 结果，定时器穷尽处理这三种结果；菜单等原调用方继续使用兼容的 Bool 包装入口 tryStartTasks。快速完成仍算实际启动成功，即使启动方法返回时已空闲。
+
+测试 runner 直接提取生产 resetStatus、公共启动收尾方法、结果类型和日常结果入口，并执行生产定时器方法的异步日志分支；核心替身只在真实 start 调用边界提供可控暂停。
+
+- 上一提交 c6da345：289 项断言、29 失败、退出码 1（[before.log](../../artifacts/pr-161-completion-timer/before.log)）。
+- 本轮：289 项断言全部通过（[after.log](../../artifacts/pr-161-completion-timer/after.log)）。覆盖八类快速完成及重启、元数据不复活、先前回调、连接失败 / 核心启动失败的定时器日志、正常开始与状态变化跳过。
+- 原停止日志变异证明仍成立：旧断言 242/0，新断言准确失败一次 289/1（[mutation-old.log](../../artifacts/pr-161-completion-timer/mutation-old.log)、[mutation-fixed.log](../../artifacts/pr-161-completion-timer/mutation-fixed.log)）。新增 timer 源文件也复制到每个变异快照；旧版断言数保持历史基线，当前目标失败断言数按实际套件核验。
+- 完整 macOS Debug arm64 构建成功（[xcodebuild.log](../../artifacts/pr-161-completion-timer/xcodebuild.log)，仅去除行尾空白），工程、依赖与命令与此前相同；不代表真实游戏并发验收。
+
 ## 证据边界
 
 这些测试复现并锁定 GUI 模型的准入、异步时序与通知行为，完整构建检查真实类型和 SwiftUI 调用点。未启动正式应用、连接游戏、实际执行识别 / 作业 / 寻访，未验证游戏端停止时延或真实 Core 回调次序，也未声称完成连接游戏后的 GUI 并发验收。没有修改真实偏好或任务文件；评审线程的 resolved 状态不能代替代码与测试核实。

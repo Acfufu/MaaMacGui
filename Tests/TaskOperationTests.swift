@@ -325,6 +325,80 @@ import Observation
             check(!model.operationInFlightForTest, "first launch releases ownership")
         }
         #endif
+        // Completion can run while the core actor's start call has not returned.
+        let completionStarts =
+            [
+                (
+                    "Daily",
+                    { @MainActor (model: MAAViewModel) async throws in
+                        if !(await model.tryStartTasks()) { throw FixtureError.connection }
+                    }
+                )
+            ] + starts
+        for (name, start) in completionStarts {
+            let model = MAAViewModel()
+            let gate = Gate()
+            model.handle?.startGate = gate
+            let startup = Task { try await start(model) }
+            await waitFor(gate)
+            model.handle?.isRunning = false
+            model.reportIdleCallback()
+            gate.release()
+            try! await startup.value
+            check(model.status == .idle, "\(name) does not overwrite completed state after start returns")
+            check(model.logStore?.taskStartTime == nil, "\(name) does not restore cleared start metadata")
+            check(
+                !model.operationInFlightForTest && !model.menuStartDisabled, "\(name) can restart after fast completion"
+            )
+            model.handle?.startGate = nil
+            var restarted = false
+            do {
+                try await start(model)
+                restarted = true
+            } catch {}
+            check(restarted, "\(name) restart after completion succeeds")
+            check(model.status == .busy, "\(name) restart after fast completion is busy")
+        }
+        // Exercise the production timer method, including its async task and print branches.
+        for failure in ["connection", "core"] {
+            let model = MAAViewModel()
+            model.failConnection = failure == "connection"
+            model.handle?.failStart = failure == "core"
+            let timer = TaskTimerHarness(model)
+            timer.fire(.init())
+            for _ in 0..<10000 {
+                if !timer.logs.isEmpty { break }
+                await Task.yield()
+            }
+            check(
+                timer.logs.count == 1 && timer.logs[0].contains("Failed"), "timer reports \(failure) failure distinctly"
+            )
+            check(
+                !timer.logs.contains(where: { $0.contains("Skip") }),
+                "timer does not label \(failure) failure as skipped")
+        }
+        do {
+            let model = MAAViewModel()
+            let timer = TaskTimerHarness(model)
+            timer.fire(.init())
+            for _ in 0..<10000 {
+                if !timer.logs.isEmpty { break }
+                await Task.yield()
+            }
+            check(timer.logs.count == 1 && timer.logs[0].contains("Started"), "timer reports successful startup")
+        }
+        do {
+            let model = MAAViewModel()
+            let timer = TaskTimerHarness(model)
+            timer.fire(.init())
+            model.reportBusyCallback()
+            for _ in 0..<10000 {
+                if !timer.logs.isEmpty { break }
+                await Task.yield()
+            }
+            check(timer.logs.count == 1 && timer.logs[0].contains("Skip"), "timer reports admission skip distinctly")
+            check(model.ensureCount == 0, "skipped timer never prepares core")
+        }
         print("\(assertions) assertions; \(failures) failures")
         if failures != 0 { exit(1) }
     }

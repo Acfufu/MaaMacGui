@@ -29,10 +29,13 @@ def declaration(source, pattern):
 parts = [declaration(model, r'^    enum Status:')]
 parts += [re.search(r'^    @Published private\(set\) var status = .*$', model, re.M)[0]]
 parts += [re.search(r'^    (?:@Published private\(set\) |private )var isStartStopInFlight = .*$', model, re.M)[0]]
-for name in ['canStartTasks', 'beginTaskOperation']:
+for pattern in [r'^    private var taskCompletionGeneration = .*$', r'^    enum TaskStartResult:']:
+    if re.search(pattern, model, re.M):
+        parts.append(declaration(model, pattern) if 'enum' in pattern else re.search(pattern, model, re.M)[0])
+for name in ['canStartTasks', 'beginTaskOperation', 'startCoreTasks', 'startDailyTasks']:
     pattern = rf'^    (?:private )?(?:func|var) {name}\b'
     if re.search(pattern, model, re.M): parts.append(declaration(model, pattern))
-for name in ['stop', 'tryStartTasks', 'startTasks', 'handleEarlyReturn', 'startCopilot', 'recognizeRecruit',
+for name in ['stop', 'resetStatus', 'tryStartTasks', 'startTasks', 'handleEarlyReturn', 'startCopilot', 'recognizeRecruit',
              'recognizeDepot', 'recognizeVideo', 'recognizeOperBox', 'gachaPoll', 'miniGame']:
     parts.append(declaration(model, rf'^    (?:private )?func {name}\b'))
 # Read the actual SwiftUI menu predicate, rather than duplicating its intended logic.
@@ -53,6 +56,8 @@ support = support.replace('// PRODUCTION_BRIDGE_SUBSCRIPTIONS', subscriptions)
 flags = ['-D', 'TASK_OPERATION_OBSERVATION'] if 'var canStartTasks:' in bridge else []
 if 'func beginTaskOperation(requiresIdle: Bool = true) async throws' in model:
     flags += ['-D', 'CORE_RUNNING_PREFLIGHT']
+timer = (source_root / 'MeoAsstMac/Utils/TaskTimerManager.swift').read_text()
+support += '\n@MainActor final class TaskTimerHarness {\n    var viewModel: MAAViewModel?\n    var logs = [String]()\n    init(_ model: MAAViewModel) { viewModel = model }\n    private func print(_ message: String) { logs.append(message) }\n    func fire(_ config: MAAViewModel.DailyTaskTimer) { startDailyTaskIfNeeded(config: config) }\n' + declaration(timer, r'^    private func startDailyTaskIfNeeded') + '\n}\n'
 errors = (source_root / 'MeoAsstMac/Model/MAAError.swift').read_text()
 with tempfile.TemporaryDirectory(prefix='maa-task-operation-tests-') as tmp:
     tmp = Path(tmp)
