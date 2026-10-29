@@ -88,6 +88,7 @@ import SwiftUI
 
     @Published var recruitConfig = RecruitConfiguration.recognition
     @Published var recruit: MAARecruit?
+    private var recruitTagNames = [String: String]()
 
     // MARK: - Connection Settings
 
@@ -293,6 +294,9 @@ extension MAAViewModel {
     /// Should be called by `loadResource(url:channel:)`.
     private func loadResource(url: URL) async throws {
         try await MAAProvider.shared.loadResource(path: url.path)
+        if let catalog = RecruitTagCatalog.read(resourceDirectory: url.appendingPathComponent("resource")) {
+            recruitTagNames = catalog.labels
+        }
 
         if touchMode == .MacPlayTools {
             let platformResource = url.appendingPathComponent("resource")
@@ -300,6 +304,11 @@ extension MAAViewModel {
                 .appendingPathComponent("iOS")
             if FileManager.default.fileExists(atPath: platformResource.path) {
                 try await MAAProvider.shared.loadResource(path: platformResource.path)
+                if let catalog = RecruitTagCatalog.read(
+                    resourceDirectory: platformResource.appendingPathComponent("resource"))
+                {
+                    recruitTagNames = catalog.labels
+                }
             }
         }
     }
@@ -471,7 +480,7 @@ extension MAAViewModel {
         for task in tasks {
             guard task.enabled else { continue }
 
-            if let coreID = try await handle?.appendTask(task.task) {
+            if let coreID = try await handle?.appendTask(task.task, recruitTagNames: recruitTagNames) {
                 taskIDMap[coreID] = task.id
             }
         }
