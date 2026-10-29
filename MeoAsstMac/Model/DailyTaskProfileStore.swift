@@ -10,15 +10,7 @@ struct DailyTaskProfileStore {
             .appendingPathComponent(profileURL.lastPathComponent)
     }
 
-    private struct Preferences: Codable {
-        var recoveryEnabled: Bool?
-        var targets: [String]?
-
-        enum CodingKeys: String, CodingKey {
-            case recoveryEnabled = "fiammetta_recovery_enabled"
-            case targets = "fiammetta_targets"
-        }
-    }
+    private typealias Preferences = InfrastConfiguration.FiammettaPreferences
 
     // Decode field presence separately: InfrastConfiguration supplies defaults for
     // missing fields, which would otherwise hide a rewrite by an older version.

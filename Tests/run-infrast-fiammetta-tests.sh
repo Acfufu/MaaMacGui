@@ -14,7 +14,8 @@ daily_task = tasks[tasks.index('struct DailyTask:'):tasks.index('\nextension Dai
 Path(sys.argv[1]).write_text(
     daily_task + '\n' + source[start:end] + '\n'
     + Path('Tests/InfrastFiammettaTests.swift').read_text() + '\n'
-    + Path('Tests/DailyTaskProfileStoreTests.swift').read_text())
+    + Path('Tests/DailyTaskProfileStoreTests.swift').read_text() + '\n'
+    + Path('Tests/FiammettaMalformedPreferencesTests.swift').read_text())
 PY
 xcrun swiftc Tests/InfrastFiammettaTestSupport.swift \
     'MeoAsstMac/Task Configurations/InfrastConfiguration.swift' \

@@ -53,6 +53,19 @@ struct InfrastConfiguration: MAATaskConfiguration {
     var fiammetta_recovery_enabled: Bool
     var fiammetta_targets: [String]
 
+    // Shared by inline settings and downgrade backups. Nil means the key was
+    // absent; malformed explicit values become false/[] so backups cannot
+    // accidentally turn recovery back on or expand its target list.
+    struct FiammettaPreferences: Codable {
+        var recoveryEnabled: Bool?
+        var targets: [String]?
+
+        private enum CodingKeys: String, CodingKey {
+            case recoveryEnabled = "fiammetta_recovery_enabled"
+            case targets = "fiammetta_targets"
+        }
+    }
+
     var filename: String
     var plan_index: Int
 
@@ -223,10 +236,22 @@ extension InfrastConfiguration {
         self.continue_training = try container.decodeIfPresent(Bool.self, forKey: .continue_training) ?? true
         self.reception_message_board =
             try container.decodeIfPresent(Bool.self, forKey: .reception_message_board) ?? true
+        let preferences = try FiammettaPreferences(from: decoder)
         self.fiammetta_targets = Self.normalizedFiammettaTargets(
-            try container.decodeIfPresent([String].self, forKey: .fiammetta_targets) ?? Self.defaultFiammettaTargets)
+            preferences.targets ?? Self.defaultFiammettaTargets)
         self.fiammetta_recovery_enabled =
-            (try container.decodeIfPresent(Bool.self, forKey: .fiammetta_recovery_enabled) ?? false)
-            && !fiammetta_targets.isEmpty
+            (preferences.recoveryEnabled ?? false) && !fiammetta_targets.isEmpty
+    }
+}
+
+extension InfrastConfiguration.FiammettaPreferences {
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        recoveryEnabled =
+            container.contains(.recoveryEnabled)
+            ? ((try? container.decode(Bool.self, forKey: .recoveryEnabled)) ?? false) : nil
+        targets =
+            container.contains(.targets)
+            ? ((try? container.decode([String].self, forKey: .targets)) ?? []) : nil
     }
 }
