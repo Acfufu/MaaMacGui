@@ -60,8 +60,16 @@ struct FightConfiguration: MAATaskConfiguration {
 
     typealias Params = Self
 
+    // The core matches stage names case-sensitively. Fully lowercase input is
+    // treated as a standard code ("ap-5" -> "AP-5"); mixed-case special names
+    // like "AveMujica-8" are preserved as-is.
     var params: Self {
-        self
+        var config = self
+        config.stage = config.stage.trimmingCharacters(in: .whitespacesAndNewlines)
+        if config.stage == config.stage.lowercased() {
+            config.stage = config.stage.uppercased()
+        }
+        return config
     }
 
     // 掉落物品列表
