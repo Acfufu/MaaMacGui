@@ -46,19 +46,12 @@ struct MallConfiguration: MAATaskConfiguration {
         .mall(self)
     }
 
-    private func isSameGameDay(as date: Date) -> Bool {
-        clientChannel.calendar.isDate(date, inSameDayAs: .now)
-    }
-
-    private var shouldCreditFight: Bool {
-        creditFight && !isSameGameDay(as: creditFightDate)
-    }
-
-    private var shouldVisitFriends: Bool {
-        visitFriends && !isSameGameDay(as: friendVisitDate)
-    }
-
     @JSON.Builder var params: JSON {
+        let now = Date.now
+        let calendar = clientChannel.calendar
+        let shouldCreditFight = creditFight && !calendar.isDate(creditFightDate, inSameDayAs: now)
+        let shouldVisitFriends = visitFriends && !calendar.isDate(friendVisitDate, inSameDayAs: now)
+
         "visit_friends" => shouldVisitFriends
         "shopping" => shopping
         "buy_first" => buy_first
