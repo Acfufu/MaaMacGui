@@ -22,6 +22,7 @@ import SwiftUI
     var expiringMedicineUsedTimes = 0
 
     @Published private(set) var status = Status.idle
+    @Published private(set) var isCoreInitialized = false
 
     private var wakeupAssertionID: UInt32?
     private var awakeAssertionID: UInt32?
@@ -223,6 +224,7 @@ extension MAAViewModel {
         try await MAAProvider.shared.setUserDirectory(path: Self.userDirectory.path)
         try await loadResource(channel: clientChannel)
         status = .idle
+        isCoreInitialized = true
     }
 
     func ensureHandle(requireConnect: Bool = true) async throws {
