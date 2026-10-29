@@ -199,7 +199,7 @@ struct RoguelikeSettingsView: View {
             }
             .disabled(config.blackflowFastFlight)
             Toggle("疾速飞行", isOn: $config.blackflowFastFlight)
-            Text("疾速飞行需要满天赋机械师；本次使用特勤分队、稳扎稳打、不借助战。关闭后恢复原开局配置。")
+            Text("疾速飞行需要自有精二机械师，并已在“训练 → 精通”中解锁“招募精通Ⅱ → 效果提升Ⅱ”，开局获得可全图任意飞行 3 次的“结构性原理”零件。本次使用特勤分队、稳扎稳打、不借助战。关闭后恢复原开局配置。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

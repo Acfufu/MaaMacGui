@@ -155,24 +155,24 @@
         }
       }
     },
-    "疾速飞行需要满天赋机械师；本次使用特勤分队、稳扎稳打、不借助战。关闭后恢复原开局配置。" : {
+    "疾速飞行需要自有精二机械师，并已在“训练 → 精通”中解锁“招募精通Ⅱ → 效果提升Ⅱ”，开局获得可全图任意飞行 3 次的“结构性原理”零件。本次使用特勤分队、稳扎稳打、不借助战。关闭后恢复原开局配置。" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fast flight requires a fully upgraded Mechanist. This run uses Special Operations Squad, Slow and Steady, and no support unit. Turning it off restores your opening settings."
+            "value" : "Fast flight requires your own Elite 2 Mechanist with “招募精通Ⅱ → 效果提升Ⅱ” already unlocked under “训练 → 精通”. This grants the starting “结构性原理” part for 3 moves to any map node. This run uses Special Operations Squad, Slow and Steady, and no support unit. Turning it off restores your opening settings."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "고속 비행에는 특성이 모두 강화된 메카니스트가 필요합니다. 이번 탐험은 특근 분대, 안정적인 전진, 지원 없는 편성을 사용합니다. 끄면 기존 시작 설정을 사용합니다."
+            "value" : "고속 비행에는 자신의 정예 2 메카니스트가 필요하며, “训练 → 精通”에서 “招募精通Ⅱ → 效果提升Ⅱ”가 이미 해금되어 있어야 합니다. 시작 시 “结构性原理” 부품을 획득하여 지도 전체의 임의 노드로 3회 이동할 수 있습니다. 이번 탐험은 특근 분대, 안정적인 전진, 지원 없는 편성을 사용합니다. 끄면 기존 시작 설정을 사용합니다."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "疾速飞行需要满天赋机械师；本次使用特勤分队、稳扎稳打、不借助战。关闭后恢复原开局配置。"
+            "value" : "疾速飞行需要自有精二机械师，并已在“训练 → 精通”中解锁“招募精通Ⅱ → 效果提升Ⅱ”，开局获得可全图任意飞行 3 次的“结构性原理”零件。本次使用特勤分队、稳扎稳打、不借助战。关闭后恢复原开局配置。"
           }
         }
       }
