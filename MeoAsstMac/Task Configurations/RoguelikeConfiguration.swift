@@ -70,6 +70,23 @@ struct RoguelikeConfiguration: MAATaskConfiguration {
         case babyAnimal = "baby_animal"
     }
 
+    /// `coreDefault` preserves the inferred strategy used by configurations saved before ending selection.
+    enum BlackflowEnding: String, Codable, CaseIterable {
+        case coreDefault
+        case ending1
+        case ending2
+        case ending3
+
+        var description: String {
+            switch self {
+            case .coreDefault: String(localized: "沿用当前 Core 行为")
+            case .ending1: String(localized: "第一结局")
+            case .ending2: String(localized: "第二结局")
+            case .ending3: String(localized: "第三结局")
+            }
+        }
+    }
+
     enum BlackflowCultivation: String, Codable, CaseIterable {
         case swaddledCat = "swaddled_cat"
         case swaddledFeatheredSerpent = "swaddled_feathered_serpent"
@@ -189,6 +206,13 @@ struct RoguelikeConfiguration: MAATaskConfiguration {
     var collectible_mode_start_list: StartCollectibles
 
     var jieFindPlaytimeTarget = JiePlaytimeTarget.ling
+
+    var blackflowEnding = BlackflowEnding.coreDefault
+    var blackflowFastFlight = false
+
+    var usesBlackflowFastFlight: Bool {
+        theme == .BlackFlow && mode == .exp && blackflowFastFlight
+    }
 
     var blackflowCultivationTarget = BlackflowCultivation.swaddledCat
 
@@ -425,8 +449,10 @@ extension RoguelikeConfiguration {
     }
 
     fileprivate var checkedBlackflowStrategy: String? {
-        guard theme == .BlackFlow, mode == .babyAnimal else { return nil }
-        return BlackflowStrategy.babyAnimal.rawValue
+        guard theme == .BlackFlow else { return nil }
+        if mode == .babyAnimal { return BlackflowStrategy.babyAnimal.rawValue }
+        guard mode == .exp, !blackflowFastFlight, blackflowEnding != .coreDefault else { return nil }
+        return blackflowEnding.rawValue
     }
 }
 
@@ -434,11 +460,11 @@ extension RoguelikeConfiguration.Params {
     init(config: RoguelikeConfiguration) {
         self.theme = config.theme.rawValue
         self.mode = config.mode.rawValue
-        self.squad = config.squad
-        self.roles = config.roles
-        self.core_char = config.core_char
-        self.use_support = config.use_support
-        self.use_nonfriend_support = config.use_support ? config.use_nonfriend_support : nil
+        self.squad = config.usesBlackflowFastFlight ? "特勤分队" : config.squad
+        self.roles = config.usesBlackflowFastFlight ? "稳扎稳打" : config.roles
+        self.core_char = config.usesBlackflowFastFlight ? "机械师" : config.core_char
+        self.use_support = config.usesBlackflowFastFlight ? false : config.use_support
+        self.use_nonfriend_support = config.use_support && !config.usesBlackflowFastFlight ? config.use_nonfriend_support : nil
         self.starts_count = config.starts_count
         self.difficulty = config.difficulty.id
         self.stop_at_final_boss = config.mode == .exp && config.theme != .Phantom ? config.stop_at_final_boss : nil
@@ -466,7 +492,7 @@ extension RoguelikeConfiguration.Params {
         self.find_playTime_target = config.checkedJiePlaytimeTarget
         self.blackflow_strategy = config.checkedBlackflowStrategy
         self.blackflow_cultivation_target =
-            config.mode == .babyAnimal ? config.blackflowCultivationTarget.rawValue : nil
+            config.theme == .BlackFlow && config.mode == .babyAnimal ? config.blackflowCultivationTarget.rawValue : nil
     }
 }
 
@@ -519,6 +545,9 @@ extension RoguelikeConfiguration {
             ?? StartCollectibles()
         self.jieFindPlaytimeTarget =
             try container.decodeIfPresent(JiePlaytimeTarget.self, forKey: .jieFindPlaytimeTarget) ?? .ling
+        self.blackflowEnding =
+            try container.decodeIfPresent(BlackflowEnding.self, forKey: .blackflowEnding) ?? .coreDefault
+        self.blackflowFastFlight = try container.decodeIfPresent(Bool.self, forKey: .blackflowFastFlight) ?? false
         self.blackflowCultivationTarget =
             try container.decodeIfPresent(BlackflowCultivation.self, forKey: .blackflowCultivationTarget)
             ?? .swaddledCat

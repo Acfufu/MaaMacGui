@@ -191,6 +191,19 @@ struct RoguelikeSettingsView: View {
             }
         }
 
+        if config.theme == .BlackFlow, config.mode == .exp {
+            Picker("目标结局", selection: $config.blackflowEnding) {
+                ForEach(RoguelikeConfiguration.BlackflowEnding.allCases, id: \.self) {
+                    Text($0.description).tag($0)
+                }
+            }
+            .disabled(config.blackflowFastFlight)
+            Toggle("疾速飞行", isOn: $config.blackflowFastFlight)
+            Text("疾速飞行需要满天赋机械师；本次使用特勤分队、稳扎稳打、不借助战。关闭后恢复原开局配置。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+
         if config.theme == .BlackFlow, config.mode == .babyAnimal {
             Picker("目标襁褓动物", selection: $config.blackflowCultivationTarget) {
                 ForEach(RoguelikeConfiguration.BlackflowCultivation.allCases, id: \.self) {
@@ -217,7 +230,7 @@ extension RoguelikeConfiguration.Mode {
     func description(theme: RoguelikeConfiguration.Theme) -> String {
         switch (self, theme) {
         case (.exp, .BlackFlow):
-            String(localized: "刷等级，快速飞三层")
+            String(localized: "刷等级，选择结局或疾速飞行")
         case (.investment, .BlackFlow):
             String(localized: "刷源石锭，投资完成后自动退出")
         case (.exp, _):

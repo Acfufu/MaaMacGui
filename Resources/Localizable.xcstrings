@@ -1,6 +1,182 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "沿用当前 Core 行为" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use current Core behavior"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 Core 동작 유지"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沿用当前 Core 行为"
+          }
+        }
+      }
+    },
+    "第一结局" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ending 1"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 번째 결말"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第一结局"
+          }
+        }
+      }
+    },
+    "第二结局" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ending 2"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "두 번째 결말"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第二结局"
+          }
+        }
+      }
+    },
+    "第三结局" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ending 3"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "세 번째 결말"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第三结局"
+          }
+        }
+      }
+    },
+    "目标结局" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target ending"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목표 결말"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标结局"
+          }
+        }
+      }
+    },
+    "疾速飞行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fast flight"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "고속 비행"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "疾速飞行"
+          }
+        }
+      }
+    },
+    "刷等级，选择结局或疾速飞行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gain experience: select an ending or fast flight"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "경험치 획득: 결말 또는 고속 비행 선택"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷等级，选择结局或疾速飞行"
+          }
+        }
+      }
+    },
+    "疾速飞行需要满天赋机械师；本次使用特勤分队、稳扎稳打、不借助战。关闭后恢复原开局配置。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fast flight requires a fully upgraded Mechanist. This run uses Special Operations Squad, Slow and Steady, and no support unit. Turning it off restores your opening settings."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "고속 비행에는 특성이 모두 강화된 메카니스트가 필요합니다. 이번 탐험은 특근 분대, 안정적인 전진, 지원 없는 편성을 사용합니다. 끄면 기존 시작 설정을 사용합니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "疾速飞行需要满天赋机械师；本次使用特勤分队、稳扎稳打、不借助战。关闭后恢复原开局配置。"
+          }
+        }
+      }
+    },
     "" : {
       "shouldTranslate" : false
     },
