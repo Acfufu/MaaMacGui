@@ -128,7 +128,7 @@ extension MAAViewModel {
             let data = try PropertyListEncoder().encode(newValue)
             try data.write(to: tasksURL)
         } catch {
-            Self.taskProfileLogger.error("Failed to write task profiles: \(String(describing: error), privacy: .public)")
+            Self.taskProfileLogger.error("Failed to write task profiles: \(String(describing: error), privacy: .private)")
         }
     }
 }
