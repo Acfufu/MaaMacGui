@@ -183,6 +183,8 @@ struct RoguelikeSettingsView: View {
                  : String(localized: "当前连接不支持种子文本输入；请选择 ADB 控制通路。PlayTools 与 MacSCK 暂不支持。"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
 
         if config.mode == .squad {
