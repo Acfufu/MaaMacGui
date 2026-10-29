@@ -54,10 +54,16 @@ import Observation
             check(model.menuStartDisabled, "menu disabled while idle callback overlaps startup")
             let duplicate = await model.tryStartTasks()
             check(!duplicate, "duplicate daily start rejected during connection")
+            // A previous diagnostic must not satisfy the stop-specific assertion.
+            model.errors.append("Earlier unrelated diagnostic")
+            let errorCountBeforeStop = model.errors.count
             var stopRejected = false
             do { try await model.stop() } catch { stopRejected = true }
             check(stopRejected, "stop during startup reports explicit rejection")
-            check(!model.errors.isEmpty, "stop rejection emits user-facing log")
+            let stopErrors = Array(model.errors.dropFirst(errorCountBeforeStop))
+            check(
+                stopErrors == ["当前正在启动或停止任务，请稍后重试。"],
+                "stop rejection appends its own busy log")
             for (name, start) in starts.prefix(4) {
                 var rejected = false
                 do { try await start(model) } catch { rejected = true }

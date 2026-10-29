@@ -57,6 +57,17 @@ xcodebuild -project /tmp/maa-pr161-build-project/MeoAsstMac.xcodeproj \
 
 完整 macOS Debug arm64 构建成功（[xcodebuild.log](../../artifacts/pr-161-core-running/xcodebuild.log)，仅去除行尾空白）；构建工程、命令和依赖与首轮相同。当前源码与测试摘要见 [manifest.json](../../artifacts/pr-161-core-running/manifest.json)。`git diff --check` 通过。
 
+## 停止冲突日志断言的归因修复
+
+Sourcery 在 `c4dae14` 新增 [4411856833](https://github.com/MaaAssistantArknights/MaaMacGui/pull/161#discussion_r4411856833)，指出 `!model.errors.isEmpty` 无法证明日志来自 stop。当前重复日常启动会被 canStartTasks 提前拦截，本身不写日志；但已有其他错误时，宽泛断言确实可能掩盖停止日志缺失。
+
+本轮仅修改测试与验证材料：先添加一条无关诊断作为前置条件，紧贴 stop 调用前快照日志数；stop 被拒后只检查新增切片，要求它恰好等于预期的忙碌提示。旧日志无法再满足该断言。
+
+- 当前完整回归：**242 项断言、0 失败**（[clean.log](../../artifacts/pr-161-stop-log/clean.log)）。
+- 可重跑变异验证：`python3 artifacts/pr-161-stop-log/mutation-check.py`。脚本仅在临时副本中让停止冲突路径不写日志，保留其他启动冲突日志，并提供相同的先前无关错误。
+- 旧宽泛断言在该变异下误通过（242 项、0 失败）；修复后准确失败，且仅报 `stop rejection appends its own busy log`（242 项、1 失败）。详见 [mutation.log](../../artifacts/pr-161-stop-log/mutation.log)、[old-oracle.log](../../artifacts/pr-161-stop-log/old-oracle.log)、[fixed-oracle.log](../../artifacts/pr-161-stop-log/fixed-oracle.log)。脚本自身在两种预期结果均得到验证后退出 0。
+- 生产代码、工程及依赖声明与 `c4dae14` 一致；本轮未重复构建应用，沿用该提交的完整 Debug arm64 构建证据。源码摘要见 [manifest.json](../../artifacts/pr-161-stop-log/manifest.json)。
+
 ## 证据边界
 
 这些测试复现并锁定 GUI 模型的准入、异步时序与通知行为，完整构建检查真实类型和 SwiftUI 调用点。未启动正式应用、连接游戏、实际执行识别 / 作业 / 寻访，未验证游戏端停止时延或真实 Core 回调次序，也未声称完成连接游戏后的 GUI 并发验收。没有修改真实偏好或任务文件；评审线程的 resolved 状态不能代替代码与测试核实。
