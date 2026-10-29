@@ -9,6 +9,7 @@ import SwiftUI
 
 struct RoguelikeSettingsView: View {
     @Binding var config: RoguelikeConfiguration
+    var supportsSeedInput = false
 
     @Environment(\.defaultMinListRowHeight) private var rowHeight
 
@@ -168,6 +169,20 @@ struct RoguelikeSettingsView: View {
             if config.mode == .clpPds {
                 TextField("待刷坍缩范式", text: $config.semicolonString(for: \.expected_collapsal_paradigms))
             }
+        }
+
+        if config.theme == .Sarkaz {
+            Toggle("使用种子开局", isOn: $config.seedEnabled)
+                .disabled(!config.supportsSeedConfiguration || !supportsSeedInput)
+            if config.seedEnabled {
+                TextField("种子", text: $config.seed)
+                    .disabled(!config.supportsSeedConfiguration || !supportsSeedInput)
+            }
+            Text(supportsSeedInput
+                 ? String(localized: "种子仅适用于萨卡兹投资模式的点刺成锭分队或后勤分队。")
+                 : String(localized: "当前连接不支持种子文本输入；请选择 ADB 控制通路。PlayTools 与 MacSCK 暂不支持。"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
 
         if config.mode == .squad {

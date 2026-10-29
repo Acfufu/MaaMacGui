@@ -190,6 +190,18 @@ struct RoguelikeConfiguration: MAATaskConfiguration {
 
     var jieFindPlaytimeTarget = JiePlaytimeTarget.ling
 
+    var seedEnabled = false
+    var seed = ""
+
+    var supportsSeedConfiguration: Bool {
+        theme == .Sarkaz && mode == .investment && ["点刺成锭分队", "后勤分队"].contains(squad)
+    }
+
+    /// The current input transport is supplied when preparing a run, never stored with preferences.
+    func params(supportsSeedInput: Bool) -> Params {
+        Params(config: self, supportsSeedInput: supportsSeedInput)
+    }
+
     var blackflowCultivationTarget = BlackflowCultivation.swaddledCat
 
     var supportsStartWithEliteTwo: Bool {
@@ -252,6 +264,7 @@ struct RoguelikeConfiguration: MAATaskConfiguration {
         let find_playTime_target: Int?
         let blackflow_strategy: String?
         let blackflow_cultivation_target: String?
+        let start_with_seed: String?
     }
 
     var params: Params {
@@ -431,7 +444,10 @@ extension RoguelikeConfiguration {
 }
 
 extension RoguelikeConfiguration.Params {
-    init(config: RoguelikeConfiguration) {
+    init(config: RoguelikeConfiguration, supportsSeedInput: Bool = false) {
+        let seed = config.seed.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.start_with_seed =
+            supportsSeedInput && config.supportsSeedConfiguration && config.seedEnabled && !seed.isEmpty ? seed : nil
         self.theme = config.theme.rawValue
         self.mode = config.mode.rawValue
         self.squad = config.squad
@@ -519,6 +535,8 @@ extension RoguelikeConfiguration {
             ?? StartCollectibles()
         self.jieFindPlaytimeTarget =
             try container.decodeIfPresent(JiePlaytimeTarget.self, forKey: .jieFindPlaytimeTarget) ?? .ling
+        self.seedEnabled = try container.decodeIfPresent(Bool.self, forKey: .seedEnabled) ?? false
+        self.seed = try container.decodeIfPresent(String.self, forKey: .seed) ?? ""
         self.blackflowCultivationTarget =
             try container.decodeIfPresent(BlackflowCultivation.self, forKey: .blackflowCultivationTarget)
             ?? .swaddledCat
