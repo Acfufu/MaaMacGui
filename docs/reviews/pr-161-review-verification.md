@@ -68,6 +68,14 @@ Sourcery 在 `c4dae14` 新增 [4411856833](https://github.com/MaaAssistantArknig
 - 旧宽泛断言在该变异下误通过（242 项、0 失败）；修复后准确失败，且仅报 `stop rejection appends its own busy log`（242 项、1 失败）。详见 [mutation.log](../../artifacts/pr-161-stop-log/mutation.log)、[old-oracle.log](../../artifacts/pr-161-stop-log/old-oracle.log)、[fixed-oracle.log](../../artifacts/pr-161-stop-log/fixed-oracle.log)。脚本自身在两种预期结果均得到验证后退出 0。
 - 生产代码、工程及依赖声明与 `c4dae14` 一致；本轮未重复构建应用，沿用该提交的完整 Debug arm64 构建证据。源码摘要见 [manifest.json](../../artifacts/pr-161-stop-log/manifest.json)。
 
+## 变异脚本的子进程参数审计
+
+`19af36a` 在推送前已完成 Standards 和 Spec 两项独立审核，均 PASS、无需修改；Spec 审核还独立重跑完整回归和变异验证。随后 Sourcery 对脚本发出 [4412002542](https://github.com/MaaAssistantArknights/MaaMacGui/pull/161#discussion_r4412002542) 的 `dangerous-subprocess-use-audit`，因为 subprocess.run 参数中包含动态拼接的临时脚本路径。
+
+旧调用使用参数列表、没有启用 shell，且路径由本地临时目录生成；未发现外部输入形成 shell 注入的路径。本轮将命令本身改为两个固定字符串 `['python3', 'Tests/run-task-operation-tests.py']`，仅通过 cwd 选择生成的临时副本，并显式设置 shell=False。验证内容不变，不添加针对审计规则的忽略标记。
+
+重跑变异验证通过：旧断言在缺失停止日志时误通过，新断言准确失败一次。AST 检查也确认该调用 argv 全为字符串字面量且 shell=False，见 [static-command.log](../../artifacts/pr-161-stop-log/static-command.log)。生产代码、任务测试和工程均未变化；本轮只重新运行受调整影响的变异验证，没有重复应用构建。
+
 ## 证据边界
 
 这些测试复现并锁定 GUI 模型的准入、异步时序与通知行为，完整构建检查真实类型和 SwiftUI 调用点。未启动正式应用、连接游戏、实际执行识别 / 作业 / 寻访，未验证游戏端停止时延或真实 Core 回调次序，也未声称完成连接游戏后的 GUI 并发验收。没有修改真实偏好或任务文件；评审线程的 resolved 状态不能代替代码与测试核实。

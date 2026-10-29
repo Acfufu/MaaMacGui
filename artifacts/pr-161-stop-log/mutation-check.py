@@ -35,8 +35,8 @@ with tempfile.TemporaryDirectory(prefix='maa-stop-log-mutation-') as tmp:
             dest.write_text(source)
         (snapshot / 'Tests/TaskOperationTests.swift').write_text(test)
         result = subprocess.run(
-            ['python3', str(snapshot / 'Tests/run-task-operation-tests.py')],
-            cwd=snapshot, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            ['python3', 'Tests/run-task-operation-tests.py'],
+            cwd=snapshot, shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         (out / (name + '.log')).write_text(result.stdout)
         print(name + ': exit=' + str(result.returncode) + '\n' + result.stdout)
         assert result.returncode == expected, 'Unexpected mutation verdict: ' + name
