@@ -466,7 +466,10 @@ extension MAAViewModel {
             tasks[index] = .init(id: task.id, task: .closedown(config), enabled: task.enabled)
         }
 
-        // 日志里的湮灭专属错误分支按存储的关卡名精确匹配，启动时把存储值一并归一化。
+        try await ensureHandle()
+
+        // 连接期间配置可能被编辑；连接完成后再归一化，保证存储值与下发参数一致。
+        // 日志里的湮灭专属错误分支也依赖存储的关卡名精确匹配。
         for (index, task) in tasks.enumerated() {
             guard case .fight(var config) = task.task else {
                 continue
@@ -478,8 +481,6 @@ extension MAAViewModel {
                 tasks[index] = .init(id: task.id, task: .fight(config), enabled: task.enabled)
             }
         }
-
-        try await ensureHandle()
 
         for task in tasks {
             guard task.enabled else { continue }
