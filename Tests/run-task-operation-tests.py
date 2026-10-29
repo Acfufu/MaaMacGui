@@ -58,6 +58,8 @@ if 'func beginTaskOperation(requiresIdle: Bool = true) async throws' in model:
     flags += ['-D', 'CORE_RUNNING_PREFLIGHT']
 timer = (source_root / 'MeoAsstMac/Utils/TaskTimerManager.swift').read_text()
 support += '\n@MainActor final class TaskTimerHarness {\n    var viewModel: MAAViewModel?\n    var logs = [String]()\n    init(_ model: MAAViewModel) { viewModel = model }\n    private func print(_ message: String) { logs.append(message) }\n    func fire(_ config: MAAViewModel.DailyTaskTimer) { startDailyTaskIfNeeded(config: config) }\n' + declaration(timer, r'^    private func startDailyTaskIfNeeded') + '\n}\n'
+if 'observedGeneration != taskCompletionGeneration' in model:
+    flags += ['-D', 'POST_START_RECONCILIATION']
 errors = (source_root / 'MeoAsstMac/Model/MAAError.swift').read_text()
 with tempfile.TemporaryDirectory(prefix='maa-task-operation-tests-') as tmp:
     tmp = Path(tmp)

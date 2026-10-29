@@ -22,16 +22,19 @@ enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot, Recruit, Depot, Vid
 @MainActor final class Core {
     var isRunning = false
     var runningGate: Gate?
+    var runningReturnsSnapshot = false
     var running: Bool {
         get async {
+            let snapshot = isRunning
             let gate = runningGate
             runningGate = nil
             if let gate { await gate.wait() }
-            return isRunning
+            return runningReturnsSnapshot ? snapshot : isRunning
         }
     }
     var appendCount = 0
     var stopCount = 0
+    var preStartGate: Gate?
     var startGate: Gate?
     var stopGate: Gate?
     var failStart = false
@@ -45,6 +48,7 @@ enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot, Recruit, Depot, Vid
         return Int32(appendCount)
     }
     func start() async throws {
+        if let preStartGate { await preStartGate.wait() }
         if failStart { throw FixtureError.connection }
         isRunning = true
         if let startGate { await startGate.wait() }

@@ -399,6 +399,47 @@ import Observation
             check(timer.logs.count == 1 && timer.logs[0].contains("Skip"), "timer reports admission skip distinctly")
             check(model.ensureCount == 0, "skipped timer never prepares core")
         }
+        // A delayed completion from the preceding run is not completion of the new run.
+        for beforeCoreStart in [true, false] {
+            let model = MAAViewModel()
+            _ = await model.tryStartTasks()
+            try! await model.stop()
+            let gate = Gate()
+            if beforeCoreStart { model.handle?.preStartGate = gate } else { model.handle?.startGate = gate }
+            let startup = Task { await model.tryStartTasks() }
+            await waitFor(gate)
+            model.reportIdleCallback()
+            gate.release()
+            let started = await startup.value
+            check(started && model.handle?.isRunning == true, "delayed prior callback does not stop new core")
+            check(model.status == .busy, "delayed prior callback does not suppress new busy state")
+            check(model.logStore?.taskStartTime != nil, "delayed prior callback does not suppress new metadata")
+            check(!model.operationInFlightForTest, "new startup releases ownership after prior callback")
+        }
+        #if POST_START_RECONCILIATION
+        // A running read can itself become stale while returning to MainActor.
+        for coreCompletes in [true, false] {
+            let model = MAAViewModel()
+            let starting = Gate()
+            let probing = Gate()
+            model.handle?.startGate = starting
+            let startup = Task { await model.tryStartTasks() }
+            await waitFor(starting)
+            model.handle?.runningGate = probing
+            model.handle?.runningReturnsSnapshot = true
+            starting.release()
+            await waitFor(probing)
+            if coreCompletes { model.handle?.isRunning = false }
+            model.reportIdleCallback()
+            probing.release()
+            let started = await startup.value
+            check(started, "post-start probe still reports accepted startup")
+            check(model.status == (coreCompletes ? .idle : .busy), "post-start probe retries stale completion snapshot")
+            check(
+                (model.logStore?.taskStartTime == nil) == coreCompletes, "post-start metadata follows reconciled core")
+            check(!model.operationInFlightForTest, "post-start probe releases ownership")
+        }
+        #endif
         print("\(assertions) assertions; \(failures) failures")
         if failures != 0 { exit(1) }
     }

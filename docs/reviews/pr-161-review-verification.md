@@ -83,7 +83,7 @@ Sourcery 在 `c4dae14` 新增 [4411856833](https://github.com/MaaAssistantArknig
 - [4412137251](https://github.com/MaaAssistantArknights/MaaMacGui/pull/161#discussion_r4412137251)：核心快速完成，resetStatus 在 handle.start 返回前已清理状态，随后恢复的启动代码却重新写入 busy 和日常启动时间。
 - [4412137260](https://github.com/MaaAssistantArknights/MaaMacGui/pull/161#discussion_r4412137260)：Bool 无法区分准入跳过与实际启动失败，定时器错误地把连接 / 核心启动失败记为跳过。
 
-修复：resetStatus 推进完成代次；所有八类启动共用 startCoreTasks，在实际调用核心 start 前捕获代次，返回后若已完成则不复活 busy 或启动元数据。连接准备期间的先前回调不会错误取消随后真正发起的启动。
+初始候选 `8fb205e` 让 resetStatus 推进完成代次，并在实际 start 前捕获代次；该候选未推送，双审核进一步发现旧运行回调延迟到达时可能误判新任务完成，最终修正见下节。所有八类启动继续共用 startCoreTasks。
 
 日常执行新增 started / skipped / failed 结果，定时器穷尽处理这三种结果；菜单等原调用方继续使用兼容的 Bool 包装入口 tryStartTasks。快速完成仍算实际启动成功，即使启动方法返回时已空闲。
 
@@ -93,6 +93,17 @@ Sourcery 在 `c4dae14` 新增 [4411856833](https://github.com/MaaAssistantArknig
 - 本轮：289 项断言全部通过（[after.log](../../artifacts/pr-161-completion-timer/after.log)）。覆盖八类快速完成及重启、元数据不复活、先前回调、连接失败 / 核心启动失败的定时器日志、正常开始与状态变化跳过。
 - 原停止日志变异证明仍成立：旧断言 242/0，新断言准确失败一次 289/1（[mutation-old.log](../../artifacts/pr-161-completion-timer/mutation-old.log)、[mutation-fixed.log](../../artifacts/pr-161-completion-timer/mutation-fixed.log)）。新增 timer 源文件也复制到每个变异快照；旧版断言数保持历史基线，当前目标失败断言数按实际套件核验。
 - 完整 macOS Debug arm64 构建成功（[xcodebuild.log](../../artifacts/pr-161-completion-timer/xcodebuild.log)，仅去除行尾空白），工程、依赖与命令与此前相同；不代表真实游戏并发验收。
+
+## 推送前双审核追出的旧回调问题
+
+两个独立审核代理分别复现：先启动并停止上一轮任务，马上启动下一轮；上一轮 TaskChainStopped 在新 start 等待 actor 执行之前或执行之后才被处理。初始候选 8fb205e 的全局代次变化不能区分旧、新运行，因此可能保留 idle 并丢掉新运行的启动元数据。该候选未推送。
+
+最终改为在核心 start 返回后重新读取实际 running。代次只用于判断这次跨 actor 的 running 读数是否已经被回调更新过；若过期就重读。稳定读数为运行中时发布 busy 和日常启动时间；核心已停时清理完成状态。这样既不会复活真正快速完成的任务，也不会因旧停止回调而压制正在运行的新任务。
+
+- 对初始候选 8fb205e 的新用例：297 项断言、4 失败（[before.log](../../artifacts/pr-161-post-start/before.log)）。
+- 最终：305 项断言、0 失败（[after.log](../../artifacts/pr-161-post-start/after.log)）。保留全部快速完成与定时器分类用例，补充旧回调在实际 start 前 / 后到达，以及 running 读取本身返回旧值时的重读与元数据一致性。
+- 变异验证仍准确定位缺失停止日志：旧断言 242/0，新断言 305/1、且唯一失败为目标日志断言（[旧](../../artifacts/pr-161-post-start/mutation-old.log)、[新](../../artifacts/pr-161-post-start/mutation-fixed.log)）。
+- 最终完整 macOS Debug arm64 构建成功（[xcodebuild.log](../../artifacts/pr-161-post-start/xcodebuild.log)，只移除行尾空白）；当前源码摘要见 [manifest.json](../../artifacts/pr-161-post-start/manifest.json)。
 
 ## 证据边界
 

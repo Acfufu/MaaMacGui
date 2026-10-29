@@ -275,11 +275,20 @@ extension MAAViewModel {
     }
 
     private func startCoreTasks(recordDailyTaskStart: Bool = false) async throws {
-        let completionGeneration = taskCompletionGeneration
         try await handle?.start()
-        // A completion callback may already have cleared state while start awaited
-        // the core actor. Do not revive that finished run or its metadata.
-        guard completionGeneration == taskCompletionGeneration else { return }
+        // Reconcile the actual core after start. A reset may belong to a prior
+        // run; retry if a callback makes the awaited running snapshot stale.
+        var observedGeneration: UInt64
+        var coreIsRunning: Bool
+        repeat {
+            observedGeneration = taskCompletionGeneration
+            coreIsRunning = await handle?.running == true
+        } while observedGeneration != taskCompletionGeneration
+
+        guard coreIsRunning else {
+            resetStatus()
+            return
+        }
         if recordDailyTaskStart { logStore?.taskStartTime = .now }
         status = .busy
     }
