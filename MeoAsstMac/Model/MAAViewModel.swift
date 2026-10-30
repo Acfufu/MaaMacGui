@@ -54,9 +54,12 @@ import SwiftUI
         }
 
         if requiresIdle {
-            // Clear the previous session synchronously before the first await,
-            // so logs appended later by concurrently rejected operations survive.
-            logStore?.clearLogs()
+            // Record the session boundary synchronously before the first await.
+            // The previous session is only removed after the core reconcile
+            // admits the start, so a stale-idle desync keeps it visible on
+            // rejection, while entries appended by operations rejected during
+            // the await are newer than the boundary and survive the new session.
+            let sessionBaseline = logStore?.logCount ?? 0
             let coreIsRunning = await handle?.running == true
             guard !coreIsRunning, status == .idle else {
                 if coreIsRunning { status = .busy }
@@ -64,6 +67,7 @@ import SwiftUI
                 throw MAAError.taskAlreadyRunning
             }
             try Task.checkCancellation()
+            logStore?.clearLogs(upTo: sessionBaseline)
         }
         accepted = true
     }
@@ -244,7 +248,8 @@ extension MAAViewModel {
             throw MAAError.taskAlreadyRunning
         }
 
-        // 日志已在 beginTaskOperation 准入时同步清空，避免并发被拒的提示被覆盖。
+        // 上一会话日志由 beginTaskOperation 在核心运行复核通过后清除（仅清除
+        // 准入时刻之前的条目），并发被拒或取消的路径不清空任何日志。
         taskIDMap.removeAll()
         taskStatus.removeAll()
 

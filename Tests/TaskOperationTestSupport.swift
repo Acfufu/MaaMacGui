@@ -69,7 +69,8 @@ struct VideoRecognitionConfiguration {
     var params: String? { "{}" }
 }
 @MainActor final class TestLogStore {
-    // Mirrors the production log store: clearing wipes previously appended entries.
+    // Mirrors the production log store: clearing removes entries appended
+    // before the recorded session boundary.
     weak var host: MAAViewModel?
     var taskStartTime: Date?
     var screencapCost: Int?
@@ -80,7 +81,11 @@ struct VideoRecognitionConfiguration {
     var stoneUsedTimes = 0
     var recruitConfirmTimes = 0
     func setDailyTasksDetailMode(_ mode: MAAViewModel.DailyTasksDetailMode) {}
-    func clearLogs() { host?.errors.removeAll() }
+    var logCount: Int { host?.errors.count ?? 0 }
+    func clearLogs(upTo index: Int) {
+        guard let host = host, index > 0 else { return }
+        host.errors.removeFirst(min(index, host.errors.count))
+    }
 }
 enum ClientChannel { case official }
 enum TouchMode { case MacPlayTools, maatouch }

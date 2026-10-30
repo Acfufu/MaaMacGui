@@ -218,12 +218,13 @@ extension NewViewModel {
 
 protocol LogStore: AnyObject {
     func appendLog(_ entry: MAALog)
-    func clearLogs()
+    func clearLogs(upTo index: Int)
     func setLastImportedCopilot(_ url: URL)
     func setDepot(_ depot: MAADepot?)
     func setOperBox(_ operBox: MAAOperBox?)
     func setDailyTasksDetailMode(_ mode: MAAViewModel.DailyTasksDetailMode)
 
+    var logCount: Int { get }
     var screencapCost: (min: Int, max: Int, avg: Int)? { get set }
     var lastScreencapWarningLevel: Int { get set }
     var hasPrintedFPSHighTip: Bool { get set }
@@ -240,8 +241,13 @@ extension NewViewModel: LogStore {
         logStoreContinuation?.yield(entry)
     }
 
-    func clearLogs() {
-        logs.removeAll()
+    var logCount: Int {
+        logs.count
+    }
+
+    func clearLogs(upTo index: Int) {
+        guard index > 0, !logs.isEmpty else { return }
+        logs.removeFirst(min(index, logs.count))
     }
 
     func setLastImportedCopilot(_ url: URL) {

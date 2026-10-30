@@ -203,6 +203,7 @@ import Observation
             let model = MAAViewModel()
             _ = await model.tryStartTasks()
             model.reportIdleCallback()
+            model.errors.append("previous session fight report")
             let count = model.ensureCount
             var states = [MAAViewModel.Status]()
             let subscription = model.$status.sink { states.append($0) }
@@ -215,6 +216,9 @@ import Observation
             check(model.ensureCount == count, "\(name) checks running core before ensureHandle")
             check(model.handle?.appendCount == 0, "\(name) never appends to running core")
             check(!model.operationInFlightForTest, "\(name) releases reservation on running-core rejection")
+            check(
+                model.errors == ["previous session fight report", "任务正在运行，请先停止当前任务。"],
+                "\(name) keeps previous session logs on running-core rejection")
             withExtendedLifetime(subscription) {}
             try! await model.stop()
             do { try await start(model) } catch { check(false, "\(name) retry after stop failed") }
@@ -224,6 +228,7 @@ import Observation
             let model = MAAViewModel()
             _ = await model.tryStartTasks()
             model.reportIdleCallback()
+            model.errors.append("previous session fight report")
             let count = model.ensureCount
             var states = [MAAViewModel.Status]()
             let subscription = model.$status.sink { states.append($0) }
@@ -234,6 +239,9 @@ import Observation
             check(!states.contains(.pending), "Daily rejects before publishing pending")
             check(model.ensureCount == count, "Daily checks running core before ensureHandle")
             check(!model.operationInFlightForTest, "Daily releases rejected reservation")
+            check(
+                model.errors == ["previous session fight report", "任务正在运行，请先停止当前任务。"],
+                "Daily keeps previous session logs on running-core rejection")
             withExtendedLifetime(subscription) {}
         }
         #if CORE_RUNNING_PREFLIGHT
@@ -249,6 +257,7 @@ import Observation
             ] + starts
         for (name, start) in allStarts {
             let model = MAAViewModel()
+            model.errors.append("previous session fight report")
             let gate = Gate()
             model.handle?.runningGate = gate
             let startup = Task { try await start(model) }
@@ -260,12 +269,16 @@ import Observation
             var stopRejected = false
             do { try await model.stop() } catch { stopRejected = true }
             check(stopRejected && model.handle?.stopCount == 0, "\(name) blocks stop during core-state await")
-            // Admission clears old logs before the probe await, so logs from
-            // operations rejected during that await must survive the startup.
-            let conflictLogs = model.errors.count
+            // Admission records the session boundary before the probe await; the
+            // previous session is removed only once the reconcile admits the
+            // start, so logs appended during that await must survive it.
+            let conflictLogs = Array(model.errors.dropFirst())
             gate.release()
             try! await startup.value
-            check(model.errors.count == conflictLogs, "\(name) keeps conflict logs visible after startup")
+            check(
+                !model.errors.contains("previous session fight report"),
+                "\(name) clears previous session logs after startup")
+            check(model.errors == conflictLogs, "\(name) keeps conflict logs visible after startup")
             check(model.status == .busy && !model.operationInFlightForTest, "\(name) transfers and releases ownership")
         }
         // Core running changes during the probe: rejection still releases ownership.
@@ -303,6 +316,7 @@ import Observation
         // Cancellation at the newly introduced suspension cannot leak the reservation.
         do {
             let model = MAAViewModel()
+            model.errors.append("previous session fight report")
             let gate = Gate()
             model.handle?.runningGate = gate
             let startup = Task { try await model.recognizeDepot() }
@@ -313,6 +327,9 @@ import Observation
             do { try await startup.value } catch is CancellationError { cancelled = true } catch {}
             check(cancelled && !model.operationInFlightForTest, "cancelled probe releases ownership")
             check(model.status == .idle && model.ensureCount == 0, "cancelled probe never prepares or starts core")
+            check(
+                model.errors == ["previous session fight report"],
+                "cancelled probe keeps previous session logs")
         }
         // Defensive ensureHandle rejection must also preserve busy if core changes later.
         for (name, start) in allStarts {
