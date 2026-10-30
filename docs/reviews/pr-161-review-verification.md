@@ -113,4 +113,6 @@ Sourcery 在 `c4dae14` 新增 [4411856833](https://github.com/MaaAssistantArknig
 
 在最终源码 `71af78f` 的独立 Debug 实例中，连接 Arknight AVD 上已登录的 Bilibili 2.7.81 游戏，实际验证重复 ⌘R、启动期停止及重试、短任务 / 空队列快速收尾后的重启、自然触发定时器的连接失败及恢复。**三项通过，启动期停止的互斥和重试通过但界面忙碌提示被清掉，该项部分通过。** 本轮没有修改生产代码。
 
+**后续修复：** 该"部分通过"的界面忙碌提示缺口已在后续修复提交中闭环：清空上一会话日志的时机移入 `beginTaskOperation()` 准入，且仅在核心运行复核通过、未被取消后才清除准入时刻之前的旧条目，被拒路径不再清空任何日志。上文结论保留为修复前时点的记录，详见 [真实 GUI 回归报告](pr-161-live-gui-regression.md) 的"后续修复"段。
+
 详见 [真实 GUI 回归报告](pr-161-live-gui-regression.md) 和 [证据目录](../../artifacts/pr-161-live-gui/README.md)。实际 Core 为本机 `DEBUG_VERSION` 开发构建；没有验证 PlayCover、实体设备、发布包或全部工具入口，不宣称关闭全部 GUI 验收。
