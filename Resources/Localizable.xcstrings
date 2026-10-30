@@ -235,6 +235,12 @@
     "AnnihilationMode" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annihilation mode: %1$(cur)lld/%2$(max)lld"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -809,6 +815,12 @@
       "comment" : "WPF: CompleteTask + CurrentSanity",
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task completed: %1$(name)@\nSanity: %2$(cur)lld/%3$(max)lld"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1211,6 +1223,12 @@
     "FightCompleted" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Battle completed"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1228,6 +1246,12 @@
     "FightFailed" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Battle failed"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1245,6 +1269,12 @@
     "FightMissionFailedAndStop" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent failure limit reached; task stopped"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1256,6 +1286,12 @@
     "FightTimesUnused" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed %1$(times)lld battles; the next %2$(series)lld× agent run would complete %3$(upTo)lld battles, exceeding the %4$(limit)lld limit, so no battle will be started"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1289,6 +1325,12 @@
     "FurnitureDrop" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Furniture"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1829,6 +1871,12 @@
     "MissionStart" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operation started"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1864,6 +1912,12 @@
       "comment" : "WPF: MissionStart + UnitTime",
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operation started %lld times"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1892,6 +1946,12 @@
     "NoDrop" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2649,6 +2709,12 @@
     "SanityReport" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sanity will be fully restored at %1$(date)@ (in %2$(duration)@)"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2711,6 +2777,12 @@
     "StageQueue" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stage queue: %1$(stage)@ — %2$(stars)lld ★"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2875,8 +2947,8 @@
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "드롭 통계:\n%1$(code)@\n\n남은 이성: %2$(drops)@"
+            "state" : "translated",
+            "value" : "%1$(code)@ 드롭 통계:\n%2$(drops)@%3$(extras)@"
           }
         },
         "zh-Hans" : {
