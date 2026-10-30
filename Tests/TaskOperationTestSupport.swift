@@ -69,6 +69,8 @@ struct VideoRecognitionConfiguration {
     var params: String? { "{}" }
 }
 @MainActor final class TestLogStore {
+    // Mirrors the production log store: clearing wipes previously appended entries.
+    weak var host: MAAViewModel?
     var taskStartTime: Date?
     var screencapCost: Int?
     var lastScreencapWarningLevel = 0
@@ -78,6 +80,7 @@ struct VideoRecognitionConfiguration {
     var stoneUsedTimes = 0
     var recruitConfirmTimes = 0
     func setDailyTasksDetailMode(_ mode: MAAViewModel.DailyTasksDetailMode) {}
+    func clearLogs() { host?.errors.removeAll() }
 }
 enum ClientChannel { case official }
 enum TouchMode { case MacPlayTools, maatouch }
@@ -106,6 +109,9 @@ struct DailyTask {
     var expiringMedicineUsedTimes = 0
     var handle: Core? = Core()
     var logStore: TestLogStore? = TestLogStore()
+    init() {
+        logStore?.host = self
+    }
     var tasks: [DailyTask] = []
     var clientChannel = ClientChannel.official
     var touchMode = TouchMode.maatouch

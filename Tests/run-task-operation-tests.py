@@ -54,7 +54,7 @@ subscriptions = '\n'.join(re.findall(r'        parent\.\$\w+\.sink.*?        \.s
 support = support.replace('// PRODUCTION_BRIDGE_STATE', bridge_state)
 support = support.replace('// PRODUCTION_BRIDGE_SUBSCRIPTIONS', subscriptions)
 flags = ['-D', 'TASK_OPERATION_OBSERVATION'] if 'var canStartTasks:' in bridge else []
-if 'func beginTaskOperation(requiresIdle: Bool = true) async throws' in model:
+if 'func beginTaskOperation(requiresIdle: Bool = true, logsConflict: Bool = true) async throws' in model:
     flags += ['-D', 'CORE_RUNNING_PREFLIGHT']
 timer = (source_root / 'MeoAsstMac/Utils/TaskTimerManager.swift').read_text()
 support += '\n@MainActor final class TaskTimerHarness {\n    var viewModel: MAAViewModel?\n    var logs = [String]()\n    init(_ model: MAAViewModel) { viewModel = model }\n    private func print(_ message: String) { logs.append(message) }\n    func fire(_ config: MAAViewModel.DailyTaskTimer) { startDailyTaskIfNeeded(config: config) }\n' + declaration(timer, r'^    private func startDailyTaskIfNeeded') + '\n}\n'

@@ -1,4 +1,5 @@
 {
+  "_note": "Historical snapshot of the stop-log round; hashes were not refreshed afterwards. Current hashes are tracked by artifacts/pr-161-post-start/manifest.json.",
   "Tests/TaskOperationTests.swift": "81510d44230748069cdc752c3a5d9d93e7019f118348ccdfcd72ce6a36a4b989",
   "artifacts/pr-161-stop-log/mutation-check.py": "14d4674c30432c28d762f3ff33ade5df04cce8f8d88e5ca278436e4030c338aa"
 }

@@ -36,13 +36,13 @@ import SwiftUI
         status == .idle && !isStartStopInFlight
     }
 
-    private func beginTaskOperation(requiresIdle: Bool = true) async throws {
+    private func beginTaskOperation(requiresIdle: Bool = true, logsConflict: Bool = true) async throws {
         guard !isStartStopInFlight else {
-            logError("当前正在启动或停止任务，请稍后重试。")
+            if logsConflict { logError("当前正在启动或停止任务，请稍后重试。") }
             throw MAAError.taskOperationInProgress
         }
         guard !requiresIdle || status == .idle else {
-            logError("任务正在运行，请先停止当前任务。")
+            if logsConflict { logError("任务正在运行，请先停止当前任务。") }
             throw MAAError.taskAlreadyRunning
         }
         // Reserve before querying the core actor: the await must not admit
@@ -54,6 +54,9 @@ import SwiftUI
         }
 
         if requiresIdle {
+            // Clear the previous session synchronously before the first await,
+            // so logs appended later by concurrently rejected operations survive.
+            logStore?.clearLogs()
             let coreIsRunning = await handle?.running == true
             guard !coreIsRunning, status == .idle else {
                 if coreIsRunning { status = .busy }
@@ -241,7 +244,7 @@ extension MAAViewModel {
             throw MAAError.taskAlreadyRunning
         }
 
-        logStore?.clearLogs()
+        // 日志已在 beginTaskOperation 准入时同步清空，避免并发被拒的提示被覆盖。
         taskIDMap.removeAll()
         taskStatus.removeAll()
 
@@ -293,8 +296,8 @@ extension MAAViewModel {
         status = .busy
     }
 
-    func stop() async throws {
-        try await beginTaskOperation(requiresIdle: false)
+    func stop(logsConflict: Bool = true) async throws {
+        try await beginTaskOperation(requiresIdle: false, logsConflict: logsConflict)
         defer { isStartStopInFlight = false }
 
         status = .pending

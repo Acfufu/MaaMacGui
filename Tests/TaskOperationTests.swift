@@ -131,6 +131,12 @@ import Observation
             do { try await model.stop() } catch { rejected = true }
             check(rejected, "duplicate stop reports conflict")
             check(model.handle?.stopCount == 1, "duplicate stop does not reach core")
+            // Automated stops (core callbacks) stay silent when a conflict owns the gate.
+            let conflictsBefore = model.errors.count
+            var silentRejected = false
+            do { try await model.stop(logsConflict: false) } catch { silentRejected = true }
+            check(silentRejected, "automated duplicate stop still reports conflict")
+            check(model.errors.count == conflictsBefore, "automated stop stays silent on conflict")
             gate.release()
             try! await stopping.value
             check(!model.operationInFlightForTest && !model.menuStartDisabled, "stop releases flag and menu")
@@ -254,8 +260,12 @@ import Observation
             var stopRejected = false
             do { try await model.stop() } catch { stopRejected = true }
             check(stopRejected && model.handle?.stopCount == 0, "\(name) blocks stop during core-state await")
+            // Admission clears old logs before the probe await, so logs from
+            // operations rejected during that await must survive the startup.
+            let conflictLogs = model.errors.count
             gate.release()
             try! await startup.value
+            check(model.errors.count == conflictLogs, "\(name) keeps conflict logs visible after startup")
             check(model.status == .busy && !model.operationInFlightForTest, "\(name) transfers and releases ownership")
         }
         // Core running changes during the probe: rejection still releases ownership.
