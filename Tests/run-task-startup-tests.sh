@@ -15,7 +15,12 @@ import sys
 source = (pathlib.Path(sys.argv[1]) / "MeoAsstMac/Model/MAAViewModel.swift").read_text()
 start = source.index("    private func startTasks() async throws {")
 end = source.index("    private func initScheduledDailyTaskTimer()", start)
-output = "import Foundation\nextension MAAViewModel {\n" + source[start:end]
+body = source[start:end]
+# Fail loudly instead of silently absorbing methods added between the markers.
+for marker in ("\n    private func ", "\n    func "):
+    if marker in body:
+        sys.exit(f"unexpected method inside the startTasks slice: {marker.strip()!r}")
+output = "import Foundation\nextension MAAViewModel {\n" + body
 output += "    func runStartupTest() async throws { try await startTasks() }\n}\n"
 (pathlib.Path(sys.argv[2]) / "TaskStartup.swift").write_text(output)
 PY
