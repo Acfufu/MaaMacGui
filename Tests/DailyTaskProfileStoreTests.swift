@@ -194,6 +194,22 @@ func testProfilePersistence() throws {
     try FileManager.default.removeItem(at: backupURL)
     check(try store.load() == [task(InfrastConfiguration())])
 
+    // A single corrupted sidecar record only loses its own task's backup.
+    try store.save([task(selected), task(configuration(true, ["清流"]), id: secondID)])
+    var backupMap =
+        try PropertyListSerialization.propertyList(
+            from: Data(contentsOf: backupURL), format: nil) as! [String: Any]
+    backupMap[secondID.uuidString] = "corrupted record"
+    try PropertyListSerialization.data(fromPropertyList: backupMap, format: .binary, options: 0)
+        .write(to: backupURL)
+    try oldVersionRewrite()
+    let healed = [task(selected), task(InfrastConfiguration(), id: secondID)]
+    check(try store.load() == healed)
+    // The next save replaces the whole sidecar, healing the corrupted record.
+    try store.save(healed)
+    try oldVersionRewrite()
+    check(try store.load() == healed)
+
     // Backup write errors are surfaced, while the primary save remains readable.
     try FileManager.default.removeItem(at: backupURL.deletingLastPathComponent())
     try Data().write(to: backupURL.deletingLastPathComponent())
@@ -204,7 +220,8 @@ func testProfilePersistence() throws {
     check(try store.load() == [task(selected)])
 
     print(
-        "PASS: \(roundTrips) downgrade round trips (each repeated); task/profile isolation, old edits, inline precedence, migration, normalization and backup failures"
+        "PASS: \(roundTrips) downgrade round trips (each repeated); task/profile isolation, old edits, "
+            + "inline precedence, migration, normalization, per-record sidecar corruption and backup failures"
     )
 }
 

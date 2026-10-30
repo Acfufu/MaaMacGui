@@ -1,4 +1,7 @@
 import Foundation
+import OSLog
+
+private let logger = Logger(subsystem: "com.hguandl.MeoAsstMac", category: "DailyTaskProfileStore")
 
 /// Keeps Fiammetta preferences outside the plist that older app versions rewrite.
 struct DailyTaskProfileStore {
@@ -11,6 +14,30 @@ struct DailyTaskProfileStore {
     }
 
     private typealias Preferences = InfrastConfiguration.FiammettaPreferences
+
+    // A single corrupted record must not discard the other tasks' backups.
+    private struct TolerantPreferencesMap: Decodable {
+        var values: [String: Preferences] = [:]
+
+        private struct Key: CodingKey {
+            var stringValue: String
+            var intValue: Int? { nil }
+            init?(stringValue: String) { self.stringValue = stringValue }
+            init?(intValue: Int) { nil }
+        }
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: Key.self)
+            for key in container.allKeys {
+                do {
+                    values[key.stringValue] = try container.decode(Preferences.self, forKey: key)
+                } catch {
+                    logger.warning(
+                        "Ignoring corrupt Fiammetta backup for task \(key.stringValue): \(error)")
+                }
+            }
+        }
+    }
 
     // Decode field presence separately: InfrastConfiguration supplies defaults for
     // missing fields, which would otherwise hide a rewrite by an older version.
@@ -34,11 +61,12 @@ struct DailyTaskProfileStore {
         let preferences: [String: Preferences]
         do {
             preferences = try PropertyListDecoder().decode(
-                [String: Preferences].self, from: Data(contentsOf: preferencesURL))
+                TolerantPreferencesMap.self, from: Data(contentsOf: preferencesURL)
+            ).values
         } catch {
             // An unreadable backup must not send an otherwise valid profile down
             // the startup path that replaces all tasks with defaults.
-            print("Failed to load Fiammetta preferences: \(error)")
+            logger.error("Failed to load Fiammetta preferences: \(error)")
             return tasks
         }
 

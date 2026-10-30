@@ -6,6 +6,9 @@
 //
 
 import Foundation
+import OSLog
+
+private let logger = Logger(subsystem: "com.hguandl.MeoAsstMac", category: "InfrastConfiguration")
 
 struct InfrastConfiguration: MAATaskConfiguration {
     var type: MAATaskType { .Infrast }
@@ -249,9 +252,23 @@ extension InfrastConfiguration.FiammettaPreferences {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         recoveryEnabled =
             container.contains(.recoveryEnabled)
-            ? ((try? container.decode(Bool.self, forKey: .recoveryEnabled)) ?? false) : nil
+            ? Self.safelyDecoded(Bool.self, .recoveryEnabled, from: container, fallback: false) : nil
         targets =
             container.contains(.targets)
-            ? ((try? container.decode([String].self, forKey: .targets)) ?? []) : nil
+            ? Self.safelyDecoded([String].self, .targets, from: container, fallback: []) : nil
+    }
+
+    // Malformed explicit values fall back to false/[] so a damaged backup cannot
+    // turn recovery back on; logging them keeps hand-edited type errors visible.
+    private static func safelyDecoded<Value: Decodable>(
+        _ type: Value.Type, _ key: CodingKeys, from container: KeyedDecodingContainer<CodingKeys>,
+        fallback: Value
+    ) -> Value {
+        do {
+            return try container.decode(Value.self, forKey: key)
+        } catch {
+            logger.warning("Ignoring malformed Fiammetta preference \(key.stringValue): \(error)")
+            return fallback
+        }
     }
 }
