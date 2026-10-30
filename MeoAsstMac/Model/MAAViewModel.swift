@@ -466,12 +466,40 @@ extension MAAViewModel {
             tasks[index] = .init(id: task.id, task: .closedown(config), enabled: task.enabled)
         }
 
+        // 同一批次可能存在多个 Mall 任务：参数在 append 阶段统一快照，若都放行信用战/好友访问，
+        // 第一个完成后第二个早已提交给 core，同一游戏日重复执行。这里按当前游戏日共享判定，
+        // 每种每日任务只放行首个待执行的 Mall，其余回写当日日期使其在生成参数时跳过（次日自愈）。
+        var creditFightAdmitted = false
+        var friendVisitAdmitted = false
+        let mallSnapshotDate = Date.now
+        let mallCalendar = clientChannel.calendar
         for (index, task) in tasks.enumerated() {
             guard case .mall(var config) = task.task else {
                 continue
             }
 
             config.clientChannel = clientChannel
+
+            if task.enabled, config.creditFight,
+                !mallCalendar.isDate(config.creditFightDate, inSameDayAs: mallSnapshotDate)
+            {
+                if creditFightAdmitted {
+                    config.creditFightDate = mallSnapshotDate
+                } else {
+                    creditFightAdmitted = true
+                }
+            }
+
+            if task.enabled, config.visitFriends,
+                !mallCalendar.isDate(config.friendVisitDate, inSameDayAs: mallSnapshotDate)
+            {
+                if friendVisitAdmitted {
+                    config.friendVisitDate = mallSnapshotDate
+                } else {
+                    friendVisitAdmitted = true
+                }
+            }
+
             tasks[index] = .init(id: task.id, task: .mall(config), enabled: task.enabled)
         }
 
