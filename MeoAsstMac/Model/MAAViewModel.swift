@@ -92,6 +92,8 @@ import SwiftUI
     /// Effective base resource directory of recruit tags, bundled until user resources take over.
     @Published private(set) var recruitResourceDirectory = Bundle.main.resourceURL?.appendingPathComponent(
         "resource")
+    /// Modification date of the effective tag table, changing on in-place resource updates.
+    @Published private(set) var recruitResourceRevision: Date?
 
     // MARK: - Connection Settings
 
@@ -282,7 +284,7 @@ extension MAAViewModel {
     private func loadResource(url: URL, channel: MAAClientChannel) async throws {
         // Keep the UI tag catalog in sync with the resources actually loaded by Core.
         if let baseDirectory = try await loadResource(url: url) {
-            recruitResourceDirectory = baseDirectory
+            publishRecruitResource(baseDirectory)
         }
 
         if channel.isGlobal {
@@ -293,9 +295,17 @@ extension MAAViewModel {
                 let globalDirectory = try await loadResource(url: extraResource)
             {
                 // Core replaces the base recruit table with the channel-specific one.
-                recruitResourceDirectory = globalDirectory
+                publishRecruitResource(globalDirectory)
             }
         }
+    }
+
+    /// Publishes the effective tag directory with a token that changes on in-place updates.
+    private func publishRecruitResource(_ directory: URL) {
+        recruitResourceDirectory = directory
+        let tableFile = RecruitTagCatalog.effectiveTableFile(resourceDirectory: directory)
+        let attributes = tableFile.flatMap { try? FileManager.default.attributesOfItem(atPath: $0.path) }
+        recruitResourceRevision = attributes?[.modificationDate] as? Date
     }
 
     /// Core process to load resources at url.

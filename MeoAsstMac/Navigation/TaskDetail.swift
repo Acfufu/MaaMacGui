@@ -23,7 +23,8 @@ struct TaskDetail: View {
                     case .recruit(let config):
                         RecruitSettingsView(
                             config: taskConfigBinding(config, id: id),
-                            resourceDirectory: viewModel.recruitResourceDirectory)
+                            resourceDirectory: viewModel.recruitResourceDirectory,
+                            resourceRevision: viewModel.recruitResourceRevision)
                     case .infrast(let config):
                         InfrastSettingsView(config: taskConfigBinding(config, id: id))
                     case .fight(let config):

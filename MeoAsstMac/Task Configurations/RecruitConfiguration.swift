@@ -163,6 +163,16 @@ struct RecruitTagCatalog: Sendable {
         return nil
     }
 
+    /// The tag table file Core reads first; its modification date detects
+    /// in-place resource updates that keep the directory unchanged.
+    static func effectiveTableFile(resourceDirectory: URL) -> URL? {
+        for name in ["recruitment_custom.json", "recruitment.json"] {
+            let file = resourceDirectory.appendingPathComponent(name)
+            if FileManager.default.fileExists(atPath: file.path) { return file }
+        }
+        return nil
+    }
+
     static func load(resourceDirectory: URL?, languageCode: String) -> Self {
         guard let resourceDirectory, let canonical = read(resourceDirectory: resourceDirectory)
         else { return Self(labels: [:]) }

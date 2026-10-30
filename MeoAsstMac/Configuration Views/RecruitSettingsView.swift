@@ -11,6 +11,8 @@ struct RecruitSettingsView: View {
     @Binding var config: RecruitConfiguration
     /// Effective resource directory; the bundle is only a fallback when nil.
     var resourceDirectory: URL? = nil
+    /// Modification date of the effective tag table; changes on in-place resource updates.
+    var resourceRevision: Date? = nil
     @Environment(\.locale) private var locale
     @State private var catalog = RecruitTagCatalog(labels: [:])
 
@@ -44,13 +46,18 @@ struct RecruitSettingsView: View {
             }
             .padding()
         }
-        .task(id: locale.identifier + (resourceDirectory?.path ?? "")) {
+        .task(id: reloadToken) {
             let directory = resourceDirectory ?? Bundle.main.resourceURL?.appendingPathComponent("resource")
             let language = locale.language.languageCode?.identifier ?? "zh"
             catalog = await Task.detached {
                 RecruitTagCatalog.load(resourceDirectory: directory, languageCode: language)
             }.value
         }
+    }
+
+    /// Locale switches, directory changes and in-place table updates all reload the catalog.
+    private var reloadToken: String {
+        locale.identifier + (resourceDirectory?.path ?? "") + "\(resourceRevision?.timeIntervalSince1970 ?? 0)"
     }
 
     @ViewBuilder private func tagList(

@@ -152,6 +152,30 @@ check(channelCatalog.tags == [robot, globalOnlyTag].sorted())
 check(channelCatalog.label(for: robot) == "Robot" && channelCatalog.label(for: globalOnlyTag) == "Ranged")
 print("PASS: channel-specific table as catalog root")
 
+// The effective table file follows Core's custom-first order, so in-place
+// updates are detectable through its modification date.
+let tableDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+try FileManager.default.createDirectory(at: tableDirectory, withIntermediateDirectories: true)
+defer { try? FileManager.default.removeItem(at: tableDirectory) }
+check(RecruitTagCatalog.effectiveTableFile(resourceDirectory: tableDirectory) == nil)
+let baseTable = tableDirectory.appendingPathComponent("recruitment.json")
+try JSONSerialization.data(withJSONObject: ["tags": [robot: robot]]).write(to: baseTable)
+check(RecruitTagCatalog.effectiveTableFile(resourceDirectory: tableDirectory) == baseTable)
+let customTable = tableDirectory.appendingPathComponent("recruitment_custom.json")
+try JSONSerialization.data(withJSONObject: ["tags": [dps: dps]]).write(to: customTable)
+check(RecruitTagCatalog.effectiveTableFile(resourceDirectory: tableDirectory) == customTable)
+
+// Same-path resource updates change the catalog, so reload tokens must not
+// rely on the directory path alone.
+try JSONSerialization.data(withJSONObject: ["tags": [robot: robot, newTag: newTag]]).write(to: baseTable)
+check(RecruitTagCatalog.load(resourceDirectory: tableDirectory, languageCode: "zh").tags == [dps])
+try FileManager.default.removeItem(at: customTable)
+check(
+    RecruitTagCatalog.load(resourceDirectory: tableDirectory, languageCode: "zh").tags == [
+        robot, newTag
+    ].sorted())
+print("PASS: effective table file and same-path table updates")
+
 if let resourcePath = CommandLine.arguments.dropFirst().first {
     let resourceURL = URL(fileURLWithPath: resourcePath)
     let canonical = RecruitTagCatalog.load(resourceDirectory: resourceURL, languageCode: "zh")
