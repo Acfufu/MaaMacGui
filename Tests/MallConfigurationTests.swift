@@ -54,6 +54,137 @@ struct MallConfigurationTests {
                 }
             }
         }
-        print("Passed \(checks) Mall parameter checks across all six channels")
+        // MARK: Batch daily admission (same-batch dedup)
+
+        func makeMall(
+            creditFight: Bool = true,
+            visitFriends: Bool = true,
+            creditFightDate: Date = .distantPast,
+            friendVisitDate: Date = .distantPast
+        ) throws -> MallConfiguration {
+            var config = try JSONDecoder().decode(MallConfiguration.self, from: Data("{}".utf8))
+            config.creditFight = creditFight
+            config.visitFriends = visitFriends
+            config.creditFightDate = creditFightDate
+            config.friendVisitDate = friendVisitDate
+            return config
+        }
+
+        let unmarked = MallConfiguration.BatchDailyAdmission(creditFightMarkedDate: nil, friendVisitMarkedDate: nil)
+
+        for channel in MAAClientChannel.allCases {
+            let calendar = channel.calendar
+            let reset = calendar.nextReset(after: formatter.date(from: "2026-01-15T00:00:00Z")!)
+            let before = reset.addingTimeInterval(-0.001)
+            let after = reset.addingTimeInterval(0.001)
+            let context = channel.rawValue
+
+            let eligibleA = try makeMall()
+            let eligibleB = try makeMall()
+            let eligibleC = try makeMall()
+
+            // 两个具备资格的 Mall：仅首个放行，次个两项都预标记为快照日。
+            let twoEligible = MallConfiguration.batchDailyAdmissions(
+                of: [(enabled: true, config: eligibleA), (enabled: true, config: eligibleB)],
+                snapshotDate: before, calendar: calendar)
+            check(twoEligible[0] == unmarked, "\(context): first eligible Mall must not be pre-marked")
+            check(
+                twoEligible[1] == .init(creditFightMarkedDate: before, friendVisitMarkedDate: before),
+                "\(context): second eligible Mall must be pre-marked with the snapshot date")
+
+            // 禁用任务不具备资格，不占放行名额。
+            let disabledFirst = MallConfiguration.batchDailyAdmissions(
+                of: [(enabled: false, config: eligibleA), (enabled: true, config: eligibleB)],
+                snapshotDate: before, calendar: calendar)
+            check(disabledFirst[0] == unmarked, "\(context): disabled Mall must not be pre-marked")
+            check(
+                disabledFirst[1] == unmarked,
+                "\(context): disabled Mall must not consume the daily admission")
+
+            // 当日已完成者不具备资格，不占放行名额。
+            let doneToday = try makeMall(creditFightDate: before, friendVisitDate: before)
+            let doneTodayFirst = MallConfiguration.batchDailyAdmissions(
+                of: [(enabled: true, config: doneToday), (enabled: true, config: eligibleB)],
+                snapshotDate: before, calendar: calendar)
+            check(doneTodayFirst[0] == unmarked, "\(context): already-done Mall must not be pre-marked")
+            check(
+                doneTodayFirst[1] == unmarked,
+                "\(context): already-done Mall must not consume the daily admission")
+
+            // 三个具备资格的 Mall：仅首个放行，其余两个都预标记。
+            let threeEligible = MallConfiguration.batchDailyAdmissions(
+                of: [
+                    (enabled: true, config: eligibleA), (enabled: true, config: eligibleB),
+                    (enabled: true, config: eligibleC),
+                ], snapshotDate: before, calendar: calendar)
+            check(threeEligible[0] == unmarked, "\(context): first of three Malls must not be pre-marked")
+            check(
+                threeEligible[1] == .init(creditFightMarkedDate: before, friendVisitMarkedDate: before),
+                "\(context): second of three Malls must be pre-marked")
+            check(
+                threeEligible[2] == .init(creditFightMarkedDate: before, friendVisitMarkedDate: before),
+                "\(context): third of three Malls must be pre-marked")
+
+            // 信用战与好友访问各自独立放行，关闭的开关单项不占名额。
+            let fightOnly = try makeMall(visitFriends: false)
+            let visitOnly = try makeMall(creditFight: false)
+            let independent = MallConfiguration.batchDailyAdmissions(
+                of: [(enabled: true, config: fightOnly), (enabled: true, config: visitOnly)],
+                snapshotDate: before, calendar: calendar)
+            check(
+                independent[0] == unmarked && independent[1] == unmarked,
+                "\(context): credit fight and friend visit admissions must be independent")
+
+            // 预标记日期在快照时刻即被参数闸门识别为同日（判定与消费一致）。
+            var premarked = eligibleB
+            premarked.creditFightDate = twoEligible[1].creditFightMarkedDate!
+            premarked.friendVisitDate = twoEligible[1].friendVisitMarkedDate!
+            MallTestClock.dates = [before, before, after]
+            MallTestClock.reads = 0
+            let premarkedParams =
+                try JSONSerialization.jsonObject(with: JSONEncoder().encode(premarked.params)) as! [String: Any]
+            check(premarkedParams["credit_fight"] as? Bool == false, "\(context): pre-marked date must suppress credit fight")
+            check(premarkedParams["visit_friends"] as? Bool == false, "\(context): pre-marked date must suppress friend visit")
+            check(MallTestClock.reads == 1, "\(context): unmaterialized parameter generation must read the clock once")
+
+            // 快照日落在重置点之后：新游戏日的"当日已完成"同样不占名额。
+            let newDayDone = try makeMall(creditFightDate: after, friendVisitDate: after)
+            let newDayBatch = MallConfiguration.batchDailyAdmissions(
+                of: [(enabled: true, config: newDayDone), (enabled: true, config: eligibleB)],
+                snapshotDate: after, calendar: calendar)
+            check(
+                newDayBatch[0] == unmarked && newDayBatch[1] == unmarked,
+                "\(context): completion on the new game day must not consume the admission")
+        }
+
+        // MARK: Conservative daily write-back date
+
+        for channel in MAAClientChannel.allCases {
+            let calendar = channel.calendar
+            let reset = calendar.nextReset(after: formatter.date(from: "2026-01-15T00:00:00Z")!)
+            let before = reset.addingTimeInterval(-0.001)
+            let after = reset.addingTimeInterval(0.001)
+            let midDay = reset.addingTimeInterval(-3600)
+            let context = channel.rawValue
+
+            check(
+                MallConfiguration.dailyWriteBackDate(now: midDay, roundStart: nil, calendar: calendar) == midDay,
+                "\(context): missing round anchor must fall back to the processing time")
+            check(
+                MallConfiguration.dailyWriteBackDate(now: midDay, roundStart: before, calendar: calendar)
+                    == midDay,
+                "\(context): same game day must write back the processing time")
+            check(
+                MallConfiguration.dailyWriteBackDate(now: after, roundStart: before, calendar: calendar)
+                    == before,
+                "\(context): crossing the reset must write back the round start")
+            check(
+                MallConfiguration.dailyWriteBackDate(
+                    now: after.addingTimeInterval(60), roundStart: after, calendar: calendar
+                ) == after.addingTimeInterval(60),
+                "\(context): same new game day must write back the processing time")
+        }
+
+        print("Passed \(checks) Mall configuration checks across all six channels")
     }
 }

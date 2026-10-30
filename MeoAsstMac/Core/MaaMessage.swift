@@ -745,18 +745,10 @@ private struct SubTaskCompletedMessage {
 }
 
 extension MAAViewModel {
-    /// 消息处理可能滞后于实际完成时刻：完成于 03:59:59.x、消息于 04:00:00.y 处理时，
-    /// 直接回写 `.now` 会把日期记到新游戏日，导致当日信用战/访问被误跳过。
-    /// 此时保守回写本轮任务开始时刻所在的游戏日：宁可下轮重复提交（core 侧幂等消化），
-    /// 不可让当日任务被漏掉。
+    /// 跨 04:00 处理完成消息时保守回写轮始游戏日（取舍详见 MallConfiguration.dailyWriteBackDate）。
     private func mallDailyWriteBackDate(for channel: MAAClientChannel) -> Date {
-        let now = Date.now
-        guard let start = logStore?.taskStartTime,
-            !channel.calendar.isDate(now, inSameDayAs: start)
-        else {
-            return now
-        }
-        return start
+        MallConfiguration.dailyWriteBackDate(
+            now: Date.now, roundStart: logStore?.taskStartTime, calendar: channel.calendar)
     }
 
     private func processSubTaskCompleted(_ details: JSON) {
