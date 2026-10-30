@@ -72,13 +72,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seeds require Sarkaz investment mode with the Point-and-Click or Logistics Squad. The current MaaCore build must support seeds for this theme, the in-game “启用参数” entry must be visible, and the seed must be valid. Check in-game prompts for current availability and account requirements."
+            "value" : "Seeds require Sarkaz investment mode with the Ingots Squad or Support Squad. The current MaaCore build must support seeds for this theme, the in-game “启用参数” entry must be visible, and the seed must be valid. Check in-game prompts for current availability and account requirements."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "시드는 살카즈 투자 모드의 점철성금 분대 또는 후방 지원 분대에서 사용할 수 있습니다. 현재 MaaCore가 해당 테마의 시드 기능을 지원해야 하며, 게임 내 “启用参数” 항목이 표시되고 유효한 시드가 필요합니다. 개방 여부와 계정 조건은 현재 게임 내 안내를 확인하세요."
+            "value" : "시드는 살카즈 투자 모드의 연금술분대 또는 지원분대에서 사용할 수 있습니다. 현재 MaaCore가 해당 테마의 시드 기능을 지원해야 하며, 게임 내 “启用参数” 항목이 표시되고 유효한 시드가 필요합니다. 개방 여부와 계정 조건은 현재 게임 내 안내를 확인하세요."
           }
         },
         "zh-Hans" : {
