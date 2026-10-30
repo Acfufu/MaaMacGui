@@ -63,20 +63,24 @@ struct RoguelikeSettingsView: View {
                 Text(squad).tag(squad)
             }
         }
+        .disabled(config.usesBlackflowFastFlight)
 
         Picker("开局职业组", selection: $config.roles) {
             ForEach(config.theme.roles, id: \.self) { role in
                 Text(role).tag(role)
             }
         }
+        .disabled(config.usesBlackflowFastFlight)
 
         TextField("开局干员（单个）", text: $config.core_char)
+            .disabled(config.usesBlackflowFastFlight)
 
         HStack {
             Toggle("“开局干员”使用助战", isOn: $config.use_support)
-                .disabled(config.start_with_elite_two)
+                .disabled(config.start_with_elite_two || config.usesBlackflowFastFlight)
             if config.use_support {
                 Toggle("可以使用非好友助战", isOn: $config.use_nonfriend_support)
+                    .disabled(config.usesBlackflowFastFlight)
             }
         }
 
