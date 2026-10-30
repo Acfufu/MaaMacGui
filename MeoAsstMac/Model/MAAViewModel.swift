@@ -546,7 +546,7 @@ extension MAAViewModel {
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
-        guard let params = try? recruitConfig.params.jsonString() else {
+        guard let params = try? recruitConfig.params(tagNames: recruitTagNames).jsonString() else {
             return
         }
 

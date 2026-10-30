@@ -87,6 +87,16 @@ check(recognition.select == [4, 5, 6] && recognition.confirm == [-1])
 check(recognition.times == 0 && !recognition.refresh && !recognition.expedite && recognition.expedite_times == 0)
 check(recognition.preserve_tags == [robot] && recognition.preserve_tags_enabled)
 
+// Both parameter paths (daily tasks and recognition) map first_tags through the
+// effective tag names, while preserve_tags always stay canonical IDs.
+var recognitionPreferred = recognition
+recognitionPreferred.first_tags = [dps]
+recognitionPreferred.first_tags_enabled = true
+let recognitionParams = recognitionPreferred.params(tagNames: [dps: "DPS"])
+check(recognitionParams.first_tags == ["DPS"])
+check(recognitionParams.preserve_tags == [robot])
+check(recognition.params(tagNames: [dps: "DPS"]).first_tags == [])
+
 // Resource-derived translated labels never become stored protocol IDs.
 let temporary = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
 try FileManager.default.createDirectory(
