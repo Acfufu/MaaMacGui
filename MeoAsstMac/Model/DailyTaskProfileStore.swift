@@ -58,15 +58,26 @@ struct DailyTaskProfileStore {
         let tasks = try PropertyListDecoder().decode([DailyTask].self, from: data)
         guard FileManager.default.fileExists(atPath: preferencesURL.path) else { return tasks }
 
-        let preferences: [String: Preferences]
+        // Keep I/O and decoding failures apart: NSError descriptions embed the
+        // user's home-directory path, so they must stay under default privacy,
+        // while DecodingError only exposes key names and type expectations.
+        let sidecarData: Data
         do {
-            preferences = try PropertyListDecoder().decode(
-                TolerantPreferencesMap.self, from: Data(contentsOf: preferencesURL)
-            ).values
+            sidecarData = try Data(contentsOf: preferencesURL)
         } catch {
             // An unreadable backup must not send an otherwise valid profile down
             // the startup path that replaces all tasks with defaults.
-            logger.error("Failed to load Fiammetta preferences: \(error, privacy: .public)")
+            logger.error("Failed to read Fiammetta preferences: \(error)")
+            return tasks
+        }
+
+        let preferences: [String: Preferences]
+        do {
+            preferences = try PropertyListDecoder().decode(
+                TolerantPreferencesMap.self, from: sidecarData
+            ).values
+        } catch {
+            logger.error("Failed to decode Fiammetta preferences: \(error, privacy: .public)")
             return tasks
         }
 
