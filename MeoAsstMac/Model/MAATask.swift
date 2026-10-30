@@ -126,7 +126,7 @@ extension MAAViewModel {
     func writeBack(_ newValue: [DailyTask]) {
         do {
             let data = try PropertyListEncoder().encode(newValue)
-            try data.write(to: tasksURL)
+            try data.write(to: tasksURL, options: .atomic)
         } catch {
             Self.taskProfileLogger.error("Failed to write task profiles: \(String(describing: error), privacy: .private)")
         }
