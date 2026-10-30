@@ -49,9 +49,12 @@ struct RecruitSettingsView: View {
         .task(id: reloadToken) {
             let directory = resourceDirectory ?? Bundle.main.resourceURL?.appendingPathComponent("resource")
             let language = locale.language.languageCode?.identifier ?? "zh"
-            catalog = await Task.detached {
+            let loaded = await Task.detached {
                 RecruitTagCatalog.load(resourceDirectory: directory, languageCode: language)
             }.value
+            // A reload superseded by a token change must not overwrite the newer catalog.
+            guard !Task.isCancelled else { return }
+            catalog = loaded
         }
     }
 
