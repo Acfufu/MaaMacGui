@@ -9,6 +9,8 @@ import SwiftUI
 
 struct RecruitSettingsView: View {
     @Binding var config: RecruitConfiguration
+    /// Effective resource directory; the bundle is only a fallback when nil.
+    var resourceDirectory: URL? = nil
     @Environment(\.locale) private var locale
     @State private var catalog = RecruitTagCatalog(labels: [:])
 
@@ -42,8 +44,8 @@ struct RecruitSettingsView: View {
             }
             .padding()
         }
-        .task(id: locale.identifier) {
-            let directory = Bundle.main.resourceURL?.appendingPathComponent("resource")
+        .task(id: locale.identifier + (resourceDirectory?.path ?? "")) {
+            let directory = resourceDirectory ?? Bundle.main.resourceURL?.appendingPathComponent("resource")
             let language = locale.language.languageCode?.identifier ?? "zh"
             catalog = await Task.detached {
                 RecruitTagCatalog.load(resourceDirectory: directory, languageCode: language)

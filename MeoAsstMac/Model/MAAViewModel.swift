@@ -89,6 +89,9 @@ import SwiftUI
     @Published var recruitConfig = RecruitConfiguration.recognition
     @Published var recruit: MAARecruit?
     private var recruitTagNames = [String: String]()
+    /// Effective base resource directory of recruit tags, bundled until user resources take over.
+    @Published private(set) var recruitResourceDirectory = Bundle.main.resourceURL?.appendingPathComponent(
+        "resource")
 
     // MARK: - Connection Settings
 
@@ -278,6 +281,12 @@ extension MAAViewModel {
     /// Should be called by `loadResource(channel:)`.
     private func loadResource(url: URL, channel: MAAClientChannel) async throws {
         try await loadResource(url: url)
+
+        // Keep the UI tag catalog in sync with the resources actually loaded by Core.
+        let baseResourceDirectory = url.appendingPathComponent("resource")
+        if RecruitTagCatalog.read(resourceDirectory: baseResourceDirectory) != nil {
+            recruitResourceDirectory = baseResourceDirectory
+        }
 
         if channel.isGlobal {
             let extraResource = url.appendingPathComponent("resource")

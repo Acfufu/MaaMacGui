@@ -113,6 +113,28 @@ check(english.label(for: "future-tag") == "future-tag")
 check(RecruitTagCatalog.load(resourceDirectory: nil, languageCode: "en").tags.isEmpty)
 check(RecruitTagCatalog.load(resourceDirectory: temporary, languageCode: "ko").label(for: robot) == robot)
 check(try params(recognition)["preserve_tags"] as! [String] == [robot])
+
+// The catalog follows the effective resource directory instead of the bundle,
+// so tags introduced by user/OTA resources stay selectable.
+let newTag = "新手"
+let bundledDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+let updatedDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+defer {
+    try? FileManager.default.removeItem(at: bundledDirectory)
+    try? FileManager.default.removeItem(at: updatedDirectory)
+}
+for directory in [bundledDirectory, updatedDirectory] {
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+}
+try JSONSerialization.data(withJSONObject: ["tags": [robot: robot]]).write(
+    to: bundledDirectory.appendingPathComponent("recruitment.json"))
+try JSONSerialization.data(withJSONObject: ["tags": [robot: robot, newTag: newTag]]).write(
+    to: updatedDirectory.appendingPathComponent("recruitment.json"))
+check(RecruitTagCatalog.load(resourceDirectory: bundledDirectory, languageCode: "zh").tags == [robot])
+check(
+    RecruitTagCatalog.load(resourceDirectory: updatedDirectory, languageCode: "zh").tags == [
+        robot, newTag
+    ].sorted())
 print(
     "PASS: \(count) migration/enablement combinations; retention, normalization, legacy, recognition and resource labels"
 )

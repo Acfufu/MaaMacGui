@@ -21,7 +21,9 @@ struct TaskDetail: View {
                     case .startup(let config):
                         StartupSettingsView(config: taskConfigBinding(config, id: id))
                     case .recruit(let config):
-                        RecruitSettingsView(config: taskConfigBinding(config, id: id))
+                        RecruitSettingsView(
+                            config: taskConfigBinding(config, id: id),
+                            resourceDirectory: viewModel.recruitResourceDirectory)
                     case .infrast(let config):
                         InfrastSettingsView(config: taskConfigBinding(config, id: id))
                     case .fight(let config):
