@@ -177,6 +177,28 @@
         }
       }
     },
+    "已选择目标结局：将按该结局推进，上方的难度与开局设置照常生效。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target ending selected: runs will aim for that ending, while the difficulty and opening settings above still apply as usual."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목표 결말 선택됨: 해당 결말을 향해 진행하며, 위에서 설정한 난이도와 시작 분대·직군·오퍼레이터가 그대로 적용됩니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选择目标结局：将按该结局推进，上方的难度与开局设置照常生效。"
+          }
+        }
+      }
+    },
     "" : {
       "shouldTranslate" : false
     },

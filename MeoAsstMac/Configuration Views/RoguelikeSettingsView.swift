@@ -202,6 +202,13 @@ struct RoguelikeSettingsView: View {
                 }
             }
             .disabled(config.blackflowFastFlight)
+            if config.blackflowEnding != .coreDefault, !config.blackflowFastFlight {
+                Text("已选择目标结局：将按该结局推进，上方的难度与开局设置照常生效。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             Toggle("疾速飞行", isOn: $config.blackflowFastFlight)
             Text("疾速飞行需要自有精二机械师，并已在“训练 → 精通”中解锁“招募精通Ⅱ → 效果提升Ⅱ”，开局获得可全图任意飞行 3 次的“结构性原理”零件。启用时使用特勤分队、稳扎稳打、不借助战。关闭后恢复原开局配置。")
                 .font(.caption)
