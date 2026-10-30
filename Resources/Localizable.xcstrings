@@ -224,6 +224,12 @@
     "AllTasksComplete" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All tasks completed! (in %1$(duration)@)%2$(sanity)@"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3040,6 +3046,12 @@
     "UnableToAgent" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stage queue: %1$(stage)@ cannot use agent command"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
