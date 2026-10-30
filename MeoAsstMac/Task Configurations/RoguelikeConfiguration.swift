@@ -448,6 +448,12 @@ extension RoguelikeConfiguration {
         return jieFindPlaytimeTarget.rawValue
     }
 
+    /// `blackflow_strategy` 的合法取值以 Core 的 profile 词表为准：
+    /// MaaAssistantArknights dev-v2 `resource/roguelike/BlackFlow/strategy.json`
+    /// 的 profiles 含 `ending1`/`ending2`/`ending3`（与 `BlackflowEnding.rawValue` 一致），
+    /// `docs/*/protocol/integration.md` 的 `blackflow_strategy` 字段及 WPF
+    /// `AsstRoguelikeTask.cs` 亦按相同拼写下发（核对于 dev-v2 @ 4d948320d）。
+    /// 另据该协议文档：指定结局后开局照常招募干员，分队/难度无需强制。
     fileprivate var checkedBlackflowStrategy: String? {
         guard theme == .BlackFlow else { return nil }
         if mode == .babyAnimal { return BlackflowStrategy.babyAnimal.rawValue }
