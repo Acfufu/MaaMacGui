@@ -18,7 +18,7 @@ sed -n '/^extension KeyedDecodingContainer/,$p' \
     "$repo_root/MeoAsstMac/Task Configurations/MAATaskConfiguration.swift" >> "$test_dir/MAATaskConfiguration.swift"
 # Substitute only clock reads in a temporary copy so the production getter can
 # be exercised deterministically while the clock advances across 04:00.
-sed -e 's/Date\.now/MallTestClock.now/g' -e 's/inSameDayAs: \.now/inSameDayAs: MallTestClock.now/g' \
+sed -e 's/Date\.now/MallTestClock.now/g' \
     "$repo_root/MeoAsstMac/Task Configurations/MallConfiguration.swift" > "$test_dir/MallConfiguration.swift"
 xcrun swiftc -module-cache-path "$test_dir/module-cache" \
     -I "$products" -I "$parser_include" \

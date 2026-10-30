@@ -29,8 +29,9 @@ struct MallConfigurationTests {
                         config.creditFightDate = fightCompleted ? before : .distantPast
                         config.friendVisitDate = visitLimited ? before : .distantPast
 
-                        // Advance the clock across reset between the fight and formation reads. This drives
-                        // the actual params getter and builder without wall-clock timing.
+                        // Parameter generation must snapshot the clock exactly once. Rig the clock
+                        // so the single read yields `now`, and keep the trailing entries as trap
+                        // dates: any extra read would cross the reset and fail the checks below.
                         MallTestClock.dates = [now, now, after]
                         MallTestClock.reads = 0
                         let data = try JSONEncoder().encode(config.params)
