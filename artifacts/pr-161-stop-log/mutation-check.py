@@ -22,7 +22,7 @@ marker = '            var stopRejected = false\n'
 assert marker in old_test
 old_test = old_test.replace(marker, '            model.errors.append("Earlier unrelated diagnostic")\n' + marker, 1)
 new_test = (root / 'Tests/TaskOperationTests.swift').read_text()
-log = '            logError("当前正在启动或停止任务，请稍后重试。")'
+log = 'if logsConflict { logError("当前正在启动或停止任务，请稍后重试。") }'
 with tempfile.TemporaryDirectory(prefix='maa-stop-log-mutation-') as tmp:
     for name, test, expected in [('old-oracle', old_test, 0), ('fixed-oracle', new_test, 1)]:
         snapshot = Path(tmp) / name
@@ -33,7 +33,8 @@ with tempfile.TemporaryDirectory(prefix='maa-stop-log-mutation-') as tmp:
             if rel == 'MeoAsstMac/Model/MAAViewModel.swift':
                 assert source.count(log) == 1
                 # Keep logging for conflicting starts, suppress it only for stop.
-                source = source.replace(log, '            if requiresIdle { ' + log.strip() + ' }', 1)
+                source = source.replace(
+                    log, 'if logsConflict, requiresIdle { logError("当前正在启动或停止任务，请稍后重试。") }', 1)
             dest.write_text(source)
         (snapshot / 'Tests/TaskOperationTests.swift').write_text(test)
         result = subprocess.run(
