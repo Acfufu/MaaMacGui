@@ -466,9 +466,10 @@ extension MAAViewModel {
             tasks[index] = .init(id: task.id, task: .closedown(config), enabled: task.enabled)
         }
 
-        // 同一批次可能存在多个 Mall 任务：参数在 append 阶段统一快照，若都放行信用战/好友访问，
-        // 第一个完成后第二个早已提交给 core，同一游戏日重复执行。这里按当前游戏日共享判定，
-        // 每种每日任务只放行首个待执行的 Mall，其余回写当日日期使其在生成参数时跳过（次日自愈）。
+        // 同一批次可能存在多个 Mall 任务：若都放行信用战/好友访问，第一个完成后第二个早已提交给
+        // core，同一游戏日重复执行。这里按注入时刻的游戏日共享判定，每种每日任务只放行首个待执行
+        // 的 Mall，其余回写当日日期；判定基准同时物化为 batchSnapshotDate，参数闸门与预标记共用
+        // 同一时刻，append 前跨 04:00 也不会同批双放行（次日自愈）。
         let mallSnapshotDate = Date.now
         let mallCalendar = clientChannel.calendar
         var mallIndices: [Int] = []
@@ -490,6 +491,7 @@ extension MAAViewModel {
             }
 
             config.clientChannel = clientChannel
+            config.batchSnapshotDate = mallSnapshotDate
 
             if let markedDate = admission.creditFightMarkedDate {
                 config.creditFightDate = markedDate

@@ -157,6 +157,67 @@ struct MallConfigurationTests {
                 "\(context): completion on the new game day must not consume the admission")
         }
 
+        // MARK: Materialized batch snapshot across the append window
+
+        for channel in MAAClientChannel.allCases {
+            let calendar = channel.calendar
+            let reset = calendar.nextReset(after: formatter.date(from: "2026-01-15T00:00:00Z")!)
+            let before = reset.addingTimeInterval(-0.001)
+            let after = reset.addingTimeInterval(0.001)
+            let context = channel.rawValue
+
+            // 预标记 + 物化快照：注入后时钟跨过 04:00（如 ensureHandle 装载框架的 await 窗口），
+            // 参数闸门仍按快照日判定，同批去重不失效。
+            var premarkedAgain = try makeMall()
+            premarkedAgain.creditFightDate = before
+            premarkedAgain.friendVisitDate = before
+            premarkedAgain.batchSnapshotDate = before
+            MallTestClock.dates = [after]
+            MallTestClock.reads = 0
+            let premarkedAgainParams =
+                try JSONSerialization.jsonObject(
+                    with: JSONEncoder().encode(premarkedAgain.params)) as! [String: Any]
+            check(
+                premarkedAgainParams["credit_fight"] as? Bool == false,
+                "\(context): pre-marked Mall must stay skipped after the clock crosses the reset")
+            check(
+                premarkedAgainParams["visit_friends"] as? Bool == false,
+                "\(context): pre-marked visit must stay skipped after the clock crosses the reset")
+            check(
+                MallTestClock.reads == 0,
+                "\(context): materialized snapshot must remove clock reads from parameter generation")
+
+            // 放行名额同样在快照时刻锁定：append 前跨日不丢失本批放行。
+            var admittedAgain = try makeMall()
+            admittedAgain.batchSnapshotDate = before
+            MallTestClock.dates = [after]
+            MallTestClock.reads = 0
+            let admittedAgainParams =
+                try JSONSerialization.jsonObject(
+                    with: JSONEncoder().encode(admittedAgain.params)) as! [String: Any]
+            check(
+                admittedAgainParams["credit_fight"] as? Bool == true,
+                "\(context): admitted Mall must keep its slot after the clock crosses the reset")
+            check(
+                admittedAgainParams["visit_friends"] as? Bool == true,
+                "\(context): admitted visit must keep its slot after the clock crosses the reset")
+            check(
+                admittedAgainParams["formation_index"] as? Int == 0,
+                "\(context): admitted Mall must schedule the selected formation")
+            check(
+                MallTestClock.reads == 0,
+                "\(context): admitted parameter generation must not read the clock")
+
+            // 物化快照不参与持久化：编码-解码往返后必须归 nil，其余字段不受影响。
+            var encoded = try makeMall()
+            encoded.batchSnapshotDate = before
+            encoded.creditFightDate = before
+            let roundTrip = try JSONDecoder().decode(
+                MallConfiguration.self, from: JSONEncoder().encode(encoded))
+            check(roundTrip.batchSnapshotDate == nil, "\(context): batch snapshot must not be persisted")
+            check(roundTrip.creditFightDate == before, "\(context): persisted dates must survive the round trip")
+        }
+
         // MARK: Conservative daily write-back date
 
         for channel in MAAClientChannel.allCases {

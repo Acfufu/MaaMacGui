@@ -26,6 +26,27 @@ struct MallConfiguration: MAATaskConfiguration {
     var creditFightDate: Date
     var friendVisitDate: Date
 
+    /// startTasks 注入的同批判定基准时刻：参数闸门与同批去重预标记共用同一读数，
+    /// 消除注入到 append 之间（ensureHandle 装载框架可达秒级）跨 04:00 导致的同批双放行。
+    /// 仅存活于单次批次内，不参与编解码；未注入时为 nil，闸门退化为读当前时钟。
+    var batchSnapshotDate: Date? = nil
+
+    // CodingKeys 显式排除 batchSnapshotDate，保持持久化结构不变。
+    enum CodingKeys: String, CodingKey {
+        case shopping
+        case buy_first
+        case blacklist
+        case force_shopping_if_credit_full
+        case only_buy_discount
+        case reserve_max_credit
+        case visitFriends
+        case creditFight
+        case formationIndex
+        case clientChannel
+        case creditFightDate
+        case friendVisitDate
+    }
+
     var title: String {
         type.description
     }
@@ -47,7 +68,9 @@ struct MallConfiguration: MAATaskConfiguration {
     }
 
     @JSON.Builder var params: JSON {
-        let now = Date.now
+        // 闸门消费 startTasks 物化的同批快照时刻（与去重预标记同源），“判定”与“消费”
+        // 共用一次时钟读数；未经批次注入时退化为读当前时钟。
+        let now = batchSnapshotDate ?? Date.now
         let calendar = clientChannel.calendar
         let shouldCreditFight = creditFight && !calendar.isDate(creditFightDate, inSameDayAs: now)
         let shouldVisitFriends = visitFriends && !calendar.isDate(friendVisitDate, inSameDayAs: now)
