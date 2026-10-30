@@ -40,13 +40,17 @@ for bad in [
     group(zone: 100),
 ] {
     check(window(try activities(["bad": bad]), at: end) == .unavailable)
+    check(window(try activities(["valid": group(), "bad": bad]), at: end.addingTimeInterval(-1)) == .extended(days: 1))
 }
 check(window(try activities(["bad": ["Activity": "broken"]]), at: end) == .unavailable)
+check(window(try activities(["valid": group(), "bad": ["Activity": "broken"]]), at: end.addingTimeInterval(-1)) == .unavailable, "undecodable peer nulls the payload")
 let overlap = try activities(["later": group(end: "2026/11/01 04:00:00"), "earlier": group()])
 check(window(overlap, at: end.addingTimeInterval(-1)) == .extended(days: 1), "nearest active end")
 let reversed = try activities(["earlier": group(), "later": group(end: "2026/11/01 04:00:00")])
 check(window(overlap, at: end.addingTimeInterval(-1)) == window(reversed, at: end.addingTimeInterval(-1)))
-check(window(try activities(["valid": group(), "bad": [:]]), at: end.addingTimeInterval(-1)) == .unavailable)
+check(window(try activities(["valid": group(), "bad": [:]]), at: end.addingTimeInterval(-1)) == .extended(days: 1), "partial malformed keeps valid group")
+check(window(try activities(["valid": group(), "bad": [:]]), at: end.addingTimeInterval(48 * 3600)) == .inactive)
+check(window(try activities(["bad": group(start: "not-a-date"), "worse": [:]]), at: end) == .unavailable, "all groups malformed")
 for channel in MAAClientChannel.allCases {
     let offset = channel == .YoStarEN ? -7 : ([MAAClientChannel.YoStarJP, .YoStarKR].contains(channel) ? 9 : 8)
     // Local Sunday/Monday boundaries, independent of the host timezone.

@@ -33,17 +33,22 @@ extension StageActivityContext {
         guard let groups = activities?.sideStoryStage else { return .unavailable }
 
         var activeEnds: [Date] = []
+        var validGroups = 0
         for group in groups.values {
             // Only grouped SideStory stages are known to describe a farming
             // activity. Mini-games and resource-all-open periods are excluded.
             guard let stages = group.Stages, !stages.isEmpty,
                 stages.allSatisfy({ !($0.Value ?? "").isEmpty }),
                 let period = group.Activity, let range = period.interval
-            else { return .unavailable }
+            else { continue }  // One malformed group must not hide valid peers.
+            validGroups += 1
             if range.start <= date && date < range.end {
                 activeEnds.append(range.end)
             }
         }
+        // A non-empty payload whose groups all failed to parse means the
+        // remote data is broken; an empty payload has no activity at all.
+        if !groups.isEmpty, validGroups == 0 { return .unavailable }
         guard let end = activeEnds.min(), end.timeIntervalSince(date) < 48 * 3600 else { return .inactive }
         return .extended(days: channel.calendar.medicineExpiryDaysUntilWeekEnd(at: date))
     }
