@@ -193,6 +193,10 @@ extension FightConfiguration {
 }
 
 extension FightConfiguration {
+    var localizedExpiry: LocalizedStringResource { params.localizedExpiry }
+}
+
+extension FightConfiguration.Params {
     var localizedExpiry: LocalizedStringResource {
         switch medicine_expire_days {
         case 0: "不启用"
