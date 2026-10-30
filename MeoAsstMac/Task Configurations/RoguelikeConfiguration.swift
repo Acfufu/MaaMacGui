@@ -197,6 +197,22 @@ struct RoguelikeConfiguration: MAATaskConfiguration {
         theme == .Sarkaz && mode == .investment && ["点刺成锭分队", "后勤分队"].contains(squad)
     }
 
+    /// 上游 WPF 要求的种子格式，示例 `2b3c4d,rogue_1,120`
+    private static let seedPattern = #/^[\da-zA-Z]+,rogue_\d+,\d+$/#
+
+    static func isValidSeed(_ seed: String) -> Bool {
+        seed.wholeMatch(of: seedPattern) != nil
+    }
+
+    var trimmedSeed: String {
+        seed.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// 空种子视为关闭该功能；非空种子必须符合上游格式才会下发
+    var hasValidSeed: Bool {
+        !trimmedSeed.isEmpty && Self.isValidSeed(trimmedSeed)
+    }
+
     /// The current input transport is supplied when preparing a run, never stored with preferences.
     func params(supportsSeedInput: Bool) -> Params {
         Params(config: self, supportsSeedInput: supportsSeedInput)
@@ -445,9 +461,9 @@ extension RoguelikeConfiguration {
 
 extension RoguelikeConfiguration.Params {
     init(config: RoguelikeConfiguration, supportsSeedInput: Bool = false) {
-        let seed = config.seed.trimmingCharacters(in: .whitespacesAndNewlines)
         self.start_with_seed =
-            supportsSeedInput && config.supportsSeedConfiguration && config.seedEnabled && !seed.isEmpty ? seed : nil
+            supportsSeedInput && config.supportsSeedConfiguration && config.seedEnabled && config.hasValidSeed
+            ? config.trimmedSeed : nil
         self.theme = config.theme.rawValue
         self.mode = config.mode.rawValue
         self.squad = config.squad
