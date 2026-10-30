@@ -139,6 +139,19 @@ print(
     "PASS: \(count) migration/enablement combinations; retention, normalization, legacy, recognition and resource labels"
 )
 
+// Channel-specific tables become the catalog root on global servers, so tags
+// only present there remain selectable.
+let globalOnlyTag = "远程位"
+let channelDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+defer { try? FileManager.default.removeItem(at: channelDirectory) }
+try FileManager.default.createDirectory(at: channelDirectory, withIntermediateDirectories: true)
+try JSONSerialization.data(withJSONObject: ["tags": [robot: "Robot", globalOnlyTag: "Ranged"]]).write(
+    to: channelDirectory.appendingPathComponent("recruitment.json"))
+let channelCatalog = RecruitTagCatalog.load(resourceDirectory: channelDirectory, languageCode: "zh")
+check(channelCatalog.tags == [robot, globalOnlyTag].sorted())
+check(channelCatalog.label(for: robot) == "Robot" && channelCatalog.label(for: globalOnlyTag) == "Ranged")
+print("PASS: channel-specific table as catalog root")
+
 if let resourcePath = CommandLine.arguments.dropFirst().first {
     let resourceURL = URL(fileURLWithPath: resourcePath)
     let canonical = RecruitTagCatalog.load(resourceDirectory: resourceURL, languageCode: "zh")

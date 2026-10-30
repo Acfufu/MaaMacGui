@@ -280,20 +280,20 @@ extension MAAViewModel {
     ///
     /// Should be called by `loadResource(channel:)`.
     private func loadResource(url: URL, channel: MAAClientChannel) async throws {
-        try await loadResource(url: url)
-
         // Keep the UI tag catalog in sync with the resources actually loaded by Core.
-        let baseResourceDirectory = url.appendingPathComponent("resource")
-        if RecruitTagCatalog.read(resourceDirectory: baseResourceDirectory) != nil {
-            recruitResourceDirectory = baseResourceDirectory
+        if let baseDirectory = try await loadResource(url: url) {
+            recruitResourceDirectory = baseDirectory
         }
 
         if channel.isGlobal {
             let extraResource = url.appendingPathComponent("resource")
                 .appendingPathComponent("global")
                 .appendingPathComponent(channel.rawValue)
-            if FileManager.default.fileExists(atPath: extraResource.path) {
-                try await loadResource(url: extraResource)
+            if FileManager.default.fileExists(atPath: extraResource.path),
+                let globalDirectory = try await loadResource(url: extraResource)
+            {
+                // Core replaces the base recruit table with the channel-specific one.
+                recruitResourceDirectory = globalDirectory
             }
         }
     }
@@ -301,11 +301,11 @@ extension MAAViewModel {
     /// Core process to load resources at url.
     ///
     /// Should be called by `loadResource(url:channel:)`.
-    private func loadResource(url: URL) async throws {
+    ///
+    /// - Returns: The resource directory of the last readable recruit tag table loaded for Core.
+    private func loadResource(url: URL) async throws -> URL? {
         try await MAAProvider.shared.loadResource(path: url.path)
-        if let catalog = RecruitTagCatalog.read(resourceDirectory: url.appendingPathComponent("resource")) {
-            recruitTagNames = catalog.labels
-        }
+        var recruitDirectory = updateRecruitTags(resourceDirectory: url.appendingPathComponent("resource"))
 
         if touchMode == .MacPlayTools {
             let platformResource = url.appendingPathComponent("resource")
@@ -313,13 +313,22 @@ extension MAAViewModel {
                 .appendingPathComponent("iOS")
             if FileManager.default.fileExists(atPath: platformResource.path) {
                 try await MAAProvider.shared.loadResource(path: platformResource.path)
-                if let catalog = RecruitTagCatalog.read(
+                if let directory = updateRecruitTags(
                     resourceDirectory: platformResource.appendingPathComponent("resource"))
                 {
-                    recruitTagNames = catalog.labels
+                    recruitDirectory = directory
                 }
             }
         }
+
+        return recruitDirectory
+    }
+
+    /// Publishes the tag names Core matches against, reporting their resource directory when readable.
+    private func updateRecruitTags(resourceDirectory: URL) -> URL? {
+        guard let catalog = RecruitTagCatalog.read(resourceDirectory: resourceDirectory) else { return nil }
+        recruitTagNames = catalog.labels
+        return resourceDirectory
     }
 
     /// Fetches OTA resources for the specified channel.
