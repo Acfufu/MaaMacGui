@@ -267,7 +267,7 @@ extension InfrastConfiguration.FiammettaPreferences {
         do {
             return try container.decode(Value.self, forKey: key)
         } catch {
-            logger.warning("Ignoring malformed Fiammetta preference \(key.stringValue): \(error)")
+            logger.warning("Ignoring malformed Fiammetta preference \(key.stringValue): \(error, privacy: .public)")
             return fallback
         }
     }

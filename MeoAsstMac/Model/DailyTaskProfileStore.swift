@@ -33,7 +33,7 @@ struct DailyTaskProfileStore {
                     values[key.stringValue] = try container.decode(Preferences.self, forKey: key)
                 } catch {
                     logger.warning(
-                        "Ignoring corrupt Fiammetta backup for task \(key.stringValue): \(error)")
+                        "Ignoring corrupt Fiammetta backup for task \(key.stringValue): \(error, privacy: .public)")
                 }
             }
         }
@@ -66,7 +66,7 @@ struct DailyTaskProfileStore {
         } catch {
             // An unreadable backup must not send an otherwise valid profile down
             // the startup path that replaces all tasks with defaults.
-            logger.error("Failed to load Fiammetta preferences: \(error)")
+            logger.error("Failed to load Fiammetta preferences: \(error, privacy: .public)")
             return tasks
         }
 
