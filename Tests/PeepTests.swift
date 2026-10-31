@@ -122,7 +122,7 @@ final class BufferAllocations {
         check(allocations.live == 0 && allocations.released == 1006, "truncated no-copy buffer releases once")
         do {
             var filled = PreviewImageBuffer.allocate(4096)
-            let written: UInt64 = filled.withUnsafeMutableBytes { bytes in
+            let written: UInt64 = filled.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
                 for i in 0..<9 { bytes[i] = UInt8(i + 1) }
                 return 9
             }
