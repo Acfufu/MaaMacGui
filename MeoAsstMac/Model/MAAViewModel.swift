@@ -955,6 +955,19 @@ extension MAAViewModel {
         }
         try Task.checkCancellation()
 
+        // 连接期间配置可能被编辑；连接完成后再归一化，保证存储值与下发参数一致。
+        for (index, task) in runTasks.enumerated() {
+            guard case .fight(var config) = task.task else {
+                continue
+            }
+
+            let normalized = FightConfiguration.normalizedStage(config.stage)
+            if normalized != config.stage {
+                config.stage = normalized
+                runTasks[index] = .init(id: task.id, task: .fight(config), enabled: task.enabled)
+            }
+        }
+
         for task in runTasks {
             try Task.checkCancellation()
             if recoverGame, recoveryCurrent?() == false { throw CancellationError() }
