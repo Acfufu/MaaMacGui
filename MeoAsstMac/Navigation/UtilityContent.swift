@@ -96,6 +96,7 @@ enum UtilityEntry: Int, CaseIterable, Codable, Identifiable {
     case gacha
     case minigame
     case maatools
+    case peep = 7
     case achievements = 9
 }
 
@@ -114,6 +115,8 @@ extension UtilityEntry: CustomStringConvertible {
             return String(localized: "干员寻访")
         case .minigame:
             return String(localized: "小游戏")
+        case .peep:
+            return String(localized: "Peep.Title")
         case .achievements:
             return String(localized: "Achievement.Entry")
         case .maatools:
@@ -135,6 +138,8 @@ extension UtilityEntry: CustomStringConvertible {
             return "person.fill.viewfinder"
         case .minigame:
             return "gamecontroller.fill"
+        case .peep:
+            return "eye"
         case .achievements:
             return "seal"
         case .maatools:
