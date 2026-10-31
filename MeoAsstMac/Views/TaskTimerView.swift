@@ -3,7 +3,6 @@ import SwiftUI
 struct TaskTimerView: View {
     @EnvironmentObject private var viewModel: MAAViewModel
     @State private var showingAlertForPreventingSleep = false
-    @State private var showingLedgerResetConfirmation = false
     @ObservedObject private var timerManager = TaskTimerManager.shared
 
     var body: some View {
@@ -21,24 +20,7 @@ struct TaskTimerView: View {
             .foregroundStyle(.secondary)
             .padding(.horizontal)
         if let failure = timerManager.failure {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(failure).foregroundStyle(.red)
-                Button("重置定时记录") { showingLedgerResetConfirmation = true }
-                    .fixedSize()
-            }
-            .padding(.horizontal)
-            .alert("重置定时记录",
-                   isPresented: $showingLedgerResetConfirmation,
-                   actions: {
-                       // 取消置首：macOS alert 首按钮即 Return 默认键，
-                       // 默认动作必须是最安全的那个（Esc 仍归 .cancel）。
-                       Button("取消", role: .cancel) {}
-                       Button("删除并重建", role: .destructive) {
-                           timerManager.resetScheduleLedger()
-                       }
-                   }, message: {
-                       Text("将删除无法读取的定时记录文件并重建空记录；刚触发过且仍在触发窗口内的定时可能再执行一次。")
-                   })
+            Text(failure).foregroundStyle(.red).padding(.horizontal)
         }
         List {
             ForEach($viewModel.scheduledDailyTaskTimers.indices, id: \.self) { index in
@@ -66,18 +48,19 @@ struct TaskTimerView: View {
             }
             .padding()
         }
+        BackgroundScheduleSettingsView().padding(.horizontal)
         Button("取消等待中的定时启动") { timerManager.cancelPendingStart() }
             .padding(.horizontal)
-            .alert("允许阻止系统睡眠",
-                   isPresented: $showingAlertForPreventingSleep,
-                   actions: {
-                       Button("允许") {
-                           viewModel.preventSystemSleeping = true
-                       }
-                       Button("取消", role: .cancel) {}
-                   }, message: {
-                       Text("日常任务定时执行会在系统休眠之后失效, 打开此功能可以阻止系统自动睡眠")
-                   })
+        .alert("允许阻止系统睡眠",
+               isPresented: $showingAlertForPreventingSleep,
+               actions: {
+                   Button("允许") {
+                       viewModel.preventSystemSleeping = true
+                   }
+                   Button("取消", role: .cancel) {}
+               }, message: {
+                   Text("日常任务定时执行会在系统休眠之后失效, 打开此功能可以阻止系统自动睡眠")
+               })
     }
 
     private func showAlertIfNeeded() {
@@ -180,6 +163,13 @@ private extension ScheduleOccurrence {
         case "nonexistentLocalTime": String(localized: "夏令时跳过了此本地时间。")
         case "triggerExpired": String(localized: "已超出本次定时触发窗口。")
         case "previousRunOutcomeUnknown": String(localized: "上次应用退出前的任务结果未知，不会自动重跑。")
+        case "recoveryBatchLimit": String(localized: "同次恢复只补跑一条历史计划，本次已跳过。")
+        case "backgroundIntent": String(localized: "等待应用接收后台定时请求。")
+        case "guiAccepted": String(localized: "应用已接收后台定时请求。")
+        case "backgroundIntentExpired": String(localized: "应用未在 5 分钟内接收请求，本次已错过。")
+        case "staleBackgroundIntent": String(localized: "后台请求已过期或计划已变更，本次不执行。")
+        case "wakeFailed": String(localized: "无法唤起应用，本次不会自动重试。")
+        case "intentWriteFailed": String(localized: "后台请求无法保存，本次未开始。")
         default: ""
         }
     }

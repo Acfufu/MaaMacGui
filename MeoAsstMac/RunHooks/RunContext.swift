@@ -1,5 +1,11 @@
 import Foundation
 
+/// Typed names so renames cannot silently break the observer/post pairs.
+extension Notification.Name {
+    static let MAACancelPendingScheduledStart = Notification.Name("MAACancelPendingScheduledStart")
+    static let MAADailyRunFinished = Notification.Name("MAADailyRunFinished")
+}
+
 /// Shared identity and terminal contract for daily automation entry points.
 enum DailyRunOrigin: String, Codable { case manual, schedule, hotkey }
 enum DailyRunPhase: String, Codable { case preparing, preHook, connecting, running, stopping, postHook, finished }
@@ -26,11 +32,13 @@ struct DailyRunSnapshot {
 final class DailyRunCoordinator {
     private(set) var active: RunContext?
     private(set) var lastTerminal: RunContext?
+    /// True while the on-disk journal no longer accepts writes. The in-memory
+    /// contract still holds, but the terminal record needs an escape hatch.
+    /// Diagnostic only: nothing reads this flag yet. It is reset on every
+    /// successful persist (begin/transition/finish) so one failed run cannot
+    /// report a stale failure for the next healthy run.
+    private(set) var journalPersistFailed = false
     private let journalURL: URL?
-    /// 首次写盘失败后置位：本次会话其余生命周期仅在内存中跟踪运行。日志
-    /// 故障绝不楔死运行——占用必须仍可释放、stop 必须仍可执行；磁盘上停
-    /// 留的过期内容由 init 的 interrupted 恢复语义兜底。
-    private(set) var journalDegraded = false
     var didChange: (() -> Void)?
 
     init(journalURL: URL? = nil) {
@@ -52,9 +60,8 @@ final class DailyRunCoordinator {
         guard active == nil else { return nil }
         let context = RunContext(id: UUID(), origin: origin, profileID: profileID,
                                  status: .preparing, startedAt: .now)
-        // 降级后仍要开跑：定时触发此刻已被认领，因日志故障拒绝启动会白白
-        // 丢失一次执行。
-        do { try persist(context) } catch {}
+        try persist(context)
+        journalPersistFailed = false
         active = context
         didChange?()
         return context.id
@@ -63,9 +70,8 @@ final class DailyRunCoordinator {
     func transition(_ phase: DailyRunPhase, for id: UUID) throws {
         guard var context = active, context.id == id, context.status != .postHook else { return }
         context.status = phase
-        // 相位必须在内存中照常推进（含降级后），否则一次写盘失败会阻断
-        // stop()/启动收尾并泄漏占用（r3 A-P2-1）。
-        do { try persist(context) } catch {}
+        try persist(context)
+        journalPersistFailed = false
         active = context
         didChange?()
     }
@@ -77,26 +83,36 @@ final class DailyRunCoordinator {
         context.finishedAt = .now
         context.outcome = outcome
         context.cleanupSucceeded = cleanupSucceeded
-        // 日志写失败也必须收口（内存降级），否则占用永久无法释放、终态永不
-        // 落账；磁盘上的过期内容交给重启后的 interrupted 恢复（r3 A-P2-1）。
-        do { try persist(context) } catch {}
+        try persist(context)
+        journalPersistFailed = false
         lastTerminal = context
         active = nil
         didChange?()
-        NotificationCenter.default.post(name: Notification.Name("MAADailyRunFinished"), object: context)
+        NotificationCenter.default.post(name: .MAADailyRunFinished, object: context)
+        return true
+    }
+
+    /// User escape hatch while the journal cannot be written: finish the run in
+    /// memory only so stop/start are not refused until an app restart. The stale
+    /// on-disk record is still marked interrupted by the next launch.
+    @discardableResult
+    func abandon(_ id: UUID, outcome: DailyRunOutcome = .cancelled) -> Bool {
+        guard var context = active, context.id == id else { return false }
+        journalPersistFailed = true
+        context.status = .finished
+        context.finishedAt = .now
+        context.outcome = outcome
+        context.cleanupSucceeded = nil
+        lastTerminal = context
+        active = nil
+        didChange?()
+        NotificationCenter.default.post(name: .MAADailyRunFinished, object: context)
         return true
     }
 
     private func persist(_ context: RunContext) throws {
-        guard let journalURL, !journalDegraded else { return }
-        do {
-            try FileManager.default.createDirectory(at: journalURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try JSONEncoder().encode(context).write(to: journalURL, options: .atomic)
-        } catch {
-            // 降级为内存模式并记一次诊断：后续写不再重试，调用方继续收口。
-            journalDegraded = true
-            print("Daily run journal degraded to memory mode: \(error)")
-            throw error
-        }
+        guard let journalURL else { return }
+        try FileManager.default.createDirectory(at: journalURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try JSONEncoder().encode(context).write(to: journalURL, options: .atomic)
     }
 }

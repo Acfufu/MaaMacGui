@@ -11,7 +11,7 @@ import Foundation
     private var plans: [DailyTaskSchedule] = []
     private var pulse: Timer?
     private var cancellables = Set<AnyCancellable>()
-    private var lastDay: Date?
+    private var triggerGrace: TimeInterval = 60
     private var sleepDisabled = false
     var sleepAssertionID: IOPMAssertionID = 0
     private var store = ScheduleOccurrenceStore(directory: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!.appendingPathComponent("Schedule"))
@@ -41,11 +41,6 @@ import Foundation
             return !model.isStartStopInFlight && run.status != .postHook && run.status != .stopping
         },
         canForce: { $0.recoveryEligible() },
-        canCancelPending: { [weak self] in
-            // 启动越过最终取消检查点（即将 startCoreTasks）后，取消已无法
-            // 生效：保留 pending，由实际启动/终态结果如实落账。
-            self?.viewModel?.startupCancellationLocked != true
-        },
         stop: { [weak self] expectedID in
             guard let model = self?.viewModel else { throw CancellationError() }
             guard model.dailyRunCoordinator.active?.id == expectedID else { throw CancellationError() }
@@ -72,6 +67,39 @@ import Foundation
 
     private init() {}
 
+    func configureSharedDirectory(_ directory: URL) throws {
+        guard viewModel == nil else { throw BackgroundScheduleError.helperUnavailable }
+        let shared = ScheduleOccurrenceStore(directory: directory)
+        try shared.mergeHistory(from: store)
+        store = shared
+    }
+
+    func setBackgroundSchedulingEnabled(_ enabled: Bool) {
+        triggerGrace = enabled ? 300 : 60
+    }
+
+    func acceptBackgroundIntent(_ intent: BackgroundScheduleIntent) throws {
+        guard let viewModel, handoff != nil,
+              let plan = plans.first(where: { $0.id == intent.occurrence.planID && $0.isEnabled && $0.revision == intent.occurrence.revision })
+        else { throw BackgroundScheduleError.invalidIntent }
+        guard try store.acceptBackgroundIntent(intent.occurrence) else { return }
+        let daily = DailyRunSnapshot(profileID: intent.profileID, tasks: viewModel.tasks)
+        let snapshot = ScheduleSnapshot(daily: daily, recoveryEligible: viewModel.forceRecoveryEligibility(snapshot: daily))
+        handoff?.submit(intent.occurrence, force: plan.forceStart, snapshot: snapshot)
+        reloadRecords()
+    }
+
+    func expireBackgroundIntents() throws {
+        // Reload the recent-occurrence view only when the ledger actually
+        // changed; otherwise this stays a wasted full-ledger transaction.
+        if try store.expireUndeliveredBackgroundIntents() { reloadRecords() }
+    }
+
+    func rejectBackgroundIntent(_ occurrence: ScheduleOccurrence, detail: String) throws {
+        try store.rejectBackgroundIntent(occurrence.id, result: Date() > occurrence.expiresAt ? .missed : .cancelled, detail: detail)
+        reloadRecords()
+    }
+
     func connectToModel(viewModel: MAAViewModel) {
         guard self.viewModel !== viewModel else { return }
         pulse?.invalidate()
@@ -89,9 +117,9 @@ import Foundation
         NotificationCenter.default.publisher(for: .MAAPreventSystemSleepingChanged)
             .sink { [weak self] in self?.preventSystemFromSleepingIfNeeded($0.object as? Bool ?? false) }
             .store(in: &cancellables)
-        NotificationCenter.default.publisher(for: Notification.Name("MAACancelPendingScheduledStart"))
+        NotificationCenter.default.publisher(for: .MAACancelPendingScheduledStart)
             .sink { [weak self] _ in self?.handoff?.cancelPending() }.store(in: &cancellables)
-        NotificationCenter.default.publisher(for: Notification.Name("MAADailyRunFinished"))
+        NotificationCenter.default.publisher(for: .MAADailyRunFinished)
             .sink { [weak self] note in
                 guard let end = note.object as? RunContext else { return }
                 self?.recordTerminal(end)
@@ -115,16 +143,7 @@ import Foundation
         let now = Date()
         let calendar = Calendar.autoupdatingCurrent
         let next = plans.filter(\.isEnabled).compactMap { ScheduleCalendar.nextDate(for: $0, after: now, calendar: calendar) }.min()
-        // 近距事件保留 ≤15s 短脉冲；远距事件直接定到触发前 1 秒，无计划时低频
-        // 待命，避免空转时每 15 秒做一次 flock + 整份 JSON 读取。时区/时钟/唤醒
-        // 变更仍由通知兜底刷新，提前 1 秒到达后再由短脉冲校正到触发时刻。
-        let delay: TimeInterval
-        if let next {
-            let interval = next.timeIntervalSince(now)
-            delay = interval > 60 ? interval - 1 : max(0.1, min(15, interval))
-        } else {
-            delay = 900
-        }
+        let delay = min(15, max(0.1, next?.timeIntervalSince(now) ?? 15))
         let timer = Timer(timeInterval: delay, repeats: false) { [weak self] _ in
             Task { @MainActor in self?.checkDueSchedules() }
         }
@@ -134,50 +153,17 @@ import Foundation
 
     private func checkDueSchedules() {
         defer { scheduleNextCheck() }
-        guard let viewModel else { return }
-        let now = Date()
-        let calendar = Calendar.autoupdatingCurrent
-        let today = calendar.startOfDay(for: now)
-        var days = [today]
-        if let lastDay, lastDay < today,
-           let yesterday = calendar.date(byAdding: .day, value: -1, to: today) { days.insert(yesterday, at: 0) }
-        lastDay = today
-        var due: [(DailyTaskSchedule, ScheduleOccurrence)] = []
-        for day in days {
-            for plan in plans.filter({ $0.isEnabled && $0.isValid }) {
-                guard let occurrence = ScheduleCalendar.occurrence(for: plan, on: day, calendar: calendar) else { continue }
-                let missingTimeDue = occurrence.result == .missed && (day < today || {
-                    let current = calendar.dateComponents([.hour, .minute], from: now)
-                    return (current.hour ?? 0) * 60 + (current.minute ?? 0) >= plan.hour * 60 + plan.minute
-                }())
-                guard occurrence.scheduledAt <= now || missingTimeDue else { continue }
-                if occurrence.result == .missed || now >= occurrence.expiresAt {
-                    do {
-                        if try store.claim(occurrence) {
-                            record(occurrence, result: .missed, detail: occurrence.result == .missed ? "nonexistentLocalTime" : "triggerExpired")
-                        }
-                    } catch { reportFailure(error); return }
-                } else {
-                    due.append((plan, occurrence))
-                }
+        guard let viewModel, viewModel.isCoreInitialized else { return }
+        do {
+            if let candidate = try BackgroundScheduleCheck.claimDue(plans: plans, now: .now,
+                    calendar: .autoupdatingCurrent, grace: triggerGrace, ledger: store, source: "") {
+                let daily = DailyRunSnapshot(profileID: viewModel.dailyTaskProfile, tasks: viewModel.tasks)
+                let snapshot = ScheduleSnapshot(daily: daily, recoveryEligible: viewModel.forceRecoveryEligibility(snapshot: daily))
+                handoff?.submit(candidate.1, force: candidate.0.forceStart, snapshot: snapshot)
             }
-        }
-        due.sort { left, right in
-            left.1.scheduledAt == right.1.scheduledAt ? left.0.id.uuidString < right.0.id.uuidString : left.1.scheduledAt < right.1.scheduledAt
-        }
-        let daily = DailyRunSnapshot(profileID: viewModel.dailyTaskProfile, tasks: viewModel.tasks)
-        let snapshot = ScheduleSnapshot(daily: daily, recoveryEligible: viewModel.forceRecoveryEligibility(snapshot: daily))
-        // Choose the stable winner before claiming. A second process that
-        // sees the winner already claimed must not promote the next plan.
-        for (index, item) in due.enumerated() {
-            do {
-                guard try store.claim(item.1) else { continue }
-                if index == 0 { handoff?.submit(item.1, force: item.0.forceStart, snapshot: snapshot) }
-                else { record(item.1, result: .skipped, detail: "simultaneousSchedule") }
-            } catch { reportFailure(error); return }
-        }
-        reloadRecords()
-        if let end = viewModel.dailyRunCoordinator.lastTerminal { recordTerminal(end) }
+            reloadRecords()
+            if let end = viewModel.dailyRunCoordinator.lastTerminal { recordTerminal(end) }
+        } catch { reportFailure(error) }
     }
 
     private func record(_ occurrence: ScheduleOccurrence, result: ScheduleOccurrence.Result,
@@ -191,14 +177,13 @@ import Foundation
     }
 
     private func recordTerminal(_ end: RunContext) {
-        // 直接在台账中按 runID 反查：recentOccurrences 只是 UI 截断窗口（最近
-        // 20 条），多计划并发更新可能把 started 记录挤出窗口导致终态永不落账。
-        let occurrence: ScheduleOccurrence?
-        do { occurrence = try store.records().first(where: { $0.runID == end.id && $0.result == .started }) }
-        catch { reportFailure(error); return }
-        guard let occurrence else { return }
+        guard let occurrence = recentOccurrences.first(where: { $0.runID == end.id && $0.result == .started }) else { return }
         let result: ScheduleOccurrence.Result
-        if end.cleanupSucceeded != true {
+        // cleanupSucceeded == nil means the outcome is unknown (journal degraded
+        // abandon path or boot-interrupted recovery), not a failed cleanup; only
+        // a definitive false mislabels the run so the user-visible record keeps
+        // the honest outcome instead of turning a user cancel into "cleanupFailed".
+        if end.cleanupSucceeded == false {
             result = .failed
         } else {
             switch end.outcome {
@@ -208,7 +193,7 @@ import Foundation
             default: result = .interrupted
             }
         }
-        record(occurrence, result: result, detail: end.cleanupSucceeded == true ? "" : "cleanupFailed", runID: end.id)
+        record(occurrence, result: result, detail: end.cleanupSucceeded == false ? "cleanupFailed" : "", runID: end.id)
     }
 
     private func reloadRecords() {
@@ -217,19 +202,8 @@ import Foundation
     }
 
     private func reportFailure(_ error: Error) {
-        // 附上台账路径：损坏时用户可据此定位文件，或用下方的重置入口恢复。
         failure = String(localized: "定时记录无法读取或保存，已停止本次触发。")
-            + "\n" + store.directory.appendingPathComponent("occurrences.json").path
         print("Schedule ledger: \(error)")
-    }
-
-    /// 台账损坏后的显式恢复入口（用户已在界面确认）：删除并重建空台账。
-    func resetScheduleLedger() {
-        do {
-            try store.resetLedger()
-            try store.recoverInterrupted()
-            reloadRecords()
-        } catch { reportFailure(error) }
     }
 
     private func preventSystemFromSleepingIfNeeded(_ needed: Bool) {

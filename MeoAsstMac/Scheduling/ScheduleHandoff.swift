@@ -11,9 +11,6 @@ import Foundation
     var terminal: @MainActor () -> Terminal?
     var canStop: @MainActor (UUID) -> Bool
     var canForce: @MainActor (Snapshot) -> Bool
-    /// 启动是否仍可被取消：越过启动方最终取消检查点后必须返回 false，
-    /// 此时取消请求已无法阻止运行完成，不得再把该运行记成“已取消”。
-    var canCancelPending: @MainActor () -> Bool
     var stop: @MainActor (UUID) async throws -> Void
     var start: @MainActor (Snapshot, Bool, @escaping @MainActor () -> Bool) async -> StartResult
     var isCurrent: @MainActor (ScheduleOccurrence) -> Bool
@@ -26,7 +23,6 @@ import Foundation
     init(timeout: Duration = .seconds(30), occupancy: @escaping @MainActor () -> Occupancy,
          terminal: @escaping @MainActor () -> Terminal?, canStop: @escaping @MainActor (UUID) -> Bool,
          canForce: @escaping @MainActor (Snapshot) -> Bool = { _ in true },
-         canCancelPending: @escaping @MainActor () -> Bool = { true },
          stop: @escaping @MainActor (UUID) async throws -> Void,
          start: @escaping @MainActor (Snapshot, Bool, @escaping @MainActor () -> Bool) async -> StartResult,
          isCurrent: @escaping @MainActor (ScheduleOccurrence) -> Bool,
@@ -36,7 +32,6 @@ import Foundation
         self.terminal = terminal
         self.canStop = canStop
         self.canForce = canForce
-        self.canCancelPending = canCancelPending
         self.stop = stop
         self.start = start
         self.isCurrent = isCurrent
@@ -131,10 +126,6 @@ import Foundation
 
     func cancelPending(detail: String = "userCancelled") {
         guard let occurrence = pending else { return }
-        // 启动越过最终取消检查点后，取消请求已无法阻止运行完成；此刻仍记
-        // .cancelled 会让台账失真（运行实际完成），保留 pending 交由 start
-        // 的实际结果收口（r3 A-P2-2）。
-        guard canCancelPending() else { return }
         finish(occurrence, result: .cancelled, detail: detail)
     }
 
