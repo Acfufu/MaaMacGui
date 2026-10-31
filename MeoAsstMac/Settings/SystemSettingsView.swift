@@ -1,3 +1,4 @@
+import ServiceManagement
 import SwiftUI
 
 struct SystemSettingsView: View {
@@ -7,7 +8,10 @@ struct SystemSettingsView: View {
     @State private var showHotkeys = false
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 16) {
+            LoginItemSettingsView()
+
+            Divider()
             Button("日常任务前后脚本…") { showHooks = true }
             Button("全局热键…") { showHotkeys = true }
 
