@@ -73,5 +73,21 @@ gh release create vX.Y.Z-single.N MAA-vX.Y.Z-single.N-arm64.dmg \
 
 ## 5. 后续可选
 
-- [ ] Release Core 重编 + 双架构 universal（届时去掉 `ARCHS=arm64` 限定）
-- [ ] tag 触发的构建 CI（与上游 #182 承诺的最小 workflow 共用一份，fork 一份即可）
+- [x] Release Core 重编：已由 CI 解决（RelWithDebInfo + arm64，见 §6）；剩余项仅「双架构 universal」（届时去掉 `ARCHS=arm64` 限定，Core 需按 makefile `MAA_DEBUG=0` 出 universal）
+- [x] tag 触发的构建 CI（2026-10-31 落地，见 §6）
+
+## 6. CI
+
+三个文件 + 一个 pin 文件，无任何 secrets：
+
+```
+.github/actions/maacore-setup/action.yml   # composite action：恢复/构建 Core 环境
+.github/workflows/ci.yml                   # PR + push(prw/single)：tests + build 两个 job
+.github/workflows/release.yml              # push tag v*-single.* 发版；workflow_dispatch 试跑
+MAACORE_PIN                                # MAA 主仓库 commit（Core 与 resource 的取材点）
+```
+
+- **Core 环境**：从 `MAACORE_PIN` 指向的主仓库 commit 构建 RelWithDebInfo arm64 xcframework（复刻主仓库 macOS-Core job；makefile 的 `MAA_DEBUG=1` 只决定取哪个 install 目录，不影响二进制类型）。xcframework 以 pin 为 key 缓存，pin 不变时免构建。框架与 resource 放在 **checkout 上两级**（`$GITHUB_WORKSPACE/../../build`、`…/../resource`）——由 pbxproj 相对路径算术推导，与本地 `$HOME/build`、`$HOME/resource` 同构（本地仓库距 `$HOME` 恰好两级）。
+- **tests job**：跑 32 个自包含脚本（实测串行 <2 分钟，CI 余量按 5 倍算）。4 个依赖已完成 Debug 构建的 DerivedData 的脚本（mall-configuration / roguelike-exit-log / roguelike-settlement / blackflow-start-status）挂在 build job 构建之后跑。
+- **发版**：`git tag vX.Y.Z-single.N && git push origin vX.Y.Z-single.N` 即可。CI 以 **tag 为唯一版本号真源**，原地更新 `Version.xcconfig` 的两行（`MARKETING_VERSION` 去 `v` 前缀，与已发版格式一致；`CURRENT_PROJECT_VERSION` 取当日日期；其余行原样保留），并校验 Info.plist 无 SUFeedURL，构建 → ad-hoc 深签 → UDZO dmg → GitHub Release（notes 自动生成 Core pin 与签名说明）。§1–§4 的手动配方保留为降级方案。
+- **更新 Core pin**：改 `MAACORE_PIN` 为新 commit 并提交，CI 首跑冷编一次（约 20–40 分钟）后重新缓存。

@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  push:
+    branches: [prw/single]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Self-contained unit tests
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Run test scripts
+        # 4 个脚本需要一份已完成 Debug 构建的 DerivedData（JBird 产物），
+        # 由下方 build job 顺带执行；其余脚本自包含，实测串行全程 <2 分钟。
+        run: |
+          set -euo pipefail
+          SKIP="run-mall-configuration-tests.sh run-roguelike-exit-log-tests.sh run-roguelike-settlement-tests.sh run-blackflow-start-status-tests.py"
+          for f in Tests/run-*.sh Tests/run-*.py; do
+            base=$(basename "$f")
+            case " $SKIP " in
+              *" $base "*)
+                echo "skip (needs DerivedData): $base"
+                continue
+                ;;
+            esac
+            echo "::group::$base"
+            case "$f" in
+              *.py) python3 "$f" ;;
+              *)    bash "$f" ;;
+            esac
+            echo "::endgroup::"
+          done
+          echo "all self-contained tests passed"
+
+  build:
+    name: Debug build + DerivedData tests
+    runs-on: macos-26
+    timeout-minutes: 150
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Cache SPM packages
+        continue-on-error: true
+        uses: actions/cache@v6
+        with:
+          path: artifacts/dd-ci/SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('MeoAsstMac.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+
+      - name: Setup MaaCore
+        uses: ./.github/actions/maacore-setup
+
+      - name: Build MAA.app (Debug, arm64)
+        run: |
+          set -euo pipefail
+          xcodebuild -scheme MAA -configuration Debug \
+            -derivedDataPath artifacts/dd-ci \
+            -skipMacroValidation CODE_SIGNING_ALLOWED=NO \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES \
+            build
+
+      - name: Tests that need a completed Debug build
+        run: |
+          set -euo pipefail
+          bash Tests/run-mall-configuration-tests.sh artifacts/dd-ci
+          bash Tests/run-roguelike-exit-log-tests.sh artifacts/dd-ci
+          bash Tests/run-roguelike-settlement-tests.sh artifacts/dd-ci
+          python3 Tests/run-blackflow-start-status-tests.py artifacts/dd-ci artifacts/dd-ci/SourcePackages
+
+      - name: Upload MAA.app (Debug)
+        uses: actions/upload-artifact@v7
+        with:
+          name: MAA-app-debug-arm64
+          path: artifacts/dd-ci/Build/Products/Debug/MAA.app
+          retention-days: 7
+          overwrite: true

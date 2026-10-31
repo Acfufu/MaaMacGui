@@ -1,0 +1,131 @@
+name: Release (single)
+
+on:
+  push:
+    tags: ['v*-single.*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build & publish single release
+    runs-on: macos-26
+    timeout-minutes: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Cache SPM packages
+        continue-on-error: true
+        uses: actions/cache@v6
+        with:
+          path: artifacts/rd-ci/SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('MeoAsstMac.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+
+      - name: Setup MaaCore
+        uses: ./.github/actions/maacore-setup
+
+      - name: Write version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          case "$TAG" in
+            v*-single*) ;;
+            *) echo "::error::tag 必须形如 vX.Y.Z-single.N，实际: $TAG"; exit 1 ;;
+          esac
+          # 原地只改两行，保留文件里其余内容（CODE_SIGN_IDENTITY / #include? Local.xcconfig 等）；
+          # MARKETING_VERSION 去掉 v 前缀，与已发版格式一致
+          sed -i '' \
+            -e "s/^MARKETING_VERSION = .*/MARKETING_VERSION = ${TAG#v}/" \
+            -e "s/^CURRENT_PROJECT_VERSION = .*/CURRENT_PROJECT_VERSION = $(date +%Y%m%d)/" \
+            Version.xcconfig
+          grep -q "^MARKETING_VERSION = ${TAG#v}$" Version.xcconfig \
+            || { echo "::error::Version.xcconfig 缺少 MARKETING_VERSION 行"; exit 1; }
+          grep -q "^CURRENT_PROJECT_VERSION = " Version.xcconfig \
+            || { echo "::error::Version.xcconfig 缺少 CURRENT_PROJECT_VERSION 行"; exit 1; }
+          cat Version.xcconfig
+
+      - name: Guard against Sparkle feed in production build
+        run: |
+          set -euo pipefail
+          if grep -q SUFeedURL MeoAsstMac/Info.plist; then
+            echo "::error::Info.plist 含 SUFeedURL，会让本版被官方版 Sparkle 源覆盖升级"
+            exit 1
+          fi
+
+      - name: Build MAA.app (Release, arm64)
+        run: |
+          set -euo pipefail
+          xcodebuild -scheme MAA -configuration Release \
+            -derivedDataPath artifacts/rd-ci \
+            -skipMacroValidation CODE_SIGNING_ALLOWED=NO \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES \
+            build
+
+      - name: Ad-hoc deep sign
+        run: |
+          set -euo pipefail
+          codesign --force --deep -s - artifacts/rd-ci/Build/Products/Release/MAA.app
+          codesign --verify --deep artifacts/rd-ci/Build/Products/Release/MAA.app
+
+      - name: Create DMG
+        run: |
+          set -euo pipefail
+          DMG_TAG="${GITHUB_REF_NAME//\//-}"
+          hdiutil create -volname MAA \
+            -srcfolder artifacts/rd-ci/Build/Products/Release/MAA.app \
+            -ov -format UDZO "MAA-${DMG_TAG}-arm64.dmg"
+
+      - name: Generate release notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          PIN=$(tr -d '[:space:]' < MAACORE_PIN)
+          PREV=$(git tag --sort=-creatordate | grep -- '-single' | grep -v "^${TAG}$" | head -1 || true)
+          {
+            echo "## ${TAG}"
+            echo
+            echo "- 基于 \`prw/single\` commit ${GITHUB_SHA:0:7}"
+            echo "- MaaCore：主仓库 [\`${PIN:0:12}\`](https://github.com/MaaAssistantArknights/MaaAssistantArknights/tree/${PIN})，RelWithDebInfo，仅 arm64"
+            echo "- 本体为 ad-hoc 签名：首次打开需「右键 → 打开」，或执行 \`xattr -cr /Applications/MAA.app\`"
+            echo "- 未内置 Sparkle 更新源，不会被官方版自动覆盖升级；更新请关注本仓库 Releases"
+            if [ -n "$PREV" ]; then
+              echo "- 与上一版比较：https://github.com/${GITHUB_REPOSITORY}/compare/${PREV}...${TAG}"
+            fi
+          } > release-notes.md
+          cat release-notes.md
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          DMG_TAG="${GITHUB_REF_NAME//\//-}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "MAA-${DMG_TAG}-arm64.dmg" --repo "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" \
+              --title "$TAG" --notes-file release-notes.md
+          else
+            gh release create "$TAG" "MAA-${DMG_TAG}-arm64.dmg" \
+              --repo "$GITHUB_REPOSITORY" --title "$TAG" --notes-file release-notes.md
+          fi
+
+      - name: Upload DMG as dry-run artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v7
+        with:
+          name: MAA-dmg-dry-run
+          path: MAA-*.dmg
+          retention-days: 14

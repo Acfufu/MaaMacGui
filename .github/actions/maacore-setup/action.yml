@@ -1,0 +1,74 @@
+name: 'Setup MaaCore'
+description: >-
+  Restore (or build from the pinned MAA main-repo commit) the MaaCore arm64
+  xcframeworks and the resource folder, placing them at the relative paths
+  MeoAsstMac.xcodeproj resolves to (two levels above the checkout root).
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Read MaaCore pin
+      id: pin
+      shell: bash
+      run: |
+        echo "pin=$(tr -d '[:space:]' < MAACORE_PIN)" >> "$GITHUB_OUTPUT"
+
+    - name: Cache MaaCore xcframeworks
+      id: cache
+      continue-on-error: true
+      uses: actions/cache@v6
+      with:
+        path: maacore/xcframeworks
+        key: maacore-arm64-${{ steps.pin.outputs.pin }}
+
+    - name: Checkout MAA main repo at pin
+      uses: actions/checkout@v7
+      with:
+        repository: MaaAssistantArknights/MaaAssistantArknights
+        ref: ${{ steps.pin.outputs.pin }}
+        path: maa
+        fetch-depth: 1
+        show-progress: false
+
+    - name: Build MaaCore xcframeworks (cache miss only)
+      if: steps.cache.outputs.cache-hit != 'true'
+      working-directory: maa
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        PIN: ${{ steps.pin.outputs.pin }}
+      run: |
+        set -euo pipefail
+        bash ./.github/scripts/sync-optional-submodules.sh --init --depth 1 src/MaaUtils
+        python3 tools/maadeps-download.py arm64-osx
+        cmake -B build --preset macos-publish-arm64 -DMAA_HASH_VERSION="${PIN:0:12}"
+        cmake --build --preset macos-publish-arm64 --parallel "$(sysctl -n hw.logicalcpu)"
+        cmake --install build --config RelWithDebInfo --prefix install-arm64
+        # MAA_DEBUG=1 selects install-arm64 as the dylib source (no lipo);
+        # the binaries themselves come from the RelWithDebInfo build above.
+        # Explicit targets: the default `all` target also wants
+        # build-arm64/compile_commands.json, which only the local recipe
+        # (cmake -B build-arm64) happens to produce.
+        make -f tools/xcframework.makefile MAA_DEBUG=1 \
+          build/MaaCore.xcframework build/MaaUtils.xcframework \
+          build/fastdeploy_ppocr.xcframework build/ONNXRuntime.xcframework \
+          build/OpenCV.xcframework
+        mkdir -p ../maacore/xcframeworks
+        cp -R build/*.xcframework ../maacore/xcframeworks/
+
+    - name: Place frameworks and resource where the project expects them
+      shell: bash
+      run: |
+        set -euo pipefail
+        CORE_ROOT="$(cd "$GITHUB_WORKSPACE/../.." && pwd)"
+        mkdir -p "$CORE_ROOT/build"
+        cp -R "$GITHUB_WORKSPACE/maacore/xcframeworks/"*.xcframework "$CORE_ROOT/build/"
+        ln -sfn "$GITHUB_WORKSPACE/maa/resource" "$CORE_ROOT/resource"
+        for fw in MaaCore MaaUtils fastdeploy_ppocr ONNXRuntime OpenCV; do
+          test -d "$CORE_ROOT/build/$fw.xcframework" || { echo "::error::missing $fw.xcframework"; exit 1; }
+        done
+        test -f "$CORE_ROOT/build/MaaCore.xcframework/macos-arm64/libMaaCore.dylib" \
+          || { echo "::error::libMaaCore.dylib missing in MaaCore.xcframework"; exit 1; }
+        test -f "$CORE_ROOT/resource/version.json" \
+          || { echo "::error::resource incomplete (version.json missing)"; exit 1; }
+        echo "MaaCore env ready: $CORE_ROOT/build + $CORE_ROOT/resource"
