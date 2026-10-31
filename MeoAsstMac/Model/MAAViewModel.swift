@@ -41,6 +41,7 @@ import SwiftUI
     private var dailyFinishAttemptedRunID: UUID?
 
     var achievementEvents = AchievementEventAdapter()
+    let globalHotkeys = GlobalHotkeyService()
     let hookSettings = HookSettingsStore()
     private var runHookConfiguration = HookConfiguration()
     private var dailyStartCancelled = false
@@ -228,6 +229,15 @@ import SwiftUI
         $tasks.sink(receiveValue: writeBack).store(in: &cancellables)
         $status.sink(receiveValue: switchAwakeGuard).store(in: &cancellables)
 
+        globalHotkeys.command = { [weak self] command in
+            guard let self else { return false }
+            switch command {
+            case .start: return await self.startDailyTasks(origin: .hotkey) == .started
+            case .stop:
+                guard self.status != .idle || self.dailyRunCoordinator.active != nil else { return false }
+                do { try await self.stop(); return true } catch { return false }
+            }
+        }
         dailyRunCoordinator.didChange = { [weak self] in self?.objectWillChange.send() }
         initScheduledDailyTaskTimer()
         AchievementStore.shared.recordLaunch()

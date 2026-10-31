@@ -4,10 +4,12 @@ struct SystemSettingsView: View {
     @EnvironmentObject private var viewModel: MAAViewModel
 
     @State private var showHooks = false
+    @State private var showHotkeys = false
 
     var body: some View {
         VStack(alignment: .leading) {
             Button("日常任务前后脚本…") { showHooks = true }
+            Button("全局热键…") { showHotkeys = true }
 
             Toggle(isOn: $viewModel.preventSystemSleeping) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -23,6 +25,9 @@ struct SystemSettingsView: View {
                 HookSettingsView(store: viewModel.hookSettings)
                 Button("完成") { showHooks = false }.keyboardShortcut(.defaultAction).padding(.bottom)
             }.environmentObject(viewModel)
+        }
+        .sheet(isPresented: $showHotkeys) {
+            HotkeySettingsView(service: viewModel.globalHotkeys)
         }
     }
 }

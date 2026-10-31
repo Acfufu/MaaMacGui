@@ -1,600 +1,6 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
-    "运行日志写入失败，本次运行将保持未完成状态，重启应用后即可恢复。" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "运行日志写入失败，本次运行将保持未完成状态，重启应用后即可恢复。"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to write the run journal. This run stays unfinished; restart the app to recover."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "실행 기록 쓰기에 실패했습니다. 이번 실행은 미완료 상태로 유지되며, 앱을 재시작하면 복구할 수 있습니다."
-          }
-        }
-      }
-    },
-    "选择…" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选择…"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose…"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "선택…"
-          }
-        }
-      }
-    },
-    "完成" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "完成"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "완료"
-          }
-        }
-      }
-    },
-    "当前正在启动或停止任务，请稍后重试。" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "当前正在启动或停止任务，请稍后重试。"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A start or stop operation is already in progress. Please try again later."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "작업 시작 또는 정지가 진행 중입니다. 잠시 후 다시 시도하세요."
-          }
-        }
-      }
-    },
-    "任务正在运行，请先停止当前任务。" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "任务正在运行，请先停止当前任务。"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tasks are running. Please stop the current tasks first."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "작업이 실행 중입니다. 먼저 현재 작업을 정지하세요."
-          }
-        }
-      }
-    },
-    "后置清理正在执行，请等待完成。" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "后置清理正在执行，请等待完成。"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Post-run cleanup is in progress. Wait for it to finish."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "실행 후 정리가 진행 중입니다. 완료될 때까지 기다려 주세요."
-          }
-        }
-      }
-    },
-    "运行中的配置已被编辑，保留用户修改，未自动更新任务记录。" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "运行中的配置已被编辑，保留用户修改，未自动更新任务记录。"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The running profile was edited. Your changes were kept; its task record was not updated automatically."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "실행 중인 설정이 편집되어 사용자 변경을 보존했습니다. 작업 기록은 자동으로 덮어쓰지 않았습니다."
-          }
-        }
-      }
-    },
-    "启用日常任务脚本" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "启用日常任务脚本"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable daily run scripts"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "일일 작업 스크립트 활성화"
-          }
-        }
-      }
-    },
-    "日常任务前后脚本…" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "日常任务前后脚本…"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daily run scripts…"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "일일 작업 전후 스크립트…"
-          }
-        }
-      }
-    },
-    "仅作用于日常队列。前置脚本在连接前执行，后置脚本在完成、失败或取消后清理。脚本可修改设备设置，请仅选择可信的本地文件。" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "仅作用于日常队列。前置脚本在连接前执行，后置脚本在完成、失败或取消后清理。脚本可修改设备设置，请仅选择可信的本地文件。"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Applies to daily tasks. The pre-run script runs before connecting; cleanup runs after completion, failure or cancellation. Scripts can change device settings. Choose trusted local files."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "일일 작업에만 적용됩니다. 연결 전에 전처리하고 완료, 실패 또는 취소 후 정리합니다. 스크립트는 기기 설정을 변경할 수 있으므로 신뢰하는 로컬 파일만 선택하세요."
-          }
-        }
-      }
-    },
-    "脚本超时（秒）" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "脚本超时（秒）"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Script timeout (seconds)"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "스크립트 제한 시간(초)"
-          }
-        }
-      }
-    },
-    "工作目录：应用支持目录中的 RunHooks。每行一个参数，原样传递；环境提供 MAA_RUN_ID、MAA_PROFILE_ID、MAA_RUN_ORIGIN、MAA_RUN_RESULT 和 MAA_ADB_PATH。" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "工作目录：应用支持目录中的 RunHooks。每行一个参数，原样传递；环境提供 MAA_RUN_ID、MAA_PROFILE_ID、MAA_RUN_ORIGIN、MAA_RUN_RESULT 和 MAA_ADB_PATH。"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Working directory: RunHooks in Application Support. One literal argument per line. Environment: MAA_RUN_ID, MAA_PROFILE_ID, MAA_RUN_ORIGIN, MAA_RUN_RESULT and MAA_ADB_PATH."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "작업 디렉토리: Application Support의 RunHooks. 각 줄을 하나의 인수로 전달합니다. 환경: MAA_RUN_ID, MAA_PROFILE_ID, MAA_RUN_ORIGIN, MAA_RUN_RESULT, MAA_ADB_PATH."
-          }
-        }
-      }
-    },
-    "上次运行中断，无法确认后置清理是否完成。请检查设备设置；不会自动重放脚本。" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上次运行中断，无法确认后置清理是否完成。请检查设备设置；不会自动重放脚本。"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The previous run was interrupted or cleanup failed. Check device settings. Scripts are never replayed automatically."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이전 실행이 중단되었거나 정리에 실패했습니다. 기기 설정을 확인하세요. 스크립트는 자동으로 재실행되지 않습니다."
-          }
-        }
-      }
-    },
-    "运行后置恢复（会实际执行）" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "运行后置恢复（会实际执行）"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Run cleanup recovery (executes script)"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "정리 복구 실행(스크립트 실행)"
-          }
-        }
-      }
-    },
-    "前置脚本" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "前置脚本"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pre-run script"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "실행 전 스크립트"
-          }
-        }
-      }
-    },
-    "后置清理" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "后置清理"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Post-run cleanup"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "실행 후 정리"
-          }
-        }
-      }
-    },
-    "未选择文件" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未选择文件"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No file selected"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "선택된 파일 없음"
-          }
-        }
-      }
-    },
-    "使用 /bin/zsh -f 执行脚本" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用 /bin/zsh -f 执行脚本"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Run script with /bin/zsh -f"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "/bin/zsh -f로 스크립트 실행"
-          }
-        }
-      }
-    },
-    "参数（每行一个）" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "参数（每行一个）"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arguments (one per line)"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "인수(한 줄에 하나)"
-          }
-        }
-      }
-    },
-    "测试脚本（会实际执行）" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "测试脚本（会实际执行）"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Test script (executes script)"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "스크립트 테스트(실제 실행)"
-          }
-        }
-      }
-    },
-    "重新选择脚本以授予访问权限" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重新选择脚本以授予访问权限"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select the script again to grant access"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "접근 권한을 부여하려면 스크립트를 다시 선택하세요"
-          }
-        }
-      }
-    },
-    "所选程序不可执行或脚本无法读取" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "所选程序不可执行或脚本无法读取"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The selected program cannot execute or the script cannot be read"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "선택한 프로그램을 실행할 수 없거나 스크립트를 읽을 수 없습니다"
-          }
-        }
-      }
-    },
-    "无法启动脚本" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无法启动脚本"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cannot launch script"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "스크립트를 시작할 수 없습니다"
-          }
-        }
-      }
-    },
-    "后置清理失败，请检查脚本输出并手动恢复设备设置" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "后置清理失败，请检查脚本输出并手动恢复设备设置"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cleanup failed. Check script output and restore device settings manually."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "정리에 실패했습니다. 스크립트 출력을 확인하고 기기 설정을 수동으로 복원하세요."
-          }
-        }
-      }
-    },
-    "脚本以 /bin/zsh -f 运行，不加载 ~/.zshrc 等用户 shell 配置；PATH 固定为 /usr/bin:/bin:/usr/sbin:/sbin，Homebrew 等第三方工具请使用绝对路径。" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "脚本以 /bin/zsh -f 运行，不加载 ~/.zshrc 等用户 shell 配置；PATH 固定为 /usr/bin:/bin:/usr/sbin:/sbin，Homebrew 等第三方工具请使用绝对路径。"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scripts run via /bin/zsh -f, so user shell configuration such as ~/.zshrc is not loaded; PATH is fixed to /usr/bin:/bin:/usr/sbin:/sbin — use absolute paths for Homebrew and other third-party tools."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "스크립트는 /bin/zsh -f로 실행되므로 ~/.zshrc 같은 사용자 셸 설정을 불러오지 않습니다. PATH는 /usr/bin:/bin:/usr/sbin:/sbin으로 고정되며, Homebrew 등 외부 도구는 절대 경로를 사용하세요."
-          }
-        }
-      }
-    },
-    "脚本输出未完整读取（每个输出流最多保留 32 KiB；若有后台进程仍持有输出管道，将在宽限后停止读取）" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "脚本输出未完整读取（每个输出流最多保留 32 KiB；若有后台进程仍持有输出管道，将在宽限后停止读取）"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Script output not fully captured (32 KiB per stream; reading also stops after a grace period if a background process still holds the pipe)"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "스크립트 출력을 완전히 읽지 못했습니다(출력 스트림당 최대 32 KiB 보관. 백그라운드 프로세스가 파이프를 계속 잡고 있으면 일정 시간 후 읽기를 중단합니다)"
-          }
-        }
-      }
-    },
-    "退出前清理未完成，下次启动将报告中断记录" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "退出前清理未完成，下次启动将报告中断记录"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cleanup did not finish before exit. The next launch will report the interrupted run."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "종료 전에 정리가 완료되지 않았습니다. 다음 시작 시 중단된 실행이 표시됩니다."
-          }
-        }
-      }
-    },
     "" : {
       "shouldTranslate" : false
     },
@@ -5977,6 +5383,28 @@
         }
       }
     },
+    "上次运行中断，无法确认后置清理是否完成。请检查设备设置；不会自动重放脚本。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次运行中断，无法确认后置清理是否完成。请检查设备设置；不会自动重放脚本。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The previous run was interrupted or cleanup failed. Check device settings. Scripts are never replayed automatically."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전 실행이 중단되었거나 정리에 실패했습니다. 기기 설정을 확인하세요. 스크립트는 자동으로 재실행되지 않습니다."
+          }
+        }
+      }
+    },
     "下载作业" : {
       "localizations" : {
         "ko" : {
@@ -6098,6 +5526,28 @@
     },
     "也填白色" : {},
     "亮度" : {},
+    "仅作用于日常队列。前置脚本在连接前执行，后置脚本在完成、失败或取消后清理。脚本可修改设备设置，请仅选择可信的本地文件。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅作用于日常队列。前置脚本在连接前执行，后置脚本在完成、失败或取消后清理。脚本可修改设备设置，请仅选择可信的本地文件。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applies to daily tasks. The pre-run script runs before connecting; cleanup runs after completion, failure or cancellation. Scripts can change device settings. Choose trusted local files."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일일 작업에만 적용됩니다. 연결 전에 전처리하고 완료, 실패 또는 취소 후 정리합니다. 스크립트는 기기 설정을 변경할 수 있으므로 신뢰하는 로컬 파일만 선택하세요."
+          }
+        }
+      }
+    },
     "仅停止本应用的日常任务；等待停止和后置清理完成后开始，最多等待 30 秒。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -6320,6 +5770,28 @@
       }
     },
     "作业信息" : {},
+    "使用 /bin/zsh -f 执行脚本" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 /bin/zsh -f 执行脚本"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run script with /bin/zsh -f"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "/bin/zsh -f로 스크립트 실행"
+          }
+        }
+      }
+    },
     "使用 adb-lite 连接" : {
       "localizations" : {
         "ko" : {
@@ -6337,6 +5809,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "암호판 사용"
+          }
+        }
+      }
+    },
+    "保存" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장"
           }
         }
       }
@@ -6410,6 +5904,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "작업 정지"
+          }
+        }
+      }
+    },
+    "停止当前任务" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止当前任务"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop current tasks"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 작업 중지"
           }
         }
       }
@@ -6514,6 +6030,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "무료 단일 뽑기"
+          }
+        }
+      }
+    },
+    "全局热键…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全局热键…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Global shortcuts…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전역 단축키…"
+          }
+        }
+      }
+    },
+    "全局热键配置无效或系统处理器不可用" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全局热键配置无效或系统处理器不可用"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shortcut configuration is invalid or the system handler is unavailable"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단축키 설정이 잘못되었거나 시스템 처리기를 사용할 수 없습니다"
           }
         }
       }
@@ -6887,6 +6447,28 @@
         }
       }
     },
+    "前置脚本" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前置脚本"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pre-run script"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 전 스크립트"
+          }
+        }
+      }
+    },
     "剿灭模式" : {
       "localizations" : {
         "ko" : {
@@ -6950,6 +6532,28 @@
     },
     "即将" : {},
     "原始分辨率：" : {},
+    "参数（每行一个）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "参数（每行一个）"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arguments (one per line)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인수(한 줄에 하나)"
+          }
+        }
+      }
+    },
     "双三次" : {},
     "发现新资源版本：%@" : {
       "localizations" : {
@@ -7253,6 +6857,50 @@
         }
       }
     },
+    "后置清理" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后置清理"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Post-run cleanup"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 후 정리"
+          }
+        }
+      }
+    },
+    "后置清理失败，请检查脚本输出并手动恢复设备设置" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后置清理失败，请检查脚本输出并手动恢复设备设置"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleanup failed. Check script output and restore device settings manually."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정리에 실패했습니다. 스크립트 출력을 확인하고 기기 설정을 수동으로 복원하세요."
+          }
+        }
+      }
+    },
     "后置清理未成功，本次不再开始。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -7293,6 +6941,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "실행 후 정리가 진행 중입니다. 완료될 때까지 기다려 주세요."
+          }
+        }
+      }
+    },
+    "启用全局热键" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用全局热键"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable global shortcuts"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전역 단축키 활성화"
+          }
+        }
+      }
+    },
+    "启用日常任务脚本" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用日常任务脚本"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable daily run scripts"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일일 작업 스크립트 활성화"
           }
         }
       }
@@ -7499,6 +7191,28 @@
         }
       }
     },
+    "完成" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "완료"
+          }
+        }
+      }
+    },
     "官服" : {
       "localizations" : {
         "ko" : {
@@ -7674,6 +7388,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "쉐이의 기괴한 정원"
+          }
+        }
+      }
+    },
+    "工作目录：应用支持目录中的 RunHooks。每行一个参数，原样传递；环境提供 MAA_RUN_ID、MAA_PROFILE_ID、MAA_RUN_ORIGIN、MAA_RUN_RESULT 和 MAA_ADB_PATH。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作目录：应用支持目录中的 RunHooks。每行一个参数，原样传递；环境提供 MAA_RUN_ID、MAA_PROFILE_ID、MAA_RUN_ORIGIN、MAA_RUN_RESULT 和 MAA_ADB_PATH。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Working directory: RunHooks in Application Support. One literal argument per line. Environment: MAA_RUN_ID, MAA_PROFILE_ID, MAA_RUN_ORIGIN, MAA_RUN_RESULT and MAA_ADB_PATH."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 디렉토리: Application Support의 RunHooks. 각 줄을 하나의 인수로 전달합니다. 환경: MAA_RUN_ID, MAA_PROFILE_ID, MAA_RUN_ORIGIN, MAA_RUN_RESULT, MAA_ADB_PATH."
           }
         }
       }
@@ -8025,6 +7761,28 @@
         }
       }
     },
+    "开始日常任务" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始日常任务"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start daily tasks"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일일 작업 시작"
+          }
+        }
+      }
+    },
     "开始游戏" : {
       "localizations" : {
         "ko" : {
@@ -8131,6 +7889,28 @@
       }
     },
     "当期活动" : {},
+    "录制" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录制"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기록"
+          }
+        }
+      }
+    },
     "待刷坍缩范式" : {
       "localizations" : {
         "ko" : {
@@ -8168,6 +7948,28 @@
     "截图分辨率：" : {},
     "截图宽高比不符合16:9" : {},
     "截图模式" : {},
+    "所选程序不可执行或脚本无法读取" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选程序不可执行或脚本无法读取"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected program cannot execute or the script cannot be read"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 프로그램을 실행할 수 없거나 스크립트를 읽을 수 없습니다"
+          }
+        }
+      }
+    },
     "手动确认1星" : {
       "localizations" : {
         "ko" : {
@@ -8285,6 +8087,28 @@
         }
       }
     },
+    "按下组合键，Esc 取消" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按下组合键，Esc 取消"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press a shortcut; Escape cancels"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단축키를 누르세요. Esc로 취소"
+          }
+        }
+      }
+    },
     "按住加号按钮" : {
       "localizations" : {
         "ko" : {
@@ -8365,6 +8189,28 @@
         }
       }
     },
+    "新热键注册失败且旧绑定未能恢复；当前未绑定，请重试" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新热键注册失败且旧绑定未能恢复；当前未绑定，请重试"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The new shortcut failed and the old binding could not be restored. No shortcut is bound; try again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 단축키 등록과 이전 단축키 복원에 실패했습니다. 현재 지정된 단축키가 없습니다. 다시 시도하세요."
+          }
+        }
+      }
+    },
     "方案" : {
       "localizations" : {
         "ko" : {
@@ -8415,6 +8261,28 @@
         }
       }
     },
+    "无法启动脚本" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法启动脚本"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot launch script"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크립트를 시작할 수 없습니다"
+          }
+        }
+      }
+    },
     "无法唤起应用，本次不会自动重试。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -8433,6 +8301,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "앱을 열지 못했습니다. 이번 예약을 자동으로 재시도하지 않습니다."
+          }
+        }
+      }
+    },
+    "无法安装全局热键处理器" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法安装全局热键处理器"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot install global shortcut handler"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전역 단축키 처리기를 설치할 수 없습니다"
           }
         }
       }
@@ -8494,6 +8384,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "일일 임무"
+          }
+        }
+      }
+    },
+    "日常任务前后脚本…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "日常任务前后脚本…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily run scripts…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일일 작업 전후 스크립트…"
           }
         }
       }
@@ -8755,6 +8667,50 @@
         }
       }
     },
+    "未绑定" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未绑定"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unassigned"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "미지정"
+          }
+        }
+      }
+    },
+    "未选择文件" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未选择文件"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No file selected"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택된 파일 없음"
+          }
+        }
+      }
+    },
     "术&狙芯片" : {
       "localizations" : {
         "en" : {
@@ -8976,6 +8932,28 @@
       }
     },
     "测试" : {},
+    "测试脚本（会实际执行）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试脚本（会实际执行）"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test script (executes script)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크립트 테스트(실제 실행)"
+          }
+        }
+      }
+    },
     "深入调查" : {
       "localizations" : {
         "ko" : {
@@ -9028,6 +9006,28 @@
       }
     },
     "清除" : {},
+    "清除热键" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除热键"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Hotkey"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단축키 지우기"
+          }
+        }
+      }
+    },
     "游戏内历法：%@" : {
       "localizations" : {
         "en" : {
@@ -9125,6 +9125,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "주전자"
+          }
+        }
+      }
+    },
+    "热键注册失败，组合可能已被系统或其他应用占用" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "热键注册失败，组合可能已被系统或其他应用占用"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shortcut registration failed. The combination may be in use by the system or another app."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단축키 등록에 실패했습니다. 시스템이나 다른 앱에서 이미 사용 중일 수 있습니다."
+          }
+        }
+      }
+    },
+    "热键须包含 Command 或 Control，开始和停止不能使用同一组合" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "热键须包含 Command 或 Control，开始和停止不能使用同一组合"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include Command or Control. Start and Stop must use different shortcuts."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Command 또는 Control을 포함하고 시작과 중지에 다른 단축키를 사용하세요."
           }
         }
       }
@@ -9534,6 +9578,28 @@
       }
     },
     "红票-5" : {},
+    "组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口。无需输入监控权限。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口。无需输入监控权限。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include Command or Control. Start runs only when idle; Stop uses the same task controls. Input Monitoring permission is not required."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Command 또는 Control을 포함해야 합니다. 유휴 상태에서만 시작하며 중지는 작업 버튼과 동일하게 작동합니다. 입력 모니터링 권한은 필요하지 않습니다."
+          }
+        }
+      }
+    },
     "组装批次数：" : {
       "localizations" : {
         "ko" : {
@@ -9577,6 +9643,72 @@
     },
     "编队栏位" : {},
     "缩放算法" : {},
+    "脚本以 /bin/zsh -f 运行，不加载 ~/.zshrc 等用户 shell 配置；PATH 固定为 /usr/bin:/bin:/usr/sbin:/sbin，Homebrew 等第三方工具请使用绝对路径。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "脚本以 /bin/zsh -f 运行，不加载 ~/.zshrc 等用户 shell 配置；PATH 固定为 /usr/bin:/bin:/usr/sbin:/sbin，Homebrew 等第三方工具请使用绝对路径。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scripts run via /bin/zsh -f, so user shell configuration such as ~/.zshrc is not loaded; PATH is fixed to /usr/bin:/bin:/usr/sbin:/sbin — use absolute paths for Homebrew and other third-party tools."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크립트는 /bin/zsh -f로 실행되므로 ~/.zshrc 같은 사용자 셸 설정을 불러오지 않습니다. PATH는 /usr/bin:/bin:/usr/sbin:/sbin으로 고정되며, Homebrew 등 외부 도구는 절대 경로를 사용하세요."
+          }
+        }
+      }
+    },
+    "脚本超时（秒）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "脚本超时（秒）"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Script timeout (seconds)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크립트 제한 시간(초)"
+          }
+        }
+      }
+    },
+    "脚本输出未完整读取（每个输出流最多保留 32 KiB；若有后台进程仍持有输出管道，将在宽限后停止读取）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "脚本输出未完整读取（每个输出流最多保留 32 KiB；若有后台进程仍持有输出管道，将在宽限后停止读取）"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Script output not fully captured (32 KiB per stream; reading also stops after a grace period if a background process still holds the pipe)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크립트 출력을 완전히 읽지 못했습니다(출력 스트림당 최대 32 KiB 보관. 백그라운드 프로세스가 파이프를 계속 잡고 있으면 일정 시간 후 읽기를 중단합니다)"
+          }
+        }
+      }
+    },
     "自动下载更新" : {
       "localizations" : {
         "ko" : {
@@ -9949,6 +10081,28 @@
         }
       }
     },
+    "该组合为系统保留或通用编辑快捷键（如 ⌘Q、⌘C、⌃→、⌘⇧4），不能注册为全局热键" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该组合为系统保留或通用编辑快捷键（如 ⌘Q、⌘C、⌃→、⌘⇧4），不能注册为全局热键"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This combination is a system-reserved or common editing shortcut (e.g. ⌘Q, ⌘C, ⌃→, ⌘⇧4) and cannot be registered as a global hotkey"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 예약 또는 공용 편집 단축키(⌘Q, ⌘C, ⌃→, ⌘⇧4 등)는 전역 단축키로 등록할 수 없습니다"
+          }
+        }
+      }
+    },
     "详细内容" : {},
     "请从边栏选择功能" : {
       "localizations" : {
@@ -10158,6 +10312,28 @@
         }
       }
     },
+    "运行后置恢复（会实际执行）" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "运行后置恢复（会实际执行）"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run cleanup recovery (executes script)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정리 복구 실행(스크립트 실행)"
+          }
+        }
+      }
+    },
     "运行日志" : {
       "localizations" : {
         "ko" : {
@@ -10186,6 +10362,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "실행 로그를 작성할 수 없어 이번 실행은 메모리에서만 추적되며, 다시 시작하면 중단된 것으로 처리됩니다."
+          }
+        }
+      }
+    },
+    "运行日志写入失败，本次运行将保持未完成状态，重启应用后即可恢复。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "运行日志写入失败，本次运行将保持未完成状态，重启应用后即可恢复。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to write the run journal. This run stays unfinished; restart the app to recover."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 기록 쓰기에 실패했습니다. 이번 실행은 미완료 상태로 유지되며, 앱을 재시작하면 복구할 수 있습니다."
           }
         }
       }
@@ -10267,6 +10465,28 @@
         }
       }
     },
+    "退出前清理未完成，下次启动将报告中断记录" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出前清理未完成，下次启动将报告中断记录"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleanup did not finish before exit. The next launch will report the interrupted run."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "종료 전에 정리가 완료되지 않았습니다. 다음 시작 시 중단된 실행이 표시됩니다."
+          }
+        }
+      }
+    },
     "退出后定时启动" : {
       "localizations" : {
         "zh-Hans" : {
@@ -10285,6 +10505,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "종료 후 예약 실행"
+          }
+        }
+      }
+    },
+    "选择…" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택…"
           }
         }
       }
@@ -10337,6 +10579,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "앱을 다시 열어야 적용됩니다."
+          }
+        }
+      }
+    },
+    "重新选择脚本以授予访问权限" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新选择脚本以授予访问权限"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select the script again to grant access"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "접근 권한을 부여하려면 스크립트를 다시 선택하세요"
           }
         }
       }
