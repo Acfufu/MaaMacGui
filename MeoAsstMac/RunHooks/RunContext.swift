@@ -32,12 +32,10 @@ struct DailyRunSnapshot {
 final class DailyRunCoordinator {
     private(set) var active: RunContext?
     private(set) var lastTerminal: RunContext?
-    /// True while the on-disk journal no longer accepts writes. The in-memory
-    /// contract still holds, but the terminal record needs an escape hatch.
-    /// Diagnostic only: nothing reads this flag yet. It is reset on every
-    /// successful persist (begin/transition/finish) so one failed run cannot
-    /// report a stale failure for the next healthy run.
-    private(set) var journalPersistFailed = false
+    /// 首次写盘失败后置位:本次会话其余生命周期仅在内存中跟踪运行。日志
+    /// 故障绝不楔死运行——占用必须仍可释放、stop 必须仍可执行;磁盘上停
+    /// 留的过期内容由 init 的 interrupted 恢复语义兜底(#178 92ee14c)。
+    private(set) var journalDegraded = false
     private let journalURL: URL?
     var didChange: (() -> Void)?
 
@@ -60,8 +58,7 @@ final class DailyRunCoordinator {
         guard active == nil else { return nil }
         let context = RunContext(id: UUID(), origin: origin, profileID: profileID,
                                  status: .preparing, startedAt: .now)
-        try persist(context)
-        journalPersistFailed = false
+        do { try persist(context) } catch {}
         active = context
         didChange?()
         return context.id
@@ -70,8 +67,7 @@ final class DailyRunCoordinator {
     func transition(_ phase: DailyRunPhase, for id: UUID) throws {
         guard var context = active, context.id == id, context.status != .postHook else { return }
         context.status = phase
-        try persist(context)
-        journalPersistFailed = false
+        do { try persist(context) } catch {}
         active = context
         didChange?()
     }
@@ -83,8 +79,7 @@ final class DailyRunCoordinator {
         context.finishedAt = .now
         context.outcome = outcome
         context.cleanupSucceeded = cleanupSucceeded
-        try persist(context)
-        journalPersistFailed = false
+        do { try persist(context) } catch {}
         lastTerminal = context
         active = nil
         didChange?()
@@ -98,7 +93,7 @@ final class DailyRunCoordinator {
     @discardableResult
     func abandon(_ id: UUID, outcome: DailyRunOutcome = .cancelled) -> Bool {
         guard var context = active, context.id == id else { return false }
-        journalPersistFailed = true
+        journalDegraded = true
         context.status = .finished
         context.finishedAt = .now
         context.outcome = outcome
@@ -119,8 +114,15 @@ final class DailyRunCoordinator {
     }
 
     private func persist(_ context: RunContext) throws {
-        guard let journalURL else { return }
-        try FileManager.default.createDirectory(at: journalURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try JSONEncoder().encode(context).write(to: journalURL, options: .atomic)
+        guard let journalURL, !journalDegraded else { return }
+        do {
+            try FileManager.default.createDirectory(at: journalURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try JSONEncoder().encode(context).write(to: journalURL, options: .atomic)
+        } catch {
+            // 降级为内存模式并记一次诊断:后续写不再重试,调用方继续收口。
+            journalDegraded = true
+            print("Daily run journal degraded to memory mode: \(error)")
+            throw error
+        }
     }
 }

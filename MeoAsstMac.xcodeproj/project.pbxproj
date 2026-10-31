@@ -126,7 +126,6 @@
 		9BC2EEB32E3F188D0039C4DB /* MiniGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BC2EEB22E3F188D0039C4DB /* MiniGameView.swift */; };
 		AEA8E3A02E77003F00355D84 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = AEA8E39F2E77003F00355D84 /* AppIcon.icon */; };
 		2CFD9CE6D9AB44579939835B /* RunContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7743B34F2704668B4E0A0E9 /* RunContext.swift */; };
-		9B6C185C8729497448935CB7 /* ScheduleAgentLocation.swift in Agent Sources */ = {isa = PBXBuildFile; fileRef = 1C3AC5D910863BF71F8DC4B6; };
 		C11000000000000000000000 /* PreviewImageBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000000 /* PreviewImageBuffer.swift */; };
 		C11000000000000000000001 /* PeepViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* PeepViewModel.swift */; };
 		C11000000000000000000002 /* PeepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000002 /* PeepView.swift */; };

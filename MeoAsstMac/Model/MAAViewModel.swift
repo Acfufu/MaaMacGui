@@ -47,6 +47,12 @@ private struct PreparationCleanupFailure: Error {}
     private var dailyFinishAttemptedRunID: UUID?
 
     var achievementEvents = AchievementEventAdapter()
+    // #178 启动取消通道:启动占用期 stop 只请求取消;越过最终检查点后锁定。
+    private var startupCancellationRequested = false
+    // #181 链错误标记:运行中由 markDailyRunFailed 置位,用户停止后结局存续
+    // 为 .failed;启动期失败(未真正运行)不置位,停止时按「已取消」收口。
+    private var dailyRunChainFailed = false
+    private(set) var startupCancellationLocked = false
     let globalHotkeys = GlobalHotkeyService()
     let hookSettings = HookSettingsStore()
     private var runHookConfiguration = HookConfiguration()
@@ -68,6 +74,13 @@ private struct PreparationCleanupFailure: Error {}
         if status == .idle, let phase = dailyRunCoordinator.active?.status {
             status = phase == .running ? .busy : .pending
         }
+    }
+
+    /// 启动路径的取消检查点:既响应任务树取消,也响应启动占用期 stop() 的取消
+    /// 请求(含 #176 早段取消标记),任一命中即按「已取消」收口。
+    private func checkStartupCancellation() throws {
+        try Task.checkCancellation()
+        if startupCancellationRequested || dailyStartCancelled { throw CancellationError() }
     }
 
     private func beginTaskOperation(requiresIdle: Bool = true, logsConflict: Bool = true) async throws {
@@ -411,6 +424,7 @@ extension MAAViewModel {
             // cleanupPending 尾窗除外:该窗口必须完整停止卡死的 Core,
             // 不得被此短路吞掉(179 修复语义)。
             dailyStartCancelled = true
+            startupCancellationRequested = true
             dailyRunOutcome = .cancelled
             activeHookTask?.cancel()
             return
@@ -423,7 +437,9 @@ extension MAAViewModel {
         status = .pending
         defer { handleEarlyReturn(backTo: .busy) }
 
-        dailyRunOutcome = .cancelled
+        // 已在运行/停止相位记录的链错误必须存续为结局(#181);启动期(未真正
+        // 运行)的失败被用户停止时按「已取消」收口(#179 清理失败回归)。
+        if !(dailyRunOutcome == .failed && dailyRunChainFailed) { dailyRunOutcome = .cancelled }
         var abandonedRun = false
         if let id = dailyRunCoordinator.active?.id {
             do { try dailyRunCoordinator.transition(.stopping, for: id) }
@@ -499,7 +515,10 @@ extension MAAViewModel {
     }
 
     func markDailyRunFailed() {
-        if dailyRunCoordinator.active != nil { dailyRunOutcome = .failed }
+        if dailyRunCoordinator.active != nil {
+            dailyRunOutcome = .failed
+            dailyRunChainFailed = true
+        }
     }
 
     private func discardPreparedDailyTasks(for runID: UUID) async -> Bool {
@@ -950,10 +969,21 @@ extension MAAViewModel {
             logStore?.setDailyTasksDetailMode(.log)
             let snapshot = snapshot ?? DailyRunSnapshot(profileID: dailyTaskProfile, tasks: tasks)
             guard let runID = try dailyRunCoordinator.begin(profileID: snapshot.profileID, origin: origin) else { return .skipped }
+            if dailyRunCoordinator.journalDegraded {
+                // 日志已降级为内存模式:运行照常执行,仅提示跟踪方式与重启后果。
+                logWarn("运行日志写入失败，本次运行仅在内存中跟踪，重启后将按中断恢复处理。")
+            }
             forceRecoveryJournalFailureRunID = nil
             forceRecoveryAbortRequested = false
             dailyRunOutcome = .completed
+            dailyRunChainFailed = false
             dailyRunTasks = snapshot.tasks
+            startupCancellationRequested = false
+            startupCancellationLocked = false
+            defer {
+                startupCancellationRequested = false
+                startupCancellationLocked = false
+            }
             if recoverGame { forceRecoveryInFlight = true }
             defer { if recoverGame && !forceRecoveryCleanupPending { forceRecoveryInFlight = false } }
             dailyStartCancelled = false

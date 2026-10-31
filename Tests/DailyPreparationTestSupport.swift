@@ -267,6 +267,9 @@ struct DailyTask: Equatable {
     func logError(_ text: String) { errors.append(text) }
     func logInfo(_ text: String) { infos.append(text) }
     func logTrace(verbatim text: String) {}
+    func logWarn(_ text: String) {}
+    var startupCancellationRequested = false
+    var dailyRunChainFailed = false
     func ensureHandle(requireConnect: Bool = true) async throws {
         ensureCount += 1
         if handle == nil { handle = Core() }

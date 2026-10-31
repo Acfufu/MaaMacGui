@@ -35,6 +35,11 @@ import Foundation
             guard let end = self?.viewModel?.dailyRunCoordinator.lastTerminal else { return nil }
             return .init(id: end.id, cleanupSucceeded: end.cleanupSucceeded == true)
         },
+        canCancelPending: { [weak self] in
+            // 启动越过最终取消检查点(即将 startCoreTasks)后,取消已无法生效:
+            // 保留 pending,由实际启动/终态结果如实落账(#178)。
+            self?.viewModel?.startupCancellationLocked != true
+        },
         canStop: { [weak self] expectedID in
             guard let model = self?.viewModel, let run = model.dailyRunCoordinator.active,
                   run.id == expectedID else { return false }

@@ -154,7 +154,9 @@ main = '''
   try await Task.sleep(for: .milliseconds(800))
   failure.resetStatus() // Duplicate callbacks must not retry a failed journal.
   try await Task.sleep(for: .milliseconds(350))
-  precondition(failure.errors.count == 1 && failure.dailyRunCoordinator.active?.id == failureID && failure.status == .pending, "journal failure must stop retries and preserve ownership")
+  // #178 92ee14c 语义:写盘失败→降级内存模式,finish 照常收口并释放占用;
+  // 重启后由 interrupted 恢复兜底。重复回调因 active==nil 不再重试。
+  precondition(failure.dailyRunCoordinator.active == nil && failure.dailyRunCoordinator.lastTerminal?.id == failureID && failure.status == .idle && failure.errors.count == 0, "journal failure degrades to memory mode and still releases ownership")
   print("Completion lifecycle: 10 production-path assertions passed")
  }
 }

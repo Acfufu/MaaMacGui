@@ -113,12 +113,13 @@ import Foundation
   check(await journalWork.value == .failed && journalModel.handle === journalCore && journalCore.isRunning && !journalModel.canStartTasks, "journal transition error retains live Core and blocks start")
   journalCore.isRunning = false
   try? await Task.sleep(for:.milliseconds(650))
-  check(journalModel.handle == nil && journalModel.dailyRunCoordinator.active != nil && !journalModel.canStartTasks && !journalModel.forceRecoveryInFlight, "journal error releases only idle Core while run stays blocked")
-  check(journalModel.errors.filter { $0.contains("每日运行日志：") }.count == 1, "journal failure logs once without a retry loop")
-  let oldJournalRun=journalModel.dailyRunCoordinator.active!.id
+  // #178 92ee14c 语义:写盘失败→降级内存模式,空闲观测照常收口并释放占用,
+  // 不再「保留运行阻塞启动」;重启后由 interrupted 恢复兜底。
+  check(journalModel.handle == nil && journalModel.dailyRunCoordinator.active == nil && journalModel.canStartTasks && !journalModel.forceRecoveryInFlight, "degraded journal still finishes the idle run in memory and unblocks start")
+  check(journalModel.dailyRunCoordinator.journalDegraded, "journal degraded latch is set for the session")
+  check(journalModel.errors.filter { $0.contains("每日运行日志：") }.count == 0, "degraded finish no longer errors nor retries")
   try! FileManager.default.removeItem(at:journalRoot)
   try! FileManager.default.createDirectory(at:journalRoot, withIntermediateDirectories:true)
-  try! journalModel.dailyRunCoordinator.finish(oldJournalRun,outcome:.failed,cleanupSucceeded:true)
   journalModel.resetStatus(); journalModel.handle = Core(); journalModel.recoveryGate = nil
   let nextJournalCore=journalModel.handle!
   check(await journalModel.startDailyTasks(recoverGame:true) == .failed && !journalModel.canStartTasks, "next run cleanup retains occupancy")

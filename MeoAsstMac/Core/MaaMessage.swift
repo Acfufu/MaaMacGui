@@ -195,7 +195,7 @@ extension MAAViewModel {
             Task {
                 do {
                     // 自动停止被串行化拒绝时保持静默，避免向用户日志写入误导性提示。
-                    try await stop(logsConflict: false)
+                    try await stop(logsConflict: false, userRequested: false)
                 } catch {
                     logger.warning("Failed to stop after Disconnect: \(error)")
                 }
@@ -786,7 +786,7 @@ extension MAAViewModel {
                 Task {
                     do {
                         // 自动停止被串行化拒绝时保持静默，避免向用户日志写入误导性提示。
-                        try await stop(logsConflict: false)
+                        try await stop(logsConflict: false, userRequested: false)
                     } catch {
                         logger.warning("Failed to stop after game disconnect: \(error)")
                     }

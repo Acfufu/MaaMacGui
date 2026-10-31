@@ -20,9 +20,12 @@ import Foundation
     private var deadline: Task<Void, Never>?
     private let timeout: Duration
 
+    private let canCancelPending: @MainActor () -> Bool
+
     init(timeout: Duration = .seconds(30), occupancy: @escaping @MainActor () -> Occupancy,
          terminal: @escaping @MainActor () -> Terminal?, canStop: @escaping @MainActor (UUID) -> Bool,
          canForce: @escaping @MainActor (Snapshot) -> Bool = { _ in true },
+         canCancelPending: @escaping @MainActor () -> Bool = { true },
          stop: @escaping @MainActor (UUID) async throws -> Void,
          start: @escaping @MainActor (Snapshot, Bool, @escaping @MainActor () -> Bool) async -> StartResult,
          isCurrent: @escaping @MainActor (ScheduleOccurrence) -> Bool,
@@ -32,6 +35,7 @@ import Foundation
         self.terminal = terminal
         self.canStop = canStop
         self.canForce = canForce
+        self.canCancelPending = canCancelPending
         self.stop = stop
         self.start = start
         self.isCurrent = isCurrent
@@ -126,6 +130,9 @@ import Foundation
 
     func cancelPending(detail: String = "userCancelled") {
         guard let occurrence = pending else { return }
+        // 启动已越过最终取消检查点(startupCancellationLocked)时保留 pending,
+        // 由实际启动/终态结果如实落账,不得记成「已取消」(#178 r3 A-P2-2)。
+        guard canCancelPending() else { return }
         finish(occurrence, result: .cancelled, detail: detail)
     }
 

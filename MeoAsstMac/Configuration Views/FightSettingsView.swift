@@ -124,28 +124,6 @@ struct FightSettingsView: View {
 
                 Divider()
 
-                Section {
-                    LabeledContent {
-                        Text(config.localizedExpiry)
-                    } label: {
-                        Stepper("吃临期理智药", value: $config.medicine_expire_days, in: 0...7, step: 1)
-                    }
-                    Toggle("博朗台碎石模式", isOn: $config.DrGrandet)
-                }
-
-                Divider()
-
-                TextField(text: $config.penguin_id) {
-                    Toggle("企鹅物流汇报ID", isOn: $config.report_to_penguin)
-                }
-
-                Divider()
-
-                DailyStageTipView()
-            }
-
-            Divider()
-
             Section {
                 LabeledContent {
                     Text(config.localizedExpiry)
@@ -175,6 +153,7 @@ struct FightSettingsView: View {
             Divider()
 
             DailyStageTipView()
+            }
             .padding()
             .animation(.default, value: useCustomStage)
         }
