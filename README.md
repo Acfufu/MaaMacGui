@@ -1,5 +1,16 @@
 # MAA Mac GUI
 
+> [!NOTE]
+> **关于本仓库（个人维护 fork）**
+>
+> 这是 [MaaAssistantArknights/MaaMacGui](https://github.com/MaaAssistantArknights/MaaMacGui) 的个人维护分支：在上游合并队列停滞期间，将社区增强 PR（#161–#181）整合为单一可用版本继续维护与发版。
+>
+> - **`prw/single`**（默认分支）：集成版主线，在此开发、打 tag 发版（版本号 `X.Y.Z-single.N`），发版配方见 [docs/RELEASE.md](docs/RELEASE.md)
+> - **`master`**：上游镜像分支，仅作基线参照，不在此开发
+> - 与上游的合并顺序协调：[上游 issue #182](https://github.com/MaaAssistantArknights/MaaMacGui/issues/182)；上游恢复活跃后本分支按需 merge 上游（只 merge 不 rebase，tag 已发布）
+>
+> **免责声明**：本仓库 Release 为个人构建，采用 ad-hoc 签名（无 Developer ID 证书），首次打开需右键 →「打开」或在「系统设置 → 隐私与安全性」中放行；内嵌 MaaCore 为构建时快照，具体版本见各 Release 说明。代码源自上游 MaaMacGui 仓库。
+
 MAA 的意思是 MAA Assistant Arknights
 
 一款明日方舟游戏小助手
