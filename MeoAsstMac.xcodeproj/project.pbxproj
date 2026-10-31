@@ -126,6 +126,16 @@
 		9BC2EEB32E3F188D0039C4DB /* MiniGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BC2EEB22E3F188D0039C4DB /* MiniGameView.swift */; };
 		AEA8E3A02E77003F00355D84 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = AEA8E39F2E77003F00355D84 /* AppIcon.icon */; };
 		2CFD9CE6D9AB44579939835B /* RunContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7743B34F2704668B4E0A0E9 /* RunContext.swift */; };
+		9B6C185C8729497448935CB7 /* ScheduleAgentLocation.swift in Agent Sources */ = {isa = PBXBuildFile; fileRef = 1C3AC5D910863BF71F8DC4B6; };
+		C11000000000000000000000 /* PreviewImageBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000000 /* PreviewImageBuffer.swift */; };
+		C11000000000000000000001 /* PeepViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* PeepViewModel.swift */; };
+		C11000000000000000000002 /* PeepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000000000000000000002 /* PeepView.swift */; };
+		B50000000000000000000001 /* BlackflowStartSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50000000000000000000002 /* BlackflowStartSupport.swift */; };
+		B30000000000000000000001 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B30000000000000000000002 /* LoginItemService.swift */; };
+		B80000000000000000000001 /* SecretFront.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80000000000000000000002 /* SecretFront.swift */; };
+		C21000000000000000000002 /* AnnouncementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000002 /* AnnouncementView.swift */; };
+		C21000000000000000000001 /* AnnouncementStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000001 /* AnnouncementStore.swift */; };
+		C21000000000000000000000 /* AnnouncementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000000 /* AnnouncementService.swift */; };
 		C70000000000000000000002 /* InventoryTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70000000000000000000001 /* InventoryTarget.swift */; };
 		D435C735FBB248EDAB963960 /* HotkeyConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A31B3C3C9145DBAFB0BA95 /* HotkeyConfiguration.swift */; };
 		6289CAA0CEBE4173997CAB86 /* GlobalHotkeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F6DFDA2D2384CB1800C898E /* GlobalHotkeyService.swift */; };
@@ -313,6 +323,15 @@
 		7F6DFDA2D2384CB1800C898E /* GlobalHotkeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeoAsstMac/Hotkeys/GlobalHotkeyService.swift; sourceTree = SOURCE_ROOT; };
 		E78B60E254D04E2E91F4FA92 /* HotkeySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeoAsstMac/Hotkeys/HotkeySettingsView.swift; sourceTree = SOURCE_ROOT; };
 		B7743B34F2704668B4E0A0E9 /* RunContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunContext.swift; sourceTree = "<group>"; };
+		C10000000000000000000000 /* PreviewImageBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewImageBuffer.swift; sourceTree = "<group>"; };
+		C10000000000000000000001 /* PeepViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeepViewModel.swift; sourceTree = "<group>"; };
+		C10000000000000000000002 /* PeepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeepView.swift; sourceTree = "<group>"; };
+		B50000000000000000000002 /* BlackflowStartSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlackflowStartSupport.swift; sourceTree = "<group>"; };
+		B30000000000000000000002 /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
+		B80000000000000000000002 /* SecretFront.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretFront.swift; sourceTree = "<group>"; };
+		C20000000000000000000002 /* AnnouncementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnouncementView.swift; sourceTree = "<group>"; };
+		C20000000000000000000001 /* AnnouncementStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnouncementStore.swift; sourceTree = "<group>"; };
+		C20000000000000000000000 /* AnnouncementService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnouncementService.swift; sourceTree = "<group>"; };
 		C70000000000000000000001 /* InventoryTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryTarget.swift; sourceTree = "<group>"; };
 		9A6855ABEC964286B70706AC /* HookConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookConfiguration.swift; sourceTree = "<group>"; };
 		3621885B42794A3E8940DB36 /* HookRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookRunner.swift; sourceTree = "<group>"; };
@@ -375,9 +394,6 @@
 			isa = PBXGroup;
 			children = (
 				B7743B34F2704668B4E0A0E9 /* RunContext.swift */,
-				9A6855ABEC964286B70706AC /* HookConfiguration.swift */,
-				3621885B42794A3E8940DB36 /* HookRunner.swift */,
-				0FC2C19F5DD0469BBD8F1A7F /* HookSettingsView.swift */,
 				9A6855ABEC964286B70706AC /* HookConfiguration.swift */,
 				3621885B42794A3E8940DB36 /* HookRunner.swift */,
 				0FC2C19F5DD0469BBD8F1A7F /* HookSettingsView.swift */,
@@ -593,6 +609,9 @@
 			isa = PBXGroup;
 			children = (
 				8341195629EC58CF00044F45 /* MAACopilot.swift */,
+				C10000000000000000000000 /* PreviewImageBuffer.swift */,
+				C10000000000000000000001 /* PeepViewModel.swift */,
+				C10000000000000000000002 /* PeepView.swift */,
 				C20000000000000000000001 /* AnnouncementStore.swift */,
 				C20000000000000000000000 /* AnnouncementService.swift */,
 				832985B529EF1890009F7ED5 /* MAADepot.swift */,
@@ -779,6 +798,9 @@
 				A5CC1A5A94B6EFE3BA010488 /* ScheduleOccurrenceStore.swift in Sources */,
 				B90B2C1FA5DC1ACDC583A2C4 /* DailyTaskSchedule.swift in Sources */,
 				8341195D29EC719B00044F45 /* CopilotContent.swift in Sources */,
+				C11000000000000000000000 /* PreviewImageBuffer.swift in Sources */,
+				C11000000000000000000001 /* PeepViewModel.swift in Sources */,
+				C11000000000000000000002 /* PeepView.swift in Sources */,
 				C21000000000000000000002 /* AnnouncementView.swift in Sources */,
 				C21000000000000000000001 /* AnnouncementStore.swift in Sources */,
 				C21000000000000000000000 /* AnnouncementService.swift in Sources */,
