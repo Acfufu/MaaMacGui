@@ -961,6 +961,9 @@ private struct RoguelikeSettlementDetails {
     let score: Int?
     let exp: String?
     let skill: String?
+
+    /// Missing OCR data is unknown; an explicitly reported zero is still zero.
+    var floorDescription: String { floor.map(String.init) ?? "?" }
 }
 
 @JSONRepresentable
@@ -1375,7 +1378,7 @@ extension MAAViewModel {
             logTrace(
                 .roguelikeSettlement(
                     pass: settlement.game_pass ? "✓" : "✗",
-                    floor: settlement.floor ?? 0, step: settlement.step ?? 0,
+                    floor: settlement.floorDescription, step: settlement.step ?? 0,
                     combat: settlement.combat ?? 0, emergency: settlement.emergency ?? 0, boss: settlement.boss ?? 0,
                     recruit: settlement.recruit ?? 0, collection: settlement.collection ?? 0,
                     difficulty: settlement.difficulty ?? 0, score: settlement.score ?? 0,
