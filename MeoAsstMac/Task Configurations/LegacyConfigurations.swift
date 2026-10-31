@@ -122,6 +122,7 @@ extension AwardConfiguration {
         self.orundum = config.orundum
         self.mining = config.mining
         self.specialaccess = config.specialaccess
+        self.signinevent = false
     }
 }
 
