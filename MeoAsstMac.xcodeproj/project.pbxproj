@@ -456,6 +456,7 @@
 			sourceTree = "<group>";
 		};
 		8329858E29EDAC7B009F7ED5 /* Views */ = {
+				C20000000000000000000002 /* AnnouncementView.swift */,
 			isa = PBXGroup;
 			children = (
 				83264A3A29EC0F2E0074E33A /* LogView.swift */,
@@ -587,6 +588,8 @@
 			sourceTree = "<group>";
 		};
 		8341195129EC258D00044F45 /* Model */ = {
+				C20000000000000000000001 /* AnnouncementStore.swift */,
+				C20000000000000000000000 /* AnnouncementService.swift */,
 			isa = PBXGroup;
 			children = (
 				8341195629EC58CF00044F45 /* MAACopilot.swift */,
@@ -753,6 +756,9 @@
 /* Begin PBXSourcesBuildPhase section */
 		833786C728F188D800D39D6F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
+				C21000000000000000000002 /* AnnouncementView.swift in Sources */,
+				C21000000000000000000001 /* AnnouncementStore.swift in Sources */,
+				C21000000000000000000000 /* AnnouncementService.swift in Sources */,
 			buildActionMask = 2147483647;
 			files = (
 				2CFD9CE6D9AB44579939835B /* RunContext.swift in Sources */,
