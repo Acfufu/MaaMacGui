@@ -796,6 +796,12 @@ private struct SubTaskCompletedMessage {
 }
 
 extension MAAViewModel {
+    /// 跨 04:00 处理完成消息时保守回写轮始游戏日（取舍详见 MallConfiguration.dailyWriteBackDate）。
+    private func mallDailyWriteBackDate(for channel: MAAClientChannel) -> Date {
+        MallConfiguration.dailyWriteBackDate(
+            now: Date.now, roundStart: logStore?.taskStartTime, calendar: channel.calendar)
+    }
+
     private func processSubTaskCompleted(_ details: JSON) {
         guard let info = SubTaskCompletedMessage(json: details, context: "SubTaskCompleted") else {
             return
@@ -828,10 +834,11 @@ extension MAAViewModel {
             switch process.task {
             case "StageDrops-Stars-3":
                 // TODO: (Achievement) Record completed credit fights.
-                _ = applyDailyTaskCallback(.creditFightDate(.now), coreID: info.taskid)
+                // 162 保守回写:跨 04:00 的完成回调按游戏日历锚定日期,而非 .now。
+                _ = applyDailyTaskCallback(.creditFightDate(mallDailyWriteBackDate(for: clientChannel)), coreID: info.taskid)
                 logInfo(.completeTask(name: L(.creditFight)))
             case "VisitLimited":
-                _ = applyDailyTaskCallback(.friendVisitDate(.now), coreID: info.taskid)
+                _ = applyDailyTaskCallback(.friendVisitDate(mallDailyWriteBackDate(for: clientChannel)), coreID: info.taskid)
                 logInfo(.completeTask(name: L(.visiting)))
             case "VisitNextBlack":
                 logInfo(.completeTask(name: L(.visiting)))

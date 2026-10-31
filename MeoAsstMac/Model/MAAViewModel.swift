@@ -985,8 +985,74 @@ extension MAAViewModel {
             runTasks[index] = .init(id: task.id, task: .closedown(config), enabled: task.enabled)
         }
 
+        // 同一批次可能存在多个 Mall 任务：若都放行信用战/好友访问，第一个完成后第二个早已提交给
+        // core，同一游戏日重复执行。这里按注入时刻的游戏日共享判定，每种每日任务只放行首个待执行
+        // 的 Mall，其余回写当日日期；判定基准同时物化为 batchSnapshotDate，参数闸门与预标记共用
+        // 同一时刻，append 前跨 04:00 也不会同批双放行（次日自愈）。
+        //
+        // 注入与 append 共用同一份任务快照：ensureHandle 的 await 窗口内新增的任务不进入本批次
+        // （避免绕过渠道注入与同批去重），窗口内保存的陈旧草稿也无法回滚已物化进快照的预标记；
+        // 两者均在下一轮生效。冻结快照(runTasks)承载预标记;活档按 id 位置对齐回写,不覆盖窗口内
+        // 的新增编辑(161/179 族快照权威语义)。
+        let mallSnapshotDate = Date.now
+        let mallCalendar = clientChannel.calendar
+        var mallIndices: [Int] = []
+        var mallEntries: [(enabled: Bool, config: MallConfiguration)] = []
+        for (index, task) in runTasks.enumerated() {
+            guard case .mall(let config) = task.task else {
+                continue
+            }
+            mallIndices.append(index)
+            mallEntries.append((enabled: task.enabled, config: config))
+        }
+
+        let admissions = MallConfiguration.batchDailyAdmissions(
+            of: mallEntries, snapshotDate: mallSnapshotDate, calendar: mallCalendar)
+
+        var premarked = false
+        for (index, admission) in zip(mallIndices, admissions) {
+            guard case .mall(var config) = runTasks[index].task else {
+                continue
+            }
+
+            config.clientChannel = clientChannel
+            config.batchSnapshotDate = mallSnapshotDate
+
+            if let markedDate = admission.creditFightMarkedDate {
+                config.creditFightDate = markedDate
+            }
+            if let markedDate = admission.friendVisitMarkedDate {
+                config.friendVisitDate = markedDate
+            }
+
+            runTasks[index] = .init(id: runTasks[index].id, task: .mall(config), enabled: runTasks[index].enabled)
+            premarked = true
+        }
+
+        if premarked {
+            var liveBatch = tasks
+            for (index, admission) in zip(mallIndices, admissions) {
+                guard index < liveBatch.count, liveBatch[index].id == runTasks[index].id,
+                      case .mall(var config) = liveBatch[index].task else {
+                    continue
+                }
+                config.clientChannel = clientChannel
+                config.batchSnapshotDate = mallSnapshotDate
+                if let markedDate = admission.creditFightMarkedDate {
+                    config.creditFightDate = markedDate
+                }
+                if let markedDate = admission.friendVisitMarkedDate {
+                    config.friendVisitDate = markedDate
+                }
+                liveBatch[index] = .init(id: liveBatch[index].id, task: .mall(config), enabled: liveBatch[index].enabled)
+            }
+            if liveBatch != tasks {
+                tasks = liveBatch
+            }
+        }
+
         dailyRunTasks = runTasks
-        try await ensureHandle()
+                try await ensureHandle()
         try Task.checkCancellation()
         if recoverGame {
             try await recoverGameToHome(runID: runID, isCurrent: recoveryCurrent ?? { true })

@@ -122,6 +122,9 @@ extension Array where Element == DailyTask {
 }
 
 extension MAAViewModel {
+    private static let taskProfileLogger = Logger(subsystem: "com.hguandl.MeoAsstMac", category: "TaskProfile")
+
+    // 写盘失败（磁盘满、权限等）会让去重日期停留在上次保存的值，重启后可能重复提交子任务，必须留痕。
     func writeBack(_ newValue: [DailyTask]) {
         guard !isApplyingDailyCallbackPatch else { return }
         do {

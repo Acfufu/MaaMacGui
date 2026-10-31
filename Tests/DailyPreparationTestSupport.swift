@@ -20,7 +20,7 @@ import Observation
 enum FixtureError: Error { case connection }
 struct ForcedRecoveryCleanupFailure: Error {}
 enum ForcedRecoveryFailure: Error { case notReady, timedOut }
-enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot, Recruit, Depot, VideoRecognition, OperBox, Custom }
+enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot, Recruit, Depot, VideoRecognition, OperBox, Custom, Fight }
 @MainActor final class Core {
     var isRunning = false
     var runningGate: Gate?
@@ -47,6 +47,9 @@ enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot, Recruit, Depot, Vid
     func appendTask(type: MAATaskType, params: String) async throws -> Int32 {
         appendCount += 1
         return Int32(appendCount)
+    }
+    func appendTask(_ task: DailyTask.Kind, recruitTagNames: [String: String]) async throws -> Int32 {
+        return try await appendTask(task)
     }
     func appendTask(_ task: DailyTask.Kind) async throws -> Int32 {
         appendCount += 1
@@ -96,17 +99,50 @@ struct VideoRecognitionConfiguration {
     }
     func setDailyTasksDetailMode(_ mode: MAAViewModel.DailyTasksDetailMode) {}
 }
-enum ClientChannel { case official, bilibili }
+enum ClientChannel { case official, bilibili
+    /// 生产侧由 162 的游戏日历提供;夹具下 Mall 批次为空,日历不被消费。
+    var calendar: Calendar { Calendar(identifier: .gregorian) }
+}
+struct MAAStageActivity {}
+struct StageActivityContext {
+    enum MedicineWindow: Equatable { case inactive, unavailable, extended(Int) }
+    init(channel: ClientChannel, activities: MAAStageActivity?) {}
+    func medicineWindow(at date: Date, enabled: Bool) -> MedicineWindow { .inactive }
+}
+struct FightConfiguration: Equatable {
+    var stage: String = "1-7"
+    var useActivityMedicine = false
+    struct Params: Equatable {
+        var stage: String = ""
+        var medicine_expire_days: Int = 0
+        func jsonString() throws -> String { "{}" }
+    }
+    func params(at date: Date, stageActivity: StageActivityContext) -> Params { Params() }
+    static func normalizedStage(_ stage: String) -> String { stage }
+}
+struct MallConfiguration: Equatable {
+    var clientChannel: ClientChannel = .official
+    var batchSnapshotDate: Date?
+    var creditFightDate: Date?
+    var friendVisitDate: Date?
+    struct Admission { var creditFightMarkedDate: Date?; var friendVisitMarkedDate: Date? }
+    static func batchDailyAdmissions(of entries: [(enabled: Bool, config: MallConfiguration)],
+                                     snapshotDate: Date, calendar: Calendar) -> [Admission] {
+        entries.map { _ in Admission(creditFightMarkedDate: nil, friendVisitMarkedDate: nil) }
+    }
+}
 enum TouchMode { case MacPlayTools, maatouch }
 enum ToolsMode { case BGR, MacSCK }
-struct GameConfiguration {
+struct GameConfiguration: Equatable {
     var client_type = ClientChannel.official
     var start_game_enabled = false
 }
-struct DailyTask {
-    enum Kind {
+struct DailyTask: Equatable {
+    enum Kind: Equatable {
         case startup(GameConfiguration)
         case closedown(GameConfiguration)
+        case mall(MallConfiguration)
+        case fight(FightConfiguration)
         case fixture
     }
     var id = UUID()
@@ -144,6 +180,9 @@ struct DailyTask {
     var taskIDMap: [Int32: UUID] = [:]
     var taskStatus: [UUID: Int] = [:]
     var messageTask: Task<Void, Never>?
+    var stageActivity: MAAStageActivity? = nil
+    var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
+    var recruitTagNames: [String: String] = [:]
     var achievementEvents = AchievementEventAdapter()
     let hookSettings = HookSettingsStore()
     var runHookConfiguration = HookConfiguration()
