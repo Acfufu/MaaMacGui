@@ -49,7 +49,8 @@ enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot, Recruit, Depot, Vid
         return Int32(appendCount)
     }
     var connected: Bool { true }
-    func appendTask(_ task: DailyTask.Kind, recruitTagNames: [String: String]) async throws -> Int32 {
+    func appendTask(_ task: DailyTask.Kind, recruitTagNames: [String: String],
+                     blackflowStartAvailable: Bool = false) async throws -> Int32 {
         return try await appendTask(task)
     }
     func appendTask(_ task: DailyTask.Kind) async throws -> Int32 {
@@ -103,9 +104,11 @@ struct VideoRecognitionConfiguration {
 enum ClientChannel { case official, bilibili
     /// 生产侧由 162 的游戏日历提供;夹具下 Mall 批次为空,日历不被消费。
     var calendar: Calendar { Calendar(identifier: .gregorian) }
+    var isGlobal: Bool { false }
 }
 struct MAAStageActivity {}
 struct PreparationCleanupFailure: Error {}
+struct RoguelikeCfgStub: Equatable { func validateBlackflowStart(available: Bool) throws {} }
 struct DropItemStub {}
 struct InventoryTarget: Equatable { var itemID: String = ""; var quantity: Int = 0 }
 struct InventoryTargetPlan { var generation = 0; var startInventory = 0; var requiredDrops = 0 }
@@ -166,6 +169,7 @@ struct DailyTask: Equatable {
         case closedown(GameConfiguration)
         case mall(MallConfiguration)
         case fight(FightConfiguration)
+        case roguelike(RoguelikeCfgStub)
         case fixture
     }
     var id = UUID()
@@ -216,6 +220,7 @@ struct DailyTask: Equatable {
     enum SecretFrontResult { case stopped }
     struct SecretFrontRunStub { var taskID: Int32? = nil; func finish(taskID: Int32, result: SecretFrontResult) {} ; func release() {} }
     var secretFrontRun = SecretFrontRunStub()
+    var blackflowStartAvailable = false
     var achievementEvents = AchievementEventAdapter()
     let hookSettings = HookSettingsStore()
     var runHookConfiguration = HookConfiguration()

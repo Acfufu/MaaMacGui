@@ -664,6 +664,7 @@
 				8307A5CE3030157600A82FF7 /* PixelPainter.swift */,
 				83191C8E3040AF0D00576DC0 /* TCPConnection.swift */,
 				83AAF81730416ACF003752BD /* ByteReader.swift */,
+				B50000000000000000000002 /* BlackflowStartSupport.swift */,
 				83B8E0D83053131B00AB0B56 /* HGCalendar.swift */,
 			);
 			path = Utils;
@@ -876,6 +877,7 @@
 				838FF82729FDD0F9000566A0 /* GachaView.swift in Sources */,
 				B30000000000000000000001 /* LoginItemService.swift in Sources */,
 				83AAF81830416ACF003752BD /* ByteReader.swift in Sources */,
+				B50000000000000000000001 /* BlackflowStartSupport.swift in Sources */,
 				83782A2B2CFFAF2900A32BDD /* LegacyConfigurations.swift in Sources */,
 				83264A2F29EBEE140074E33A /* RecruitConfiguration.swift in Sources */,
 				8341195029EC249E00044F45 /* RoguelikeConfiguration.swift in Sources */,

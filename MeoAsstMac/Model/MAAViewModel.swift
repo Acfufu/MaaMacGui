@@ -172,6 +172,8 @@ private struct PreparationCleanupFailure: Error {}
 
     @Published var scheduledDailyTaskTimers: [DailyTaskTimer] = []
 
+    @Published private(set) var blackflowStartAvailable = false
+
     // MARK: - OTA Resources
 
     @Published private var stageActivities = [String: MAAStageActivity]()
@@ -720,10 +722,16 @@ extension MAAViewModel {
     /// Core process to load resources at url.
     ///
     /// Should be called by `loadResource(url:channel:)`.
-    ///
-    /// - Returns: The resource directory of the last readable recruit tag table loaded for Core.
     private func loadResource(url: URL) async throws -> URL? {
-        try await MAAProvider.shared.loadResource(path: url.path)
+        do {
+            try await MAAProvider.shared.loadResource(path: url.path)
+        } catch {
+            blackflowStartAvailable = false
+            throw error
+        }
+        if blackflowStartAvailable && !BlackflowStartSupport.permitsOverlay(at: url) {
+            blackflowStartAvailable = false
+        }
         var recruitDirectory = updateRecruitTags(resourceDirectory: url.appendingPathComponent("resource"))
 
         if touchMode == .MacPlayTools {
@@ -782,6 +790,8 @@ extension MAAViewModel {
     /// Should be the outermost call to load resources.
     private func loadResource(channel: MAAClientChannel) async throws {
         defer { refreshSecretFrontAvailability() }
+        blackflowStartAvailable = BlackflowStartSupport.matchesLoadedCore() && !channel.isGlobal
+            && touchMode != .MacPlayTools && BlackflowStartSupport.matchesBundledResources(at: Bundle.main.resourceURL!)
         let (preferUser, currentResourceVersion) = try resourceChannel.version()
         try await loadResource(url: Bundle.main.resourceURL!, channel: channel)
 
@@ -1166,6 +1176,15 @@ extension MAAViewModel {
             }
         }
 
+        // Validate the entire enabled queue before appending any task. A rejected
+        // configuration must not leave earlier tasks queued on the reused handle.
+        let supportsBlackflowStart = blackflowStartAvailable && touchMode != .MacPlayTools && !clientChannel.isGlobal
+        for task in runTasks where task.enabled {
+            if case .roguelike(let config) = task.task {
+                try config.validateBlackflowStart(available: supportsBlackflowStart)
+            }
+        }
+
         try checkStartupCancellation()
         if recoverGame, recoveryCurrent?() == false { throw CancellationError() }
         startupCancellationLocked = true
@@ -1193,7 +1212,8 @@ extension MAAViewModel {
                         inventoryFightIDs.insert(coreID)
                     }
                 } else {
-                    coreID = try await handle?.appendTask(task.task, recruitTagNames: recruitTagNames)
+                    coreID = try await handle?.appendTask(task.task, recruitTagNames: recruitTagNames,
+                                                      blackflowStartAvailable: supportsBlackflowStart)
                 }
                 if let coreID {
                     appendedAnyTask = true
