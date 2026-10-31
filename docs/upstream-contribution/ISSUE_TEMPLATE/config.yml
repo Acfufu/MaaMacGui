@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: MAA 主仓库 Issues
+    url: https://github.com/MaaAssistantArknights/MaaAssistantArknights/issues
+    about: 识别率、任务逻辑等 MaaCore / 资源层面的问题请到主仓库反馈
+  - name: MAA 主仓库 Discussions
+    url: https://github.com/MaaAssistantArknights/MaaAssistantArknights/discussions
+    about: 使用咨询与一般讨论

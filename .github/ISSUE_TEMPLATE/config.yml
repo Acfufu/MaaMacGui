@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 上游 MaaMacGui Issues
+    url: https://github.com/MaaAssistantArknights/MaaMacGui/issues
+    about: 属于 Mac GUI 上游通用行为的问题或需求，建议优先反馈到上游仓库
+  - name: MAA 主仓库 Issues
+    url: https://github.com/MaaAssistantArknights/MaaAssistantArknights/issues
+    about: 识别率、任务逻辑等 MaaCore / 资源层面的问题请到主仓库反馈
+  - name: MAA 主仓库 Discussions
+    url: https://github.com/MaaAssistantArknights/MaaAssistantArknights/discussions
+    about: 使用咨询与一般讨论

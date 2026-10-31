@@ -1,0 +1,75 @@
+name: Bug 反馈
+description: 连接异常、任务不执行、界面异常、闪退等问题
+labels: ["bug"]
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 前置确认
+      options:
+        - label: 我使用了当前可获取的最新版本，并确认此问题在活跃与已关闭 Issue 中均未被提及
+          required: true
+        - label: 我填写了简短且明确的标题，能让人快速判断问题大致方向（而不是「一个 bug」「卡住了」）
+          required: true
+        - label: 我理解 Issue 用于反馈和解决问题，会尽量提供完整信息
+          required: true
+  - type: textarea
+    id: describe
+    attributes:
+      label: 问题描述
+      description: 描述得越具体越好复现，例如执行了哪个任务、在什么时机、期望行为与实际行为的差异
+    validations:
+      required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: 版本信息
+      description: 应用版本可在「设置」面板查看
+      placeholder: |
+        应用版本：
+        获取渠道：官方 Release / 自行构建（注明对应 commit）
+    validations:
+      required: true
+  - type: textarea
+    id: system
+    attributes:
+      label: 系统信息
+      placeholder: |
+        macOS 版本（如 15.2）：
+        机型：Apple Silicon (M1/M2/M3/M4) / Intel
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志文件
+      description: |
+        请通过菜单栏「文件 → 查找日志…」找到日志文件（asst.log 与 gui.log）并上传。
+        闪退问题：若 ~/Library/Logs/DiagnosticReports 下有本应用相关的 .ips 报告，请一并上传。
+    validations:
+      required: true
+  - type: dropdown
+    id: connection
+    attributes:
+      label: 连接方式
+      options:
+        - USB（有线）
+        - Wi-Fi（无线调试）
+        - PlayCover
+        - 模拟器 / 其他
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图或录屏
+      description: 应用截图、游戏画面截图等，有助于说明问题即可
+    validations:
+      required: false
+  - type: textarea
+    id: others
+    attributes:
+      label: 其他补充
+      description: 任何有助于了解问题的背景信息
+    validations:
+      required: false
