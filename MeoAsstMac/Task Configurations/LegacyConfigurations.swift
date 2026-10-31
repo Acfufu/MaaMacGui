@@ -85,6 +85,8 @@ extension InfrastConfiguration {
         self.plan_index = config.plan_index
         self.continue_training = true
         self.reception_message_board = true
+        self.fiammetta_recovery_enabled = false
+        self.fiammetta_targets = Self.defaultFiammettaTargets
     }
 }
 
