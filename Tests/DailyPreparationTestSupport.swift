@@ -86,6 +86,14 @@ struct VideoRecognitionConfiguration {
     var fightReport: Int?
     var stoneUsedTimes = 0
     var recruitConfirmTimes = 0
+    // LogStore 协议成员(161 会话基线日志保留):本夹具不覆盖日志行为,提供最小
+    // 实现以满足协议;保留语义由 #161 自有套件(TaskOperationTests)验证。
+    private var retained: [String] = []
+    var logCount: Int { retained.count }
+    func clearLogs(upTo index: Int) {
+        guard index > 0, index <= retained.count else { return }
+        retained.removeFirst(index)
+    }
     func setDailyTasksDetailMode(_ mode: MAAViewModel.DailyTasksDetailMode) {}
 }
 enum ClientChannel { case official, bilibili }

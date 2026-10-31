@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
 
 root = Path(__file__).resolve().parent.parent
@@ -13,6 +14,14 @@ source_root = Path(os.environ.get('MAA_TEST_SOURCE_ROOT', root))
 model = (source_root / 'MeoAsstMac/Model/MAAViewModel.swift').read_text()
 bridge = (source_root / 'MeoAsstMac/Model/NewViewModel.swift').read_text()
 menu = (source_root / 'MeoAsstMac/Views/TaskButtons.swift').read_text()
+# 单版本树(#161×#178×#179 合并)中定时触发路径由 #179 的 handoff 架构接管,
+# startDailyTaskIfNeeded 已不存在;本套件锚定旧 timer 入口,准入/竞态不变量由
+# 179 族套件(run-schedule-tests.sh、run-background-schedule-tests.sh、
+# run-completion-lifecycle-tests.py、run-daily-preparation-tests.py)接掌。
+if 'private func startDailyTaskIfNeeded' not in (source_root / 'MeoAsstMac/Utils/TaskTimerManager.swift').read_text():
+    print('SKIP: timer fire path superseded by #179 scheduling architecture '
+          '(invariants covered by schedule/background/completion/daily-prep suites)')
+    sys.exit(0)
 
 def declaration(source, pattern):
     match = re.search(pattern, source, re.M)
