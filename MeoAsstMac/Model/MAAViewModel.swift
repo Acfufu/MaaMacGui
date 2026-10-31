@@ -320,6 +320,9 @@ extension MAAViewModel {
     }
 
     func ensureHandle(requireConnect: Bool = true) async throws {
+        // 与 beginTaskOperation 相同的会话基线契约：先于首个 await 记录边界，
+        // 复核通过后仅清除边界之前的旧条目，探测期间新追加的日志得以保留。
+        let sessionBaseline = logStore?.logCount ?? 0
         if handle == nil {
             let handle = try await MAAHandle(options: instanceOptions)
             self.handle = handle
@@ -343,7 +346,7 @@ extension MAAViewModel {
         }
 
         secretFrontRun = SecretFrontRun()
-        logStore?.clearLogs()
+        logStore?.clearLogs(upTo: sessionBaseline)
         taskIDMap.removeAll()
         fightTaskParams.removeAll()
         taskStatus.removeAll()

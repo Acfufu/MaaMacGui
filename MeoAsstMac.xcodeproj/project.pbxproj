@@ -477,6 +477,7 @@
 			children = (
 				83264A3A29EC0F2E0074E33A /* LogView.swift */,
 				C20000000000000000000002 /* AnnouncementView.swift */,
+				C10000000000000000000002 /* PeepView.swift */,
 				83264ACA29EC0F2E0074E33A /* EditableTextList.swift */,
 				9BC2EEB22E3F188D0039C4DB /* MiniGameView.swift */,
 				83BC250C302F02B000080642 /* PixelPaintView.swift */,
@@ -505,6 +506,7 @@
 				8383EA2C28F2AF23007DAB9D /* MaaMessage.swift */,
 				8391C9F92B2746FA0047DB20 /* MaaToolClient.swift */,
 				83AAF81930417267003752BD /* MaaToolsClient.swift */,
+				C10000000000000000000000 /* PreviewImageBuffer.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -608,9 +610,7 @@
 			isa = PBXGroup;
 			children = (
 				8341195629EC58CF00044F45 /* MAACopilot.swift */,
-				C10000000000000000000000 /* PreviewImageBuffer.swift */,
 				C10000000000000000000001 /* PeepViewModel.swift */,
-				C10000000000000000000002 /* PeepView.swift */,
 				C20000000000000000000001 /* AnnouncementStore.swift */,
 				C20000000000000000000000 /* AnnouncementService.swift */,
 				832985B529EF1890009F7ED5 /* MAADepot.swift */,
@@ -655,7 +655,6 @@
 		83FF5A98297855E5000AE831 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
-				B30000000000000000000002 /* LoginItemService.swift */,
 				8334777928F3A14A00499D0A /* ConnectionSettingsView.swift */,
 				838FF82129FBB9E3000566A0 /* GameSettingsView.swift */,
 				83DD50B629BE385A000E84E7 /* UpdaterSettingsView.swift */,
@@ -684,6 +683,7 @@
 				83AAF81730416ACF003752BD /* ByteReader.swift */,
 				B50000000000000000000002 /* BlackflowStartSupport.swift */,
 				83B8E0D83053131B00AB0B56 /* HGCalendar.swift */,
+				B30000000000000000000002 /* LoginItemService.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
