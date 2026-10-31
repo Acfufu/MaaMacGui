@@ -1,5 +1,5 @@
 {
-  "_note": "post-start 轮次（71af78f，305 断言）的历史快照。其中 MeoAsstMac/Model/MAAViewModel.swift、Tests/TaskOperationTests.swift、Tests/TaskOperationTestSupport.swift、Tests/run-task-operation-tests.py 已被 d932363 及其后的修复提交修改而过期；本清单仅作为该轮证据留存，现行文件内容以 git 仓库对应提交为准。",
+  "_note": "post-start 轮次（71af78f，305 断言）的历史快照。其中 MeoAsstMac/Model/MAAViewModel.swift、MeoAsstMac/Model/NewViewModel.swift、Tests/TaskOperationTests.swift、Tests/TaskOperationTestSupport.swift、Tests/run-task-operation-tests.py、artifacts/pr-161-stop-log/mutation-check.py 等条目已被 d932363 及其后的修复提交修改而过期（过期条目包括但不限于以上列举）；本清单仅作为该轮证据留存，现行文件内容以 git 仓库对应提交为准。",
   "MeoAsstMac/Model/MAAError.swift": "e6f48cffd7c1b0998032ed7765d22f2a665f277da0c2ac0e73056c1ed1c59470",
   "MeoAsstMac/Model/MAAViewModel.swift": "c9349c4e854c32a1d761f7af7bd137e546c4fb02f30aa8ec5918adb1bd40a71e",
   "MeoAsstMac/Model/NewViewModel.swift": "a8cc4f758bce777e8e488466c861b3c66069e0794d1dfce121f54cd32017392c",
