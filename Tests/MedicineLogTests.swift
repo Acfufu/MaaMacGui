@@ -28,9 +28,13 @@ final class RecordingHandle {
         return id
     }
 
+    func appendTask(_ task: MAATask, recruitTagNames: [String: String]) async throws -> Int32 {
+        try await appendTask(task)
+    }
     func appendTask(_ task: MAATask) async throws -> Int32 {
         switch task {
         case .fight(let config): return try await appendTask(type: .Fight, params: config.params.jsonString())
+        case .other: return try await appendTask(type: .Fight, params: "{}")
         }
     }
 }
@@ -43,6 +47,7 @@ final class MedicineLogHarness {
     var handle: RecordingHandle? = RecordingHandle()
     var clientChannel = MAAClientChannel.Official
     var stageActivity: MAAStageActivity?
+    var recruitTagNames: [String: String] = [:]
     var now = ISO8601DateFormatter().date(from: "2026-10-24T00:00:00Z")!
 
     func logInfo(_ message: String) {}

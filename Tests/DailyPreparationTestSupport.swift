@@ -48,6 +48,7 @@ enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot, Recruit, Depot, Vid
         appendCount += 1
         return Int32(appendCount)
     }
+    var connected: Bool { true }
     func appendTask(_ task: DailyTask.Kind, recruitTagNames: [String: String]) async throws -> Int32 {
         return try await appendTask(task)
     }
@@ -104,6 +105,24 @@ enum ClientChannel { case official, bilibili
     var calendar: Calendar { Calendar(identifier: .gregorian) }
 }
 struct MAAStageActivity {}
+struct PreparationCleanupFailure: Error {}
+struct DropItemStub {}
+struct InventoryTarget: Equatable { var itemID: String = ""; var quantity: Int = 0 }
+struct InventoryTargetPlan { var generation = 0; var startInventory = 0; var requiredDrops = 0 }
+enum InventoryTargetError: Error { case recognitionRequired, unsafeOrder, stalePreparation }
+struct InventoryScope: Equatable { var connection: String }
+struct InventorySnapshot {}
+struct InventorySnapshotAdapter {
+    var snapshot: InventorySnapshot? = nil
+    var usableSnapshot: ((InventoryScope) -> InventorySnapshot?) = { _ in nil }
+    func invalidate() {}
+    func beginRun(id: UUID, taskIDs: Set<Int32>) {}
+}
+enum InventoryTargetPlanner {
+    static func validateQueue(targetIndices: [Int], firstEnabledIndex: Int?) throws {}
+    static func plan(target: InventoryTarget, snapshot: InventorySnapshot?, knownItems: Set<String>) throws -> InventoryTargetPlan { InventoryTargetPlan() }
+    static func validateFrozen(_ plan: InventoryTargetPlan, itemID: String, snapshot: InventorySnapshot?) throws {}
+}
 struct StageActivityContext {
     enum MedicineWindow: Equatable { case inactive, unavailable, extended(Int) }
     init(channel: ClientChannel, activities: MAAStageActivity?) {}
@@ -112,6 +131,7 @@ struct StageActivityContext {
 struct FightConfiguration: Equatable {
     var stage: String = "1-7"
     var useActivityMedicine = false
+    var inventoryTarget: InventoryTarget? = nil
     struct Params: Equatable {
         var stage: String = ""
         var medicine_expire_days: Int = 0
@@ -119,6 +139,9 @@ struct FightConfiguration: Equatable {
     }
     func params(at date: Date, stageActivity: StageActivityContext) -> Params { Params() }
     static func normalizedStage(_ stage: String) -> String { stage }
+    @MainActor static func initDropItems(_ language: String) throws {}
+    @MainActor static var inventoryDropItems: [(id: String, item: DropItemStub)] { [] }
+    func preparingInventoryTarget(_ plan: InventoryTargetPlan) -> FightConfiguration { self }
 }
 struct MallConfiguration: Equatable {
     var clientChannel: ClientChannel = .official
@@ -178,11 +201,21 @@ struct DailyTask: Equatable {
     var useAdbLite = true
     var touchMode = TouchMode.maatouch
     var taskIDMap: [Int32: UUID] = [:]
-    var taskStatus: [UUID: Int] = [:]
+    enum TaskStatusValue { case success }
+    var taskStatus: [UUID: TaskStatusValue] = [:]
     var messageTask: Task<Void, Never>?
     var stageActivity: MAAStageActivity? = nil
+    var inventory = InventorySnapshotAdapter()
+    var inventoryScope = InventoryScope(connection: "adb")
+    var currentInventorySnapshot: InventorySnapshot? { nil }
     var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
     var recruitTagNames: [String: String] = [:]
+    func invalidateInventory() { inventory.invalidate() }
+    func checkStartupCancellation() throws {}
+    var startupCancellationLocked = false
+    enum SecretFrontResult { case stopped }
+    struct SecretFrontRunStub { var taskID: Int32? = nil; func finish(taskID: Int32, result: SecretFrontResult) {} ; func release() {} }
+    var secretFrontRun = SecretFrontRunStub()
     var achievementEvents = AchievementEventAdapter()
     let hookSettings = HookSettingsStore()
     var runHookConfiguration = HookConfiguration()
@@ -221,11 +254,13 @@ struct DailyTask: Equatable {
     func finishDailyRun(_ id: UUID, outcome: DailyRunOutcome, preparationCleanupSucceeded: Bool = true) async {
         try? dailyRunCoordinator.finish(id, outcome: outcome, cleanupSucceeded: preparationCleanupSucceeded)
         dailyRunTasks = nil
+        status = .idle
     }
     func reportIdleCallback() { resetStatus() }
     func reportBusyCallback() { status = .busy }
     func logError(_ text: String) { errors.append(text) }
     func logInfo(_ text: String) { infos.append(text) }
+    func logTrace(verbatim text: String) {}
     func ensureHandle(requireConnect: Bool = true) async throws {
         ensureCount += 1
         if handle == nil { handle = Core() }

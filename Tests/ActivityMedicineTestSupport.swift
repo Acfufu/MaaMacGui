@@ -13,4 +13,4 @@ enum MAATaskType {
     case Fight
     var description: String { "Fight" }
 }
-enum MAATask { case fight(FightConfiguration) }
+enum MAATask { case fight(FightConfiguration), other }

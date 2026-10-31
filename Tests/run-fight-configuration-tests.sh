@@ -8,6 +8,7 @@ trap 'rm -rf "$test_build_dir"' EXIT
 
 xcrun swiftc -parse-as-library \
     "$repo_dir/MeoAsstMac/Task Configurations/FightConfiguration.swift" \
+    "$repo_dir/MeoAsstMac/Model/InventoryTarget.swift" \
     "$test_dir/FightConfigurationTests.swift" \
     -o "$test_build_dir/fight-tests"
 "$test_build_dir/fight-tests"

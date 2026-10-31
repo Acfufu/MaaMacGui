@@ -19,6 +19,8 @@ struct FightConfiguration: MAATaskConfiguration {
     var series: Int?
     var drops: [String: Int]?
 
+    var inventoryTarget: InventoryTarget? = nil
+
     var report_to_penguin: Bool
     var penguin_id: String
     var server: String
@@ -59,36 +61,32 @@ struct FightConfiguration: MAATaskConfiguration {
         .fight(self)
     }
 
-    // Core parameters deliberately exclude GUI preferences and require an explicit
-    // activity context before the medicine window can be extended.
     struct Params: Encodable {
-        let stage: String
-        let medicine: Int?
-        var medicine_expire_days: Int
-        let stone: Int?
-        let times: Int?
-        let series: Int?
-        let drops: [String: Int]?
-        let report_to_penguin: Bool
-        let penguin_id: String
-        let server: String
-        let client_type: String
-        let DrGrandet: Bool
-
-        init(_ config: FightConfiguration) {
-            stage = config.stage
-            medicine = config.medicine
-            medicine_expire_days = config.medicine_expire_days
-            stone = config.stone
-            times = config.times
-            series = config.series
-            drops = config.drops
-            report_to_penguin = config.report_to_penguin
-            penguin_id = config.penguin_id
-            server = config.server
-            client_type = config.client_type
-            DrGrandet = config.DrGrandet
+        fileprivate let configuration: FightConfiguration
+        func encode(to encoder: any Encoder) throws {
+            // A target must be prepared against a live snapshot before it reaches Core.
+            guard configuration.inventoryTarget == nil else { throw InventoryTargetError.recognitionRequired }
+            var container = encoder.container(keyedBy: CoreCodingKeys.self)
+            let c = configuration
+            try container.encode(c.stage, forKey: .stage)
+            try container.encodeIfPresent(c.medicine, forKey: .medicine)
+            try container.encode(c.medicine_expire_days, forKey: .medicine_expire_days)
+            try container.encodeIfPresent(c.stone, forKey: .stone)
+            try container.encodeIfPresent(c.times, forKey: .times)
+            try container.encodeIfPresent(c.series, forKey: .series)
+            try container.encodeIfPresent(c.drops, forKey: .drops)
+            try container.encode(c.report_to_penguin, forKey: .report_to_penguin)
+            try container.encode(c.penguin_id, forKey: .penguin_id)
+            try container.encode(c.server, forKey: .server)
+            try container.encode(c.client_type, forKey: .client_type)
+            try container.encode(c.DrGrandet, forKey: .DrGrandet)
         }
+        private enum CoreCodingKeys: String, CodingKey {
+            case stage, medicine, medicine_expire_days, stone, times, series, drops
+            case report_to_penguin, penguin_id, server, client_type, DrGrandet
+        }
+
+        var medicine_expire_days: Int { configuration.medicine_expire_days }
     }
 
     // Normalize short stage codes (AP-5, PR-A-1, JT8-2, OF-F3) regardless of input case.
@@ -108,19 +106,32 @@ struct FightConfiguration: MAATaskConfiguration {
     var params: Params {
         var config = self
         config.stage = Self.normalizedStage(config.stage)
-        return Params(config)
+        return Params(configuration: config)
     }
 
     func params(at date: Date, stageActivity: StageActivityContext) -> Params {
-        var result = params
+        var config = self
+        config.stage = Self.normalizedStage(config.stage)
         if case .extended(let days) = stageActivity.medicineWindow(at: date, enabled: useActivityMedicine) {
-            result.medicine_expire_days = max(medicine_expire_days, days)
+            config.medicine_expire_days = max(medicine_expire_days, days)
         }
-        return result
+        return Params(configuration: config)
+    }
+
+    func preparingInventoryTarget(_ plan: InventoryTargetPlan) -> Self {
+        var prepared = self
+        if let target = inventoryTarget {
+            prepared.drops = [target.itemID: plan.requiredDrops]
+            prepared.inventoryTarget = nil
+        }
+        return prepared
     }
 
     // 掉落物品列表
     @MainActor static var dropItems: [(id: String, item: DropItem)] = []
+    @MainActor static var inventoryDropItems: [(id: String, item: DropItem)] {
+        dropItems.filter { InventoryTargetPlanner.supportsInventory(classification: $0.item.classifyType) }
+    }
     @MainActor static var id2index: [String: Int] = [:]  // (id -> idx of dropItems)
     static let _excludedValues = Set([
         3213, 3223, 3233, 3243,  // 双芯片
@@ -202,6 +213,7 @@ extension FightConfiguration {
         self.times = try container.decodeIfPresent(Int.self, forKey: .times)
         self.series = try container.decodeIfPresent(Int.self, forKey: .series)
         self.drops = try container.decodeIfPresent([String: Int].self, forKey: .drops)
+        self.inventoryTarget = try container.decodeIfPresent(InventoryTarget.self, forKey: .inventoryTarget)
         self.report_to_penguin = try container.decodeIfPresent(Bool.self, forKey: .report_to_penguin) ?? false
         self.penguin_id = try container.decodeIfPresent(String.self, forKey: .penguin_id) ?? ""
         self.server = try container.decodeIfPresent(String.self, forKey: .server) ?? "CN"

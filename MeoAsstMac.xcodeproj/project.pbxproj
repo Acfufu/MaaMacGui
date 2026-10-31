@@ -126,6 +126,7 @@
 		9BC2EEB32E3F188D0039C4DB /* MiniGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BC2EEB22E3F188D0039C4DB /* MiniGameView.swift */; };
 		AEA8E3A02E77003F00355D84 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = AEA8E39F2E77003F00355D84 /* AppIcon.icon */; };
 		2CFD9CE6D9AB44579939835B /* RunContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7743B34F2704668B4E0A0E9 /* RunContext.swift */; };
+		C70000000000000000000002 /* InventoryTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70000000000000000000001 /* InventoryTarget.swift */; };
 		D435C735FBB248EDAB963960 /* HotkeyConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38A31B3C3C9145DBAFB0BA95 /* HotkeyConfiguration.swift */; };
 		6289CAA0CEBE4173997CAB86 /* GlobalHotkeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F6DFDA2D2384CB1800C898E /* GlobalHotkeyService.swift */; };
 		38EB76370CAF45D89359D590 /* HotkeySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E78B60E254D04E2E91F4FA92 /* HotkeySettingsView.swift */; };
@@ -312,6 +313,7 @@
 		7F6DFDA2D2384CB1800C898E /* GlobalHotkeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeoAsstMac/Hotkeys/GlobalHotkeyService.swift; sourceTree = SOURCE_ROOT; };
 		E78B60E254D04E2E91F4FA92 /* HotkeySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeoAsstMac/Hotkeys/HotkeySettingsView.swift; sourceTree = SOURCE_ROOT; };
 		B7743B34F2704668B4E0A0E9 /* RunContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunContext.swift; sourceTree = "<group>"; };
+		C70000000000000000000001 /* InventoryTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryTarget.swift; sourceTree = "<group>"; };
 		9A6855ABEC964286B70706AC /* HookConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookConfiguration.swift; sourceTree = "<group>"; };
 		3621885B42794A3E8940DB36 /* HookRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookRunner.swift; sourceTree = "<group>"; };
 		0FC2C19F5DD0469BBD8F1A7F /* HookSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookSettingsView.swift; sourceTree = "<group>"; };
@@ -456,10 +458,10 @@
 			sourceTree = "<group>";
 		};
 		8329858E29EDAC7B009F7ED5 /* Views */ = {
-				C20000000000000000000002 /* AnnouncementView.swift */,
 			isa = PBXGroup;
 			children = (
 				83264A3A29EC0F2E0074E33A /* LogView.swift */,
+				C20000000000000000000002 /* AnnouncementView.swift */,
 				83264ACA29EC0F2E0074E33A /* EditableTextList.swift */,
 				9BC2EEB22E3F188D0039C4DB /* MiniGameView.swift */,
 				83BC250C302F02B000080642 /* PixelPaintView.swift */,
@@ -588,12 +590,13 @@
 			sourceTree = "<group>";
 		};
 		8341195129EC258D00044F45 /* Model */ = {
-				C20000000000000000000001 /* AnnouncementStore.swift */,
-				C20000000000000000000000 /* AnnouncementService.swift */,
 			isa = PBXGroup;
 			children = (
 				8341195629EC58CF00044F45 /* MAACopilot.swift */,
+				C20000000000000000000001 /* AnnouncementStore.swift */,
+				C20000000000000000000000 /* AnnouncementService.swift */,
 				832985B529EF1890009F7ED5 /* MAADepot.swift */,
+				C70000000000000000000001 /* InventoryTarget.swift */,
 				C80000000000000000000001 /* AchievementDefinition.swift */,
 				C80000000000000000000002 /* AchievementEngine.swift */,
 				C80000000000000000000003 /* AchievementEventAdapter.swift */,
@@ -756,9 +759,6 @@
 /* Begin PBXSourcesBuildPhase section */
 		833786C728F188D800D39D6F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-				C21000000000000000000002 /* AnnouncementView.swift in Sources */,
-				C21000000000000000000001 /* AnnouncementStore.swift in Sources */,
-				C21000000000000000000000 /* AnnouncementService.swift in Sources */,
 			buildActionMask = 2147483647;
 			files = (
 				2CFD9CE6D9AB44579939835B /* RunContext.swift in Sources */,
@@ -778,6 +778,9 @@
 				A5CC1A5A94B6EFE3BA010488 /* ScheduleOccurrenceStore.swift in Sources */,
 				B90B2C1FA5DC1ACDC583A2C4 /* DailyTaskSchedule.swift in Sources */,
 				8341195D29EC719B00044F45 /* CopilotContent.swift in Sources */,
+				C21000000000000000000002 /* AnnouncementView.swift in Sources */,
+				C21000000000000000000001 /* AnnouncementStore.swift in Sources */,
+				C21000000000000000000000 /* AnnouncementService.swift in Sources */,
 				8355E7B429E918A2005D5A1C /* TasksContent.swift in Sources */,
 				832985AA29EE9958009F7ED5 /* RecruitView.swift in Sources */,
 				83264A3B29EC0F2E0074E33A /* LogView.swift in Sources */,
@@ -842,6 +845,7 @@
 				83264A2629EBC9C10074E33A /* ReclamationSettingsView.swift in Sources */,
 				836E9975305338150082748D /* FightStage.swift in Sources */,
 				832985B629EF1890009F7ED5 /* MAADepot.swift in Sources */,
+				C70000000000000000000002 /* InventoryTarget.swift in Sources */,
 				C81000000000000000000001 /* AchievementDefinition.swift in Sources */,
 				C81000000000000000000002 /* AchievementEngine.swift in Sources */,
 				C81000000000000000000003 /* AchievementEventAdapter.swift in Sources */,

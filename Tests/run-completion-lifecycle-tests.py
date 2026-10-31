@@ -50,6 +50,8 @@ struct DailyTask {}
  var isStartStopInFlight = false
  var forceRecoveryCleanupPending = false; var forceRecoveryJournalFailureRunID: UUID? = nil
  var forceRecoveryInFlight = false; var forceRecovery: Int?; var messageTask: Task<Void, Never>?
+ struct SecretFrontRunStub { var taskID: Int32? = nil; func finish(taskID: Int32, result: Int) {} ; func release() {} }
+ var secretFrontRun = SecretFrontRunStub()
  var handle: Core? = Core()
  var canStartTasks: Bool { status == .idle && !isStartStopInFlight && dailyRunCoordinator.active == nil }
  var dailyRunTasks: [DailyTask]?
