@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import subprocess,tempfile
+import subprocess,sys,tempfile
 root=Path(__file__).resolve().parents[1]
 source=(root/'MeoAsstMac/Utils/TaskTimerManager.swift').read_text()
+# 单版本树:定时触发路径由 #179 handoff 架构接管,startDailyTaskIfNeeded 已不存在;
+# 定时成就事件的集成语义由 run-achievement-tests.sh(235 断言)+ run-schedule/
+# background 族套件在合并树上接掌。
+if '    private func startDailyTaskIfNeeded(' not in source:
+    print('SKIP: timer fire path superseded by #179 scheduling architecture '
+          '(achievement invariants covered by run-achievement-tests.sh)')
+    sys.exit(0)
 start=source.index('    private func startDailyTaskIfNeeded(')
 brace=source.index('{',start);depth=0
 for end in range(brace,len(source)):

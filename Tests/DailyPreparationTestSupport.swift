@@ -187,6 +187,20 @@ struct DailyTask {
 
 
 typealias MAATask = DailyTask.Kind
-struct AchievementEventAdapter { mutating func register(taskID: Int32, runID: UUID) {} }
-struct AchievementEvent { enum Metric { case scheduledStart }; let runID: UUID?; let metric: Metric }
-@MainActor final class AchievementStore { static let shared = AchievementStore(); func record(_ event: AchievementEvent) {} }
+struct AchievementEventAdapter {
+    mutating func register(taskID: Int32, runID: UUID) {}
+    mutating func register(taskID: Int32, type: String) {}
+    mutating func resetSession() {}
+}
+struct AchievementEvent {
+    enum Metric { case scheduledStart, manualStart, manualStop }
+    enum Operation { case maximum }
+    let runID: UUID?
+    let metric: Metric
+    var operation: Operation = .maximum
+}
+@MainActor final class AchievementStore {
+    static let shared = AchievementStore()
+    func record(_ event: AchievementEvent) {}
+    func recordLaunch() {}
+}
