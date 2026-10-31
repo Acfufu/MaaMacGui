@@ -217,8 +217,32 @@ struct RoguelikeConfiguration: MAATaskConfiguration {
     }
     var blackflowStart = BlackflowStartOptions()
 
-    func params(blackflowStartAvailable: Bool) -> Params {
-        Params(config: self, blackflowStartAvailable: blackflowStartAvailable)
+    var seedEnabled = false
+    var seed = ""
+
+    var supportsSeedConfiguration: Bool {
+        theme == .Sarkaz && mode == .investment && ["点刺成锭分队", "后勤分队"].contains(squad)
+    }
+
+    /// 上游 WPF 要求的种子格式，示例 `2b3c4d,rogue_1,120`
+    private static let seedPattern = #/^[\da-zA-Z]+,rogue_\d+,\d+$/#
+
+    static func isValidSeed(_ seed: String) -> Bool {
+        seed.wholeMatch(of: seedPattern) != nil
+    }
+
+    var trimmedSeed: String {
+        seed.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// 空种子视为关闭该功能；非空种子必须符合上游格式才会下发
+    var hasValidSeed: Bool {
+        !trimmedSeed.isEmpty && Self.isValidSeed(trimmedSeed)
+    }
+
+    /// The current input transport is supplied when preparing a run, never stored with preferences.
+    func params(blackflowStartAvailable: Bool = false, supportsSeedInput: Bool = false) -> Params {
+        Params(config: self, blackflowStartAvailable: blackflowStartAvailable, supportsSeedInput: supportsSeedInput)
     }
 
     var blackflowCultivationTarget = BlackflowCultivation.swaddledCat
@@ -283,6 +307,7 @@ struct RoguelikeConfiguration: MAATaskConfiguration {
         let find_playTime_target: Int?
         let blackflow_strategy: String?
         let blackflow_cultivation_target: String?
+        let start_with_seed: String?
         let blackflow_start_animals: [String]?
         let blackflow_start_rewards: Int?
         let blackflow_start_utopia: Bool?
@@ -478,7 +503,10 @@ extension RoguelikeConfiguration {
 }
 
 extension RoguelikeConfiguration.Params {
-    init(config: RoguelikeConfiguration, blackflowStartAvailable: Bool = false) {
+    init(config: RoguelikeConfiguration, blackflowStartAvailable: Bool = false, supportsSeedInput: Bool = false) {
+        self.start_with_seed =
+            supportsSeedInput && config.supportsSeedConfiguration && config.seedEnabled && config.hasValidSeed
+            ? config.trimmedSeed : nil
         let startRun = config.theme == .BlackFlow && config.mode == .blackflowStart
         let utopia = startRun && config.blackflowStart.utopia && blackflowStartAvailable
         self.blackflow_start_animals = startRun ? config.blackflowStart.animals.map(\.rawValue) : nil
@@ -587,6 +615,8 @@ extension RoguelikeConfiguration {
         self.blackflowFastFlight = try container.decodeIfPresent(Bool.self, forKey: .blackflowFastFlight) ?? false
         self.blackflowStart = try container.decodeIfPresent(BlackflowStartOptions.self, forKey: .blackflowStart)
             ?? BlackflowStartOptions()
+        self.seedEnabled = try container.decodeIfPresent(Bool.self, forKey: .seedEnabled) ?? false
+        self.seed = try container.decodeIfPresent(String.self, forKey: .seed) ?? ""
         self.blackflowCultivationTarget =
             try container.decodeIfPresent(BlackflowCultivation.self, forKey: .blackflowCultivationTarget)
             ?? .swaddledCat

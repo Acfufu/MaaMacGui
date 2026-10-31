@@ -31,7 +31,7 @@ extension MAATaskConfiguration {
 // MARK: JSON TaskParams
 
 extension MAAHandle {
-    func appendTask(_ task: MAATask, recruitTagNames: [String: String] = [:], blackflowStartAvailable: Bool = false) throws -> Int32 {
+    func appendTask(_ task: MAATask, recruitTagNames: [String: String] = [:], blackflowStartAvailable: Bool = false, supportsRoguelikeSeedInput: Bool = false) throws -> Int32 {
         switch task {
         case .startup(let config):
             return try appendTask(config: config)
@@ -51,7 +51,7 @@ extension MAAHandle {
             return try appendTask(config: config)
         case .roguelike(let config):
             try config.validateBlackflowStart(available: blackflowStartAvailable)
-            return try appendTask(type: config.type, params: config.params(blackflowStartAvailable: blackflowStartAvailable).jsonString())
+            return try appendTask(type: config.type, params: config.params(blackflowStartAvailable: blackflowStartAvailable, supportsSeedInput: supportsRoguelikeSeedInput).jsonString())
         case .reclamation(let config):
             return try appendTask(config: config)
         }

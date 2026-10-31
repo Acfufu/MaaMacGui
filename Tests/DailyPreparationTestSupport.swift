@@ -50,7 +50,8 @@ enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot, Recruit, Depot, Vid
     }
     var connected: Bool { true }
     func appendTask(_ task: DailyTask.Kind, recruitTagNames: [String: String],
-                     blackflowStartAvailable: Bool = false) async throws -> Int32 {
+                     blackflowStartAvailable: Bool = false,
+                     supportsRoguelikeSeedInput: Bool = false) async throws -> Int32 {
         return try await appendTask(task)
     }
     func appendTask(_ task: DailyTask.Kind) async throws -> Int32 {

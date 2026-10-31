@@ -1213,7 +1213,8 @@ extension MAAViewModel {
                     }
                 } else {
                     coreID = try await handle?.appendTask(task.task, recruitTagNames: recruitTagNames,
-                                                      blackflowStartAvailable: supportsBlackflowStart)
+                                                      blackflowStartAvailable: supportsBlackflowStart,
+                                                      supportsRoguelikeSeedInput: touchMode != .MacPlayTools)
                 }
                 if let coreID {
                     appendedAnyTask = true

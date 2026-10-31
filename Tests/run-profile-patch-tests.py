@@ -42,6 +42,10 @@ support+='''
  func logError(_ resource: LocalizedStringResource) { logError(verbatim: .init(localized: resource)) }
 '''+declaration(model,r'^    func applyDailyTaskCallback\(')+'\n}\n'
 mall=(root/'MeoAsstMac/Task Configurations/MallConfiguration.swift').read_text().replace('import JBird','')
+hg=(root/'MeoAsstMac/Utils/HGCalendar.swift').read_text()
+_channel=(root/'MeoAsstMac/Task Configurations/StartupConfiguration.swift').read_text()
+_ci=_channel.index('enum MAAClientChannel:')
+mall=_channel[_ci:_channel.index('\n}',_ci)+2]+'\n'+mall
 # Only the unrelated Core JSON result builder is replaced; all saved fields,
 # Codable migration, and production patch/store/wrapper code compile verbatim.
 params=declaration(mall,r'^    @JSON.Builder var params:')
@@ -50,8 +54,9 @@ with tempfile.TemporaryDirectory(prefix='maa-profile-patch-tests-') as temporary
     tmp=Path(temporary)
     (tmp/'Support.swift').write_text(support)
     (tmp/'MallConfiguration.swift').write_text(mall)
+    (tmp/'HGCalendar.swift').write_text(hg)
     binary=tmp/'tests'
-    subprocess.run(['xcrun','swiftc','-parse-as-library',str(tmp/'Support.swift'),
+    subprocess.run(['xcrun','swiftc','-parse-as-library',str(tmp/'HGCalendar.swift'),str(tmp/'Support.swift'),
         str(root/'MeoAsstMac/Task Configurations/InfrastConfiguration.swift'),str(tmp/'MallConfiguration.swift'),
         str(root/'MeoAsstMac/RunHooks/RunContext.swift'),str(root/'MeoAsstMac/RunHooks/DailyRunProfilePatch.swift'),
         str(root/'Tests/RunProfilePatchTests.swift'),'-o',str(binary)],check=True)

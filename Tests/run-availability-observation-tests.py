@@ -19,6 +19,8 @@ struct DailyTask {}
 @MainActor final class MAAViewModel: ObservableObject {
  enum Status { case idle, busy, pending }
  @Published var status = Status.idle
+ var isTestingHook = false
+ var blackflowStartAvailable = false
  @Published var isStartStopInFlight = false
  let dailyRunCoordinator = DailyRunCoordinator()
 '''+block(model,r'^    var canStartTasks:')+'\n init() {\n'+wiring+'\n}\n}\n'+'''

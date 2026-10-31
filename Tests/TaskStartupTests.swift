@@ -1,6 +1,15 @@
 import Combine
 import Foundation
 
+// 单文件编译桩:params(at:stageActivity:) 的活动上下文;真实实现见
+// MeoAsstMac/Model/StageActivity.swift。
+struct MAAStageActivity {}
+struct StageActivityContext {
+    enum MedicineWindow: Equatable { case inactive, unavailable, extended(Int) }
+    init(channel: String, activities: MAAStageActivity?) {}
+    func medicineWindow(at date: Date, enabled: Bool) -> MedicineWindow { .inactive }
+}
+
 // Only the core and unrelated app dependencies are replaced. The runner compiles
 // the unchanged production startTasks() body and FightConfiguration.swift.
 typealias MAATaskConfiguration = Codable & Hashable & Sendable
@@ -10,36 +19,108 @@ enum MAATaskType: String {
     var description: String { rawValue }
 }
 
-struct ClientConfiguration: Codable {
+struct ClientConfiguration: Codable, Equatable {
     var client_type = "Official"
     var start_game_enabled = false
 }
 
-enum MAATask: Codable {
+enum MAATask: Equatable {
+    static func == (l: MAATask, r: MAATask) -> Bool {
+        switch (l, r) {
+        case (.fight(let a), .fight(let b)): return a == b
+        case (.mall(let a), .mall(let b)): return a == b
+        case (.roguelike(let a), .roguelike(let b)): return a == b
+        case (.other, .other): return true
+        case (.startup, .startup), (.closedown, .closedown): return true
+        default: return false
+        }
+    }
+
     case fight(FightConfiguration)
     case startup(ClientConfiguration)
     case closedown(ClientConfiguration)
-}
+ case mall(MallConfiguration), roguelike(RoguelikeCfgStub), other }
 
-struct DailyTask: Codable {
+struct DailyTask: Equatable, Codable {
+    enum CodingKeys: String, CodingKey { case id, enabled }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(enabled, forKey: .enabled)
+    }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        enabled = try c.decode(Bool.self, forKey: .enabled)
+        task = .other
+    }
+    init(id: UUID = UUID(), task: MAATask, enabled: Bool = true) {
+        self.id = id; self.task = task; self.enabled = enabled
+    }
+
     let id: UUID
     var task: MAATask
     var enabled: Bool
 }
 
 enum MAAError: Error { case gameStartFailed }
+struct DailyRunSnapshot { let profileID: String; let tasks: [DailyTask] }
+struct PreparationCleanupFailure: Error {}
+enum ForcedRecoveryFailure: Error { case notReady, timedOut }
+enum DailyRunPhase { case running }
+struct RunContext { let id: UUID; var status: DailyRunPhase }
+final class DailyRunCoordinator { var active: RunContext?; func transition(_ phase: DailyRunPhase, for id: UUID) throws {} }
+struct DropItemStub {}
+struct MallConfiguration: Equatable {
+    var clientChannel: String = "Official"
+    var batchSnapshotDate: Date? = nil
+    var creditFightDate: Date? = nil
+    var friendVisitDate: Date? = nil
+    struct Admission { var creditFightMarkedDate: Date?; var friendVisitMarkedDate: Date? }
+    static func batchDailyAdmissions(of entries: [(enabled: Bool, config: MallConfiguration)],
+                                     snapshotDate: Date, calendar: Calendar) -> [Admission] {
+        entries.map { _ in Admission(creditFightMarkedDate: nil, friendVisitMarkedDate: nil) }
+    }
+}
+struct AchievementEventAdapter { mutating func register(taskID: Int32, runID: UUID) {} }
+struct RoguelikeCfgStub: Equatable { func validateBlackflowStart(available: Bool) throws {} }
+struct HookResultX {}
+extension String { var calendar: Calendar { Calendar(identifier: .gregorian) } }
+extension FightConfiguration.Params { func jsonString() throws -> String {
+    let data = try JSONEncoder().encode(self); return String(decoding: data, as: UTF8.self)
+} }
+extension String { var isGlobal: Bool { false } }
 
 @MainActor final class TestHandle {
     var stages = [String]()
     var started = false
 
+    var connected = true
+    var isRunning = false
+    var running: Bool { isRunning }
+
     func appendTask(_ task: MAATask) async throws -> Int32 {
         guard case .fight(let config) = task else { return 0 }
-        stages.append(config.params.stage)
+        stages.append(config.stage)
         return Int32(stages.count)
     }
+    func appendTask(_ task: MAATask, recruitTagNames: [String: String],
+                    blackflowStartAvailable: Bool = false,
+                    supportsRoguelikeSeedInput: Bool = false) async throws -> Int32 {
+        try await appendTask(task)
+    }
+    struct CoreFightPayload: Decodable { var stage: String }
+    func appendTask(type: MAATaskType, params: String) async throws -> Int32 {
+        if let data = params.data(using: .utf8),
+           let payload = try? JSONDecoder().decode(CoreFightPayload.self, from: data) {
+            stages.append(payload.stage)
+            return Int32(stages.count)
+        }
+        return 0
+    }
+    func stop() async throws {}
 
-    func start() async throws { started = true }
+    func start() async throws { started = true; isRunning = true }
 }
 
 @MainActor final class MAAViewModel {
@@ -52,10 +133,38 @@ enum MAAError: Error { case gameStartFailed }
     var clientChannel = "Official"
     var taskIDMap = [Int32: UUID]()
     var handle: TestHandle? = TestHandle()
+    var stageActivity: MAAStageActivity? = nil
+    var recruitTagNames: [String: String] = [:]
+    var blackflowStartAvailable = false
+    var inventory = InventorySnapshotAdapter()
+    var inventoryScope = InventoryScope(connection: "adb", server: "Official", profile: "Default")
+    var currentInventorySnapshot: InventorySnapshot? { nil }
+    var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
+    var achievementEvents = AchievementEventAdapter()
+    let dailyRunCoordinator = DailyRunCoordinator()
+    var dailyRunTasks: [DailyTask]? = nil
+    enum TaskStatusValue { case success }
+    var taskStatus: [UUID: TaskStatusValue] = [:]
+    var messageTask: Task<Void, Never>? = nil
+    var forceRecoveryInFlight = false
+    var startupCancellationLocked = false
+    var dailyStartCancelled = false
+    func checkStartupCancellation() throws {}
+    func runStartTasksX() async throws {
+        try await startTasks(snapshot: DailyRunSnapshot(profileID: "Default", tasks: tasks), runID: UUID())
+    }
+    func invalidateInventory() { inventory.invalidate() }
+    func recoverGameToHome(runID: UUID, isCurrent: @escaping @MainActor () -> Bool) async throws {}
+    func logInfo(_ text: String) {}
+    func logTrace(verbatim text: String) {}
+    func startCoreTasks(recordDailyTaskStart: Bool = false) async throws {
+        try await handle?.start()
+        status = .busy
+    }
     var logStore: TestLogStore?
     var connection: CheckedContinuation<Void, Never>?
 
-    func ensureHandle() async throws {
+    func ensureHandle(requireConnect: Bool = true) async throws {
         await withCheckedContinuation { connection = $0 }
     }
 

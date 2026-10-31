@@ -20,7 +20,7 @@ extension MAATaskConfiguration { init() { self = try! JSONDecoder().decode(Self.
 enum MAATaskType { case Fight; var description: String { "Fight" } }
 struct Startup: Sendable, Equatable { var client_type = "CN"; var start_game_enabled = false }
 struct Closedown: Sendable, Equatable { var client_type = "CN" }
-enum MAATask: Sendable, Equatable { case fight(FightConfiguration), startup(Startup), closedown(Closedown), mall(MallConfiguration), other }
+enum MAATask: Sendable, Equatable { case fight(FightConfiguration), startup(Startup), closedown(Closedown), mall(MallConfiguration), roguelike(RoguelikeSeedCfgStub), other }
 extension FightConfiguration: Sendable {}
 extension FightConfiguration.Params: Sendable {}
 extension FightConfiguration.Params { func jsonString() throws -> String {
@@ -39,6 +39,8 @@ struct MAAStageActivity {}
 enum ForcedRecoveryFailure: Error { case notReady, timedOut }
 struct PreparationCleanupFailure: Error {}
 extension String { var calendar: Calendar { Calendar(identifier: .gregorian) } }
+extension String { var isGlobal: Bool { false } }
+struct RoguelikeSeedCfgStub: Equatable { func validateBlackflowStart(available: Bool) throws {} }
 struct MallConfiguration: Equatable {
     var clientChannel: String = "CN"
     var batchSnapshotDate: Date? = nil
@@ -67,7 +69,7 @@ actor FakeHandle {
  var onAppend: (@MainActor () -> Void)?
  func setOnAppend(_ action: (@MainActor () -> Void)?) { onAppend = action }
  func appendTask(_ task: MAATask) async throws -> Int32 { queue.append(task); await onAppend?(); return Int32(queue.count) }
- func appendTask(_ task: MAATask, recruitTagNames: [String: String]) async throws -> Int32 { try await appendTask(task) }
+ func appendTask(_ task: MAATask, recruitTagNames: [String: String], blackflowStartAvailable: Bool = false, supportsRoguelikeSeedInput: Bool = false) async throws -> Int32 { try await appendTask(task) }
  func appendTask(type: MAATaskType, params: String) async throws -> Int32 {
   if case .Fight = type, let data = params.data(using: .utf8),
      let config = try? JSONDecoder().decode(FightConfiguration.self, from: data) {
@@ -95,6 +97,7 @@ actor FakeHandle {
  var inventoryScope = InventoryScope(connection: "adb", server: "CN", profile: "Default")
  var stageActivity: MAAStageActivity? = nil
  var recruitTagNames: [String: String] = [:]
+ var blackflowStartAvailable = false
  var dailyRunTasks: [DailyTask]? = nil
  var forceRecoveryInFlight = false
  var startupCancellationLocked = false

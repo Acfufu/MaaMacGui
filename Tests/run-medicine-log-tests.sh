@@ -26,6 +26,8 @@ enqueue = _re.sub(r'\n *try Task\.checkCancellation\(\)', '', enqueue, count=1)
 enqueue = _re.sub(r'\n *achievementEvents\.register[^\n]*', '', enqueue, count=1)
 enqueue = _re.sub(r'\n *inventoryFightIDs\.insert[^\n]*', '', enqueue, count=1)
 enqueue = _re.sub(r'\n *appendedAnyTask = true', '', enqueue, count=1)
+# 170/171 传输参数(黑流开局/肉鸽种子)不在本套件边界内,由各自套件覆盖。
+enqueue = enqueue.replace(',\n                                                      blackflowStartAvailable: supportsBlackflowStart,\n                                                      supportsRoguelikeSeedInput: touchMode != .MacPlayTools', '')
 message = Path('MeoAsstMac/Core/MaaMessage.swift').read_text()
 start = message.index('            let expiry: String', message.index('case "UseMedicine":'))
 end = message.index('            if medicine.is_expiring {', start)

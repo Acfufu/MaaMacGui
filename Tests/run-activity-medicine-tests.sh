@@ -17,6 +17,7 @@ p.joinpath('main.swift').write_text(legacy[start:end]+'\n'+Path('Tests/ActivityM
 PY
 xcrun swiftc Tests/ActivityMedicineTestSupport.swift \
   'MeoAsstMac/Task Configurations/FightConfiguration.swift' \
+  MeoAsstMac/Model/InventoryTarget.swift \
   MeoAsstMac/Model/StageActivity.swift MeoAsstMac/Utils/HGCalendar.swift \
   Packages/LegacyUserTasks/Sources/LegacyUserTasks/Fight.swift \
   "$test_dir/ActivityModels.swift" "$test_dir/main.swift" -o "$test_dir/tests"
