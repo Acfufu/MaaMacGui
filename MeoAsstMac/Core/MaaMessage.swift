@@ -51,6 +51,11 @@ extension Decodable {
 
 extension MAAViewModel {
     func processMessage(_ message: MaaMessage) {
+        if let data = try? message.details.serialize() {
+            for event in achievementEvents.consume(code: message.code, data: data) {
+                AchievementStore.shared.record(event)
+            }
+        }
         if processForcedRecoveryMessage(message) { return }
         switch message.code {
         case .InternalError:
