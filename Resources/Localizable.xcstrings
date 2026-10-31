@@ -1,249 +1,6 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
-    "登录项操作超时，系统可能仍在处理。可重试等待结果，或打开系统登录项设置检查。": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The login item request timed out and may still be processing. Retry to wait for the result, or check Login Items in System Settings."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 항목 요청 시간이 초과되었지만 시스템에서 아직 처리 중일 수 있습니다. 다시 시도하여 결과를 기다리거나 시스템 설정의 로그인 항목을 확인하세요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "登录项操作超时，系统可能仍在处理。可重试等待结果，或打开系统登录项设置检查。"
-          }
-        }
-      }
-    },
-    "登录时启动 MAA": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open MAA at login"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 시 MAA 실행"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "登录时启动 MAA"
-          }
-        }
-      }
-    },
-    "登录后仅打开应用，不会自动开始日常任务": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Login opens the app without starting daily tasks automatically."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 후 앱만 열리며 일일 작업은 자동으로 시작하지 않습니다."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "登录后仅打开应用，不会自动开始日常任务"
-          }
-        }
-      }
-    },
-    "打开系统登录项设置": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Login Items Settings"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "시스템 로그인 항목 설정 열기"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "打开系统登录项设置"
-          }
-        }
-      }
-    },
-    "取消登录项申请": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel Login Item Request"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 항목 요청 취소"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "取消登录项申请"
-          }
-        }
-      }
-    },
-    "登录项未启用": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Login item is off"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 항목 꺼짐"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "登录项未启用"
-          }
-        }
-      }
-    },
-    "登录项已启用": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Login item is on"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 항목 켜짐"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "登录项已启用"
-          }
-        }
-      }
-    },
-    "等待系统批准，请在系统设置中允许登录时启动": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Approval required. Allow login launch in System Settings."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "시스템 승인이 필요합니다. 시스템 설정에서 로그인 시 실행을 허용하세요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "等待系统批准，请在系统设置中允许登录时启动"
-          }
-        }
-      }
-    },
-    "找不到登录服务，请将应用移至固定位置后重试": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Login service not found. Move the app to a permanent location and retry."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 서비스를 찾을 수 없습니다. 앱을 고정된 위치로 옮긴 후 다시 시도하세요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "找不到登录服务，请将应用移至固定位置后重试"
-          }
-        }
-      }
-    },
-    "无法确认登录项状态，请检查系统设置": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Login item status is unknown. Check System Settings."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 항목 상태를 확인할 수 없습니다. 시스템 설정을 확인하세요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无法确认登录项状态，请检查系统设置"
-          }
-        }
-      }
-    },
-    "重试": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retry"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "다시 시도"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重试"
-          }
-        }
-      }
-    }
-,
     "" : {
       "shouldTranslate" : false
     },
@@ -5532,6 +5289,94 @@
         }
       }
     },
+    "SecretFrontCandidateLog" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detected candidate event: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트 후보 감지: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检测到候选事件：%@"
+          }
+        }
+      }
+    },
+    "SecretFrontLastStepLog" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last observed step: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마지막으로 확인된 단계: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最后有效步骤：%@"
+          }
+        }
+      }
+    },
+    "SecretFrontStartupFailureLog" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret Front failed to start"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비밀 전선 시작 실패"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐秘战线启动失败"
+          }
+        }
+      }
+    },
+    "SecretFrontTargetLog" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret Front: ending %@, preferred event: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비밀 전선: 엔딩 %@, 선호 이벤트: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐秘战线：目标结局 %@，指定事件：%@"
+          }
+        }
+      }
+    },
     "StageInfoError" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6058,6 +5903,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "이미 배치된 오퍼레이터를 숙소에 넣지 않음"
+          }
+        }
+      }
+    },
+    "不指定" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No preference"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지정 안 함"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不指定"
           }
         }
       }
@@ -6609,6 +6476,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "작업 정지"
+          }
+        }
+      }
+    },
+    "停止任务失败: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to stop the task: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 중지 실패: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止任务失败: %@"
           }
         }
       }
@@ -7286,6 +7175,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "취소"
+          }
+        }
+      }
+    },
+    "取消登录项申请" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Login Item Request"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 항목 요청 취소"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消登录项申请"
           }
         }
       }
@@ -8131,6 +8042,28 @@
         }
       }
     },
+    "小游戏启动失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to start mini game"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "미니게임 시작 실패"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小游戏启动失败"
+          }
+        }
+      }
+    },
     "岁的界园志异" : {
       "localizations" : {
         "ko" : {
@@ -8671,6 +8604,28 @@
         }
       }
     },
+    "当前服务器的隐秘战线资源尚未验证，暂不可用。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret Front resources for this server have not been verified. Currently unavailable."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 서버의 비밀 전선 리소스는 검증되지 않아 현재 사용할 수 없습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前服务器的隐秘战线资源尚未验证，暂不可用。"
+          }
+        }
+      }
+    },
     "当前正在启动或停止任务，请稍后重试。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -8838,12 +8793,56 @@
         }
       }
     },
+    "打开系统登录项设置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Login Items Settings"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 로그인 항목 설정 열기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开系统登录项设置"
+          }
+        }
+      }
+    },
     "打开自定义排班文件夹…" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "사용자 지정 교대 폴더 열기…"
+          }
+        }
+      }
+    },
+    "找不到登录服务，请将应用移至固定位置后重试" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login service not found. Move the app to a permanent location and retry."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 서비스를 찾을 수 없습니다. 앱을 고정된 위치로 옮긴 후 다시 시도하세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到登录服务，请将应用移至固定位置后重试"
           }
         }
       }
@@ -8882,6 +8881,28 @@
     "抖动" : {},
     "拷贝干员列表JSON" : {},
     "指定" : {},
+    "指定事件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preferred event"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선호 이벤트"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指定事件"
+          }
+        }
+      }
+    },
     "指定材料" : {
       "localizations" : {
         "ko" : {
@@ -8934,6 +8955,28 @@
         }
       }
     },
+    "按目标结局选择阶段路线" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choosing a route for the target ending"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목표 엔딩의 경로 선택"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按目标结局选择阶段路线"
+          }
+        }
+      }
+    },
     "探索者的银凇止境" : {
       "localizations" : {
         "ko" : {
@@ -8960,6 +9003,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "제어 센터"
+          }
+        }
+      }
+    },
+    "支援作战平台" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support Operations Platform"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지원 작전 플랫폼"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支援作战平台"
           }
         }
       }
@@ -9163,6 +9228,28 @@
       }
     },
     "无法添加视频作业：%@" : {},
+    "无法确认登录项状态，请检查系统设置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login item status is unknown. Check System Settings."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 항목 상태를 확인할 수 없습니다. 시스템 설정을 확인하세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法确认登录项状态，请检查系统设置"
+          }
+        }
+      }
+    },
     "无法识别配置" : {
       "localizations" : {
         "ko" : {
@@ -9612,6 +9699,28 @@
         }
       }
     },
+    "检查候选事件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking candidate events"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트 후보 확인"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查候选事件"
+          }
+        }
+      }
+    },
     "检查更新…" : {
       "localizations" : {
         "ko" : {
@@ -9756,6 +9865,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "실행 시 최대 모집 횟수:"
+          }
+        }
+      }
+    },
+    "比较行动收益和成功率" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparing action rewards and success rates"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "행동 보상과 성공률 비교"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "比较行动收益和成功率"
           }
         }
       }
@@ -9993,6 +10124,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "단축키 지우기"
+          }
+        }
+      }
+    },
+    "游侠" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ranger"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레인저"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "游侠"
           }
         }
       }
@@ -10235,7 +10388,139 @@
         }
       }
     },
+    "登录后仅打开应用，不会自动开始日常任务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login opens the app without starting daily tasks automatically."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 후 앱만 열리며 일일 작업은 자동으로 시작하지 않습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录后仅打开应用，不会自动开始日常任务"
+          }
+        }
+      }
+    },
+    "登录时启动 MAA" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open MAA at login"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 시 MAA 실행"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录时启动 MAA"
+          }
+        }
+      }
+    },
+    "登录项已启用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login item is on"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 항목 켜짐"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录项已启用"
+          }
+        }
+      }
+    },
+    "登录项操作超时，系统可能仍在处理。可重试等待结果，或打开系统登录项设置检查。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The login item request timed out and may still be processing. Retry to wait for the result, or check Login Items in System Settings."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 항목 요청 시간이 초과되었지만 시스템에서 아직 처리 중일 수 있습니다. 다시 시도하여 결과를 기다리거나 시스템 설정의 로그인 항목을 확인하세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录项操作超时，系统可能仍在处理。可重试等待结果，或打开系统登录项设置检查。"
+          }
+        }
+      }
+    },
+    "登录项未启用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Login item is off"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 항목 꺼짐"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录项未启用"
+          }
+        }
+      }
+    },
     "目标常乐节点" : {},
+    "目标结局" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target ending"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목표 엔딩"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目标结局"
+          }
+        }
+      }
+    },
     "目标襁褓动物" : {},
     "盾" : {
       "localizations" : {
@@ -10243,6 +10528,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "방패"
+          }
+        }
+      }
+    },
+    "确认出发" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirming departure"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "출발 확인"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确认出发"
+          }
+        }
+      }
+    },
+    "确认行动结果" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirming the action result"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "행동 결과 확인"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确认行动结果"
           }
         }
       }
@@ -10391,6 +10720,28 @@
       }
     },
     "等待测试" : {},
+    "等待系统批准，请在系统设置中允许登录时启动" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approval required. Allow login launch in System Settings."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 승인이 필요합니다. 시스템 설정에서 로그인 시 실행을 허용하세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待系统批准，请在系统设置中允许登录时启动"
+          }
+        }
+      }
+    },
     "策略" : {
       "localizations" : {
         "ko" : {
@@ -10644,6 +10995,50 @@
       }
     },
     "经验-6/5" : {},
+    "结局 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ending %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "엔딩 %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "结局 %@"
+          }
+        }
+      }
+    },
+    "继续前进" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuing forward"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계속 전진"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续前进"
+          }
+        }
+      }
+    },
     "绿票商店" : {
       "localizations" : {
         "ko" : {
@@ -10656,6 +11051,28 @@
     },
     "编队栏位" : {},
     "缩放算法" : {},
+    "缺少隐秘战线资源，请更新资源后重试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret Front resources are missing. Update resources and try again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비밀 전선 리소스가 없습니다. 리소스를 업데이트한 후 다시 시도하세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少隐秘战线资源，请更新资源后重试。"
+          }
+        }
+      }
+    },
     "脚本以 /bin/zsh -f 运行，不加载 ~/.zshrc 等用户 shell 配置；PATH 固定为 /usr/bin:/bin:/usr/sbin:/sbin，Homebrew 等第三方工具请使用绝对路径。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -11116,6 +11533,116 @@
         }
       }
     },
+    "识别到分队选择页" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detected team selection"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "분대 선택 화면 감지"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "识别到分队选择页"
+          }
+        }
+      }
+    },
+    "识别到应对危机事件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detected crisis response"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "위기 대응 화면 감지"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "识别到应对危机事件"
+          }
+        }
+      }
+    },
+    "识别到终点画面" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detected the ending screen"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "종점 화면 감지"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "识别到终点画面"
+          }
+        }
+      }
+    },
+    "识别路线，检查指定事件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognizing routes and checking the preferred event"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "경로 인식 및 선호 이벤트 확인"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "识别路线，检查指定事件"
+          }
+        }
+      }
+    },
+    "诡影迷踪" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phantom Trail"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "유령의 흔적"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "诡影迷踪"
+          }
+        }
+      }
+    },
     "该组合为系统保留或通用编辑快捷键（如 ⌘Q、⌘C、⌃→、⌘⇧4），不能注册为全局热键" : {
       "localizations" : {
         "zh-Hans" : {
@@ -11150,6 +11677,28 @@
       }
     },
     "请先手动进入游戏内 24×24 像素画编辑页，再开始。" : {},
+    "请先进入隐秘战线的分队选择页面。指定事件出现时优先选择，成功率不足时可能先积累属性。识别失败时可用工具栏停止；从路线、危机或终点页面恢复需要相应 Core 资源支持。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Secret Front team selection before starting. The preferred event takes priority when found; attributes may be accumulated first if success rates are low. Stop from the toolbar if recognition fails. Resuming from route, crisis or ending screens requires matching Core resources."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비밀 전선의 분대 선택 화면에서 시작하세요. 선호 이벤트가 나오면 우선 선택하며, 성공률이 낮으면 먼저 능력치를 쌓을 수 있습니다. 인식에 실패하면 도구 모음에서 중지하세요. 경로·위기·종점 화면에서 재개하려면 해당 Core 리소스가 필요합니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先进入隐秘战线的分队选择页面。指定事件出现时优先选择，成功率不足时可能先积累属性。识别失败时可用工具栏停止；从路线、危机或终点页面恢复需要相应 Core 资源支持。"
+          }
+        }
+      }
+    },
     "请参考“实用工具” > “分辨率指南”设置PlayCover的分辨率。" : {},
     "请在“设置” > “游戏设置” 中选择客户端类型。" : {
       "localizations" : {
@@ -11588,6 +12137,28 @@
         }
       }
     },
+    "选择医疗救援小队" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecting Medical team"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "의료 구호 소대 선택"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择医疗救援小队"
+          }
+        }
+      }
+    },
     "选择小游戏" : {
       "localizations" : {
         "ko" : {
@@ -11598,12 +12169,56 @@
         }
       }
     },
+    "选择情报侦察小队" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecting Intelligence team"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정보 정찰 소대 선택"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择情报侦察小队"
+          }
+        }
+      }
+    },
     "选择本地文件…" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "로컬 파일 선택…"
+          }
+        }
+      }
+    },
+    "选择物资整备小队" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecting Materiel team"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "물자 정비 소대 선택"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择物资整备小队"
           }
         }
       }
@@ -11684,6 +12299,28 @@
         }
       }
     },
+    "重试" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 시도"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重试"
+          }
+        }
+      }
+    },
     "钥匙" : {
       "localizations" : {
         "ko" : {
@@ -11731,6 +12368,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "랜덤 보상"
+          }
+        }
+      }
+    },
+    "隐秘战线" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret Front"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비밀 전선"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐秘战线"
+          }
+        }
+      }
+    },
+    "隐秘战线任务失败，请检查游戏画面" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret Front task failed. Check the game screen."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비밀 전선 작업 실패. 게임 화면을 확인하세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐秘战线任务失败，请检查游戏画面"
+          }
+        }
+      }
+    },
+    "隐秘战线任务完成，请确认游戏结局" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret Front task completed. Check the ending in game."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비밀 전선 작업 완료. 게임에서 엔딩을 확인하세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐秘战线任务完成，请确认游戏结局"
+          }
+        }
+      }
+    },
+    "隐秘战线已停止" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret Front stopped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비밀 전선 중지됨"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐秘战线已停止"
           }
         }
       }

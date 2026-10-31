@@ -23,6 +23,8 @@ import SwiftUI
 
     @Published private(set) var status = Status.idle
     @Published private(set) var isCoreInitialized = false
+    @Published var secretFrontRun = SecretFrontRun()
+    @Published private(set) var secretFrontUnavailableReason: String?
 
     private var wakeupAssertionID: UInt32?
     private var awakeAssertionID: UInt32?
@@ -291,6 +293,7 @@ extension MAAViewModel {
             throw MAAError.taskAlreadyRunning
         }
 
+        secretFrontRun = SecretFrontRun()
         logStore?.clearLogs()
         taskIDMap.removeAll()
         fightTaskParams.removeAll()
@@ -406,6 +409,7 @@ extension MAAViewModel {
         if userRequested, cancelScheduledStart, achievementWasRunning {
             AchievementStore.shared.record(.init(runID: achievementRunID, metric: .manualStop, operation: .maximum))
         }
+        if let id = secretFrontRun.taskID { secretFrontRun.finish(taskID: id, result: .stopped) }
         status = .idle
         if discardQuarantinedCore {
             messageTask?.cancel()
@@ -424,6 +428,7 @@ extension MAAViewModel {
             status = .pending
             return
         }
+        secretFrontRun.release()
         status = .idle
         medicineUsedTimes = 0
         expiringMedicineUsedTimes = 0
@@ -642,6 +647,7 @@ extension MAAViewModel {
 
     /// Reloads the resources from the documents directory after update.
     func reloadResources(channel: MAAClientChannel) async throws {
+        defer { refreshSecretFrontAvailability() }
         let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         try await loadResource(url: documentsDirectory, channel: channel)
     }
@@ -740,6 +746,7 @@ extension MAAViewModel {
     ///
     /// Should be the outermost call to load resources.
     private func loadResource(channel: MAAClientChannel) async throws {
+        defer { refreshSecretFrontAvailability() }
         let (preferUser, currentResourceVersion) = try resourceChannel.version()
         try await loadResource(url: Bundle.main.resourceURL!, channel: channel)
 
@@ -791,6 +798,12 @@ extension MAAViewModel {
     }
 
     private func updateChannel(channel: MAAClientChannel) {
+        // Refresh the cached availability gate synchronously so it already
+        // reflects the new channel while the async resource reload below is
+        // still running; the global-channel branch performs no IO. The reload
+        // refreshes it again once the new resources are loaded.
+        refreshSecretFrontAvailability()
+
         for (index, task) in tasks.enumerated() {
             guard case .startup(var config) = task.task else {
                 continue
@@ -1276,6 +1289,30 @@ extension MAAViewModel {
 // MARK: Copilot
 
 extension MAAViewModel {
+
+    /// Secret Front availability depends on the client channel and the loaded
+    /// resource tree. The check reads and parses resource files synchronously,
+    /// so cache the outcome instead of recomputing it in every view update;
+    /// `loadResource`/`reloadResources` refresh it whenever resources change,
+    /// and channel switches refresh it immediately in `updateChannel`.
+    private func refreshSecretFrontAvailability() {
+        secretFrontUnavailableReason = SecretFrontConfiguration.unavailableReason(
+            isGlobalChannel: clientChannel.isGlobal,
+            resourceRoot: { secretFrontResourceRoot() }
+        )
+    }
+
+    private func secretFrontResourceRoot() -> URL? {
+        guard let bundled = Bundle.main.resourceURL,
+            let (preferUser, _) = try? resourceChannel.version() else {
+            return nil
+        }
+        let root = preferUser
+            ? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            : bundled
+        return root.appendingPathComponent("resource")
+    }
+
     private func appendTrackedTask(type: MAATaskType, params: String) async throws {
         if let id = try await handle?.appendTask(type: type, params: params) {
             achievementEvents.register(taskID: id, type: type.rawValue)
@@ -1373,22 +1410,58 @@ extension MAAViewModel {
         try await startCoreTasks()
     }
 
-    func miniGame(name: String, params: Any? = nil) async throws {
-        try await beginTaskOperation()
-        defer { isStartStopInFlight = false }
-
+    func miniGame(name: String, params: Any? = nil, secretFront: SecretFrontConfiguration? = nil) async throws {
+        guard status == .idle else { return }
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
-        try await ensureHandle()
-
-        let params = ["task_names": [name], "params": params]
-        let data = try JSONSerialization.data(withJSONObject: params)
-        let string = String(data: data, encoding: .utf8)
-
-        try await appendTrackedTask(type: .Custom, params: string ?? "")
-        try await startCoreTasks()
+        var didAppend = false
+        var beganRun = false
+        do {
+            if secretFront != nil, let reason = secretFrontUnavailableReason {
+                throw NSError(domain: "SecretFront", code: 1, userInfo: [NSLocalizedDescriptionKey: reason])
+            }
+            try await ensureHandle()
+            guard let handle else { throw MaaCoreError.appendTaskFailed }
+            var payload: [String: Any]
+            if let secretFront {
+                payload = secretFront.params
+            } else {
+                payload = ["task_names": [name]]
+                if let params { payload["params"] = params }
+            }
+            let data = try JSONSerialization.data(withJSONObject: payload)
+            let string = String(decoding: data, as: UTF8.self)
+            let id = try await handle.appendTask(type: .Custom, params: string)
+            didAppend = true
+            if let secretFront {
+                secretFrontRun.begin(taskID: id, configuration: secretFront)
+                beganRun = true
+            }
+            // Publish before yielding: a fast completion callback must remain idle.
+            status = .busy
+            try await handle.start()
+        } catch {
+            // Failures caught here are startup-phase errors (connect, append,
+            // start); in-run failures arrive as callbacks instead, so report a
+            // startup failure rather than an in-game task failure. Only a run
+            // begun by this call may be finished: a taskID still owned by an
+            // earlier run (possible under leftover status pollution) must not
+            // be reported or released here.
+            secretFrontRun.finishStartupFailureIfOwned(beganRun: beganRun)
+            if didAppend {
+                do {
+                    try await handle?.stop()
+                } catch {
+                    logError("停止任务失败: \(error.localizedDescription)")
+                }
+            }
+            status = .idle
+            throw error
+        }
     }
+
+
 }
 
 // MARK: - Prevent Sleep
