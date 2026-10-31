@@ -1,3 +1,4 @@
+// CI/Sourcery 冒烟改动：验证 fork 上 pull_request 触发与 Sourcery 评审链路，验证后整 PR 关闭。
 import SwiftUI
 
 final class BufferAllocations {
