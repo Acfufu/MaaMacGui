@@ -145,6 +145,13 @@ struct DailyTask {
     var taskStatus: [UUID: Int] = [:]
     var messageTask: Task<Void, Never>?
     var achievementEvents = AchievementEventAdapter()
+    let hookSettings = HookSettingsStore()
+    var runHookConfiguration = HookConfiguration()
+    var dailyStartCancelled = false
+    var activeHookTask: Task<HookResult, Error>?
+    var runTerminationDeadline: Date?
+    private(set) var hookTestResult: String?
+    private(set) var isTestingHook = false
     var startGameCount = 0
     func startGame(client: ClientChannel) async -> Bool { startGameCount += 1; return true }
     var recruitConfig = RecruitConfiguration()
@@ -170,6 +177,12 @@ struct DailyTask {
     var errors = [String]()
     var infos = [String]()
     var operationInFlightForTest: Bool { isStartStopInFlight }
+    func executeHook(_ command: HookCommand, context: RunContext, outcome: DailyRunOutcome?,
+                      cancellable: Bool = true) async throws -> HookResult { HookResult() }
+    func finishDailyRun(_ id: UUID, outcome: DailyRunOutcome, preparationCleanupSucceeded: Bool = true) async {
+        try? dailyRunCoordinator.finish(id, outcome: outcome, cleanupSucceeded: preparationCleanupSucceeded)
+        dailyRunTasks = nil
+    }
     func reportIdleCallback() { resetStatus() }
     func reportBusyCallback() { status = .busy }
     func logError(_ text: String) { errors.append(text) }
@@ -187,6 +200,29 @@ struct DailyTask {
 
 
 typealias MAATask = DailyTask.Kind
+struct HookCommand: Codable, Equatable { var executable: String = "/bin/true" }
+struct HookResult: Equatable {
+    var succeeded: Bool = true
+    var exitCode: Int32 = 0
+    var stdout: String = ""
+    var stderr: String = ""
+    var timedOut: Bool = false
+    var cancelled: Bool = false
+    var stdoutTruncated: Bool = false
+    var stderrTruncated: Bool = false
+}
+struct HookConfiguration: Codable, Equatable {
+    var enabled: Bool = false
+    var before: HookCommand? = nil
+    var after: HookCommand? = nil
+    var timeoutSeconds: Int = 30
+}
+final class HookSettingsStore: ObservableObject { var configuration = HookConfiguration() }
+struct HookRunner {
+    func run(command: HookCommand, context: RunContext, outcome: DailyRunOutcome?,
+             adbPath: String, workingDirectory: URL, timeout: TimeInterval) async throws -> HookResult { HookResult() }
+}
+
 struct AchievementEventAdapter {
     mutating func register(taskID: Int32, runID: UUID) {}
     mutating func register(taskID: Int32, type: String) {}

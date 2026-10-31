@@ -86,6 +86,11 @@ import Observation
     @MainActor init(parent: MAAViewModel) {
         self.parent = parent
         parent.logStore = self
+        parent.objectWillChange.sink { [weak self] _ in
+            self?.withMutation(keyPath: \.canStartTasks) {}
+        }
+        .store(in: &cancellables)
+
 
         do {
             let dir = FileManager.default

@@ -370,6 +370,10 @@ extension MAAViewModel {
             return
         }
 
+        if message.code == .TaskChainError, dailyTask(coreID: info.taskid) != nil {
+            markDailyRunFailed()
+        }
+
         if info.taskchain == "CloseDown" {
             // WPF retains this task-chain callback but currently performs no operation.
             return

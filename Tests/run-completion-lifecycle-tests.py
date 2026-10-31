@@ -57,6 +57,10 @@ struct DailyTask {}
  var errors: [String] = []
  func logError(verbatim: String) { errors.append(verbatim) }
  func logError(_ resource: LocalizedStringResource) { logError(verbatim: .init(localized: resource)) }
+ func finishDailyRun(_ id: UUID, outcome: DailyRunOutcome, preparationCleanupSucceeded: Bool = true) async {
+  try? dailyRunCoordinator.finish(id, outcome: outcome, cleanupSucceeded: preparationCleanupSucceeded)
+  dailyRunTasks = nil
+ }
  func stopCompletion() async { await finishDailyRunIfStopped(allowInFlight: true) }
  func observeFinishes() {
   dailyRunCoordinator.didChange = { [weak self] in
