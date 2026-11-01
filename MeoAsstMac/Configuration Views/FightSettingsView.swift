@@ -13,6 +13,8 @@ struct FightSettingsView: View {
 
     @State private var useCustomStage = false
     @State private var dropItemList: [(name: String, id: String)] = []
+    // 当前资源支持的连战倍率上限,onAppear/换服时按已加载资源刷新
+    @State private var seriesUpperBound = 10
 
     var body: some View {
         ScrollView {
@@ -58,12 +60,28 @@ struct FightSettingsView: View {
 
                     Picker(selection: $config.series) {
                         Text(verbatim: "AUTO").tag(0)
-                        ForEach((1...10).reversed(), id: \.self) { i in
+                        ForEach((1...seriesUpperBound).reversed(), id: \.self) { i in
                             Text(verbatim: "\(i)").tag(i)
                         }
+                        if let stored = config.series, stored > seriesUpperBound {
+                            // 换旧资源后保留超限存量值,避免选项失配
+                            Text(verbatim: "\(stored)").tag(stored)
+                        }
+                        Text("保留当前").tag(-1)
                         Text("不使用").tag(Int?.none)
                     } label: {
                         Toggle("连战次数", isOn: seriesBattles)
+                    }
+                    .onAppear { refreshSeriesUpperBound() }
+                    .onChange(of: viewModel.clientChannel) { refreshSeriesUpperBound() }
+                    if config.series == nil || config.series == -1 {
+                        // Core 契约:省略 series 时 params.get("series",1) 切至单倍;-1 才是保留当前
+                        Text("保留当前沿用游戏内倍率；不使用为单倍连战")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    if seriesUpperBound < 10 {
+                        Text("当前资源为旧版倍率界面，最高支持 6 倍连战")
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
 
@@ -215,6 +233,32 @@ struct FightSettingsView: View {
         } set: {
             config.series = $0 ? 0 : nil
         }
+    }
+
+    // 与 MAAViewModel.loadResource(channel:) 同源的根解析:按 OTA 缓存 → 外部资源(preferUser)
+    // → 内置资源的加载顺序取首个含 tasks 定义的根;国际服优先 global 覆盖层(旧倍率 flag 在覆盖层)。
+    private func refreshSeriesUpperBound() {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        var bases = [documents.appendingPathComponent("cache")]
+        if let (preferUser, _) = try? viewModel.resourceChannel.version(), preferUser {
+            bases.append(documents)
+        }
+        bases.append(Bundle.main.resourceURL!)
+
+        let channel = viewModel.clientChannel
+        let root = bases.lazy.compactMap { base -> URL? in
+            let resource = base.appendingPathComponent("resource")
+            let candidate = channel.isGlobal
+                ? resource.appendingPathComponent("global")
+                    .appendingPathComponent(channel.rawValue)
+                    .appendingPathComponent("resource")
+                : resource
+            let hasTasks = ["tasks/tasks.json", "tasks.json"].contains {
+                FileManager.default.fileExists(atPath: candidate.appendingPathComponent($0).path)
+            }
+            return hasTasks ? candidate : nil
+        }.first
+        seriesUpperBound = FightConfiguration.seriesUpperBound(resourceRoot: root)
     }
 
     @State private var dropItem: (String, Int)? = nil {

@@ -7284,6 +7284,38 @@
         }
       }
     },
+    "保留当前" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留当前"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Current"
+          }
+        }
+      }
+    },
+    "保留当前沿用游戏内倍率；不使用为单倍连战" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留当前沿用游戏内倍率；不使用为单倍连战"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Keep Current\" keeps the in-game multiplier; \"Not in Use\" fights at 1x."
+          }
+        }
+      }
+    },
     "保留标签" : {
       "localizations" : {
         "en" : {
@@ -9869,6 +9901,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "작업을 시작하거나 중지하는 중입니다. 잠시 후 다시 시도해 주세요."
+          }
+        }
+      }
+    },
+    "当前资源为旧版倍率界面，最高支持 6 倍连战" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前资源为旧版倍率界面，最高支持 6 倍连战"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current resources use the legacy multiplier UI; series battles are limited to 6x."
           }
         }
       }

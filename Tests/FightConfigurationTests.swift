@@ -73,10 +73,87 @@ struct FightConfigurationTests {
                 failures.append("persistence round trip: \(input.debugDescription)")
             }
         }
+        // F11 倍率语义(Core m_series 契约):-1=保留游戏内当前倍率;0=AUTO 按理智自动;
+        // 1...10=指定档位。nil 为 GUI 存储形态,编码省略;Core JSON 缺省 1
+        // (FightTask.cpp params.get("series",1)),即切至单倍,≠显式 -1。
+        let seriesBase: [String: Any] = [
+            "stage": "1-7", "medicine_expire_days": 0, "server": "CN", "client_type": "Official",
+        ]
+        func seriesPayload(of stored: Int?) throws -> [String: Any] {
+            var config = try JSONDecoder().decode(
+                FightConfiguration.self, from: JSONSerialization.data(withJSONObject: seriesBase))
+            config.series = stored
+            return try JSONSerialization.jsonObject(with: JSONEncoder().encode(config.params)) as! [String: Any]
+        }
+        // 编码契约:每档一行断言。
+        for stored in [-1, 0] + Array(1...10) {
+            let payload = try seriesPayload(of: stored)
+            if payload["series"] as? Int != stored {
+                failures.append("series encode \(stored): got \(payload["series"] ?? "missing")")
+            }
+        }
+        do {
+            let payload = try seriesPayload(of: nil)
+            if payload.keys.contains("series") {
+                failures.append("series encode nil: expected key omitted, got \(payload["series"] ?? "")")
+            }
+        }
+
+        // 旧配置迁移:旧 plist 无 series 键 → 解码为 nil,再编码仍省略(不暗改成 0/1/-1)。
+        let legacyData = try PropertyListSerialization.data(
+            fromPropertyList: seriesBase, format: .xml, options: 0)
+        let legacy = try PropertyListDecoder().decode(FightConfiguration.self, from: legacyData)
+        if legacy.series != nil {
+            failures.append("legacy plist decode: series should stay nil, got \(legacy.series!)")
+        }
+        let persisted = try PropertyListEncoder().encode(legacy.params)
+        let restored = try PropertyListDecoder().decode(FightConfiguration.self, from: persisted)
+        if restored.series != nil {
+            failures.append("legacy plist round trip: series should stay omitted, got \(restored.series!)")
+        }
+
+        // 倍率上限资源探测:旧资源(global 服)定义 FightSeries-OldMethodFlag → 上限 6;
+        // 无 flag → 上限 10;根缺失按新 UI 处理。
+        let fixtureRoot = FileManager.default.temporaryDirectory
+            .appendingPathComponent("maa-series-fixture-" + UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: fixtureRoot) }
+        func makeSeriesFixture(_ name: String, tasks: [String: Any]) throws -> URL {
+            let root = fixtureRoot.appendingPathComponent(name, isDirectory: true)
+                .appendingPathComponent("resource", isDirectory: true)
+            let tasksDir = root.appendingPathComponent("tasks", isDirectory: true)
+            try FileManager.default.createDirectory(at: tasksDir, withIntermediateDirectories: true)
+            try JSONSerialization.data(withJSONObject: tasks)
+                .write(to: tasksDir.appendingPathComponent("tasks.json"))
+            return root
+        }
+        let oldRoot = try makeSeriesFixture(
+            "old", tasks: ["FightSeries-OldMethodFlag": ["algorithm": "JustReturn"]])
+        let newRoot = try makeSeriesFixture("new", tasks: ["FightSeries-Icon": ["template": "x.png"]])
+        if FightConfiguration.seriesUpperBound(resourceRoot: oldRoot) != 6 {
+            failures.append("seriesUpperBound old resource: expected 6")
+        }
+        if FightConfiguration.seriesUpperBound(resourceRoot: newRoot) != 10 {
+            failures.append("seriesUpperBound new resource: expected 10")
+        }
+        if FightConfiguration.seriesUpperBound(resourceRoot: nil) != 10 {
+            failures.append("seriesUpperBound missing root: expected 10")
+        }
+        // 平铺 tasks.json 候选路径(部分旧资源未分目录)。
+        let flatRoot = fixtureRoot.appendingPathComponent("flat", isDirectory: true)
+        try FileManager.default.createDirectory(at: flatRoot, withIntermediateDirectories: true)
+        try JSONSerialization.data(withJSONObject: ["FightSeries-OldMethodFlag": ["algorithm": "JustReturn"]])
+            .write(to: flatRoot.appendingPathComponent("tasks.json"))
+        if FightConfiguration.seriesUpperBound(resourceRoot: flatRoot) != 6 {
+            failures.append("seriesUpperBound flat tasks.json: expected 6")
+        }
+
         for failure in failures { print("FAIL: \(failure)") }
         guard failures.isEmpty else { exit(1) }
         print(
             "PASS: \(cases.count) stage cases; normalization, idempotence, payload fields, value semantics and plist round trips"
+        )
+        print(
+            "PASS: series encode contract (nil omitted; -1/0/1...10 verbatim), legacy migration unchanged, resource upper bound 6 vs 10"
         )
     }
 }

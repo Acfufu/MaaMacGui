@@ -16,6 +16,8 @@ struct FightConfiguration: MAATaskConfiguration {
     var useActivityMedicine: Bool = false
     var stone: Int?
     var times: Int?
+    // 作战倍率(Core m_series 契约):-1=保留游戏内当前;0=AUTO 按理智自动;1...10=指定。
+    // nil 为 GUI 存储形态,编码省略;Core JSON 缺省为 1(params.get("series",1)),即切至单倍,≠-1。
     var series: Int?
     var drops: [String: Int]?
 
@@ -73,6 +75,7 @@ struct FightConfiguration: MAATaskConfiguration {
             try container.encode(c.medicine_expire_days, forKey: .medicine_expire_days)
             try container.encodeIfPresent(c.stone, forKey: .stone)
             try container.encodeIfPresent(c.times, forKey: .times)
+            // series=-1 必须显式下发(保留当前);nil 省略时 Core 缺省 1(切至单倍),行为≠-1
             try container.encodeIfPresent(c.series, forKey: .series)
             try container.encodeIfPresent(c.drops, forKey: .drops)
             try container.encode(c.report_to_penguin, forKey: .report_to_penguin)
@@ -101,6 +104,19 @@ struct FightConfiguration: MAATaskConfiguration {
             return trimmed.uppercased()
         }
         return trimmed
+    }
+
+    // 倍率上限资源探测:旧资源(global 服)定义 FightSeries-OldMethodFlag → 旧倍率 UI,
+    // 上限 6;CN 新资源无该 flag → 新 UI,上限 10。缺 tasks 定义或根不可用时按新 UI 处理。
+    static func seriesUpperBound(resourceRoot: URL?) -> Int {
+        guard let resourceRoot else { return 10 }
+        for path in ["tasks.json", "tasks/tasks.json"] {
+            guard let data = try? Data(contentsOf: resourceRoot.appendingPathComponent(path)),
+                let tasks = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+            else { continue }
+            if tasks["FightSeries-OldMethodFlag"] != nil { return 6 }
+        }
+        return 10
     }
 
     var params: Params {
