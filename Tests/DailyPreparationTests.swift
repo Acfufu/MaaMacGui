@@ -138,6 +138,13 @@ import Foundation
   let unsafe=MAAViewModel(); unsafe.touchMode = .MacPlayTools
   let unsafeSnapshot=DailyRunSnapshot(profileID:unsafe.dailyTaskProfile,tasks:[.init(task:.startup(.init(start_game_enabled:true)))])
   check(!unsafe.forceRecoveryEligibility(snapshot:unsafeSnapshot)(), "PlayCover auto-start is rejected at occurrence")
+  // AT-1:定时成就链——schedule 源的 startDailyTasks 成功路径必须恰好记录一次
+  // .scheduledStart(MAAViewModel 的 origin == .schedule 分支),手动源不记录。
+  let scheduledModel=MAAViewModel(); scheduledModel.tasks=[.init(task:.fixture)]
+  check(await scheduledModel.startDailyTasks(origin:.schedule) == .started, "scheduled origin still starts the daily chain")
+  let scheduledEvents=AchievementStore.shared.recordedEvents.filter { $0.metric == .scheduledStart }
+  check(scheduledEvents.count == 1, "scheduled start records exactly one .scheduledStart achievement event")
+  check(scheduledEvents.first?.runID == scheduledModel.dailyRunCoordinator.active?.id, "the achievement event carries the scheduled run's ID")
   print("DailyPreparationTests: \(count) production async assertions passed")
  }
 }

@@ -5,10 +5,30 @@ root=Path(__file__).resolve().parents[1]
 source=(root/'MeoAsstMac/Utils/TaskTimerManager.swift').read_text()
 # 单版本树:定时触发路径由 #179 handoff 架构接管,startDailyTaskIfNeeded 已不存在;
 # 定时成就事件的集成语义由 run-achievement-tests.sh(235 断言)+ run-schedule/
-# background 族套件在合并树上接掌。
+# background 族套件在合并树上接掌;.scheduledStart 发射链由 daily-preparation(AT-1)
+# 断言。SKIP 前自证承接:承接脚本与其"断言意图"级标记必须存在,否则退出码 1。
 if '    private func startDailyTaskIfNeeded(' not in source:
+    successors=[
+     ('Tests/run-achievement-tests.sh','Tests/AchievementTests.swift',
+      ['stored progress','session reset discards ownership']),
+     ('Tests/run-schedule-tests.sh','Tests/ScheduleTests.swift',
+      ['first claim','duplicate claim']),
+     ('Tests/run-background-schedule-tests.sh','Tests/BackgroundScheduleTests.swift',
+      ['stable same minute winner','duplicate check does not wake again']),
+     ('Tests/run-daily-preparation-tests.py','Tests/DailyPreparationTests.swift',
+      ['scheduled start records exactly one .scheduledStart achievement event']),
+    ]
+    missing=[]
+    for runner,suite,markers in successors:
+        if not (root/runner).is_file(): missing.append(f'missing successor runner {runner}');continue
+        if not (root/suite).is_file(): missing.append(f'missing successor suite {suite}');continue
+        content=(root/suite).read_text()
+        missing+= [f"{suite} lacks assertion marker {marker!r}" for marker in markers if marker not in content]
+    if missing:
+        print('succession broken: '+'; '.join(missing));sys.exit(1)
     print('SKIP: timer fire path superseded by #179 scheduling architecture '
           '(achievement invariants covered by run-achievement-tests.sh)')
+    print('succession verified: '+', '.join(runner for runner,_,_ in successors))
     sys.exit(0)
 start=source.index('    private func startDailyTaskIfNeeded(')
 brace=source.index('{',start);depth=0

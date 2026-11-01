@@ -18,3 +18,18 @@ assert results.count('claimed') == 1, results
 assert results.count('duplicate') == 31, results
 print('PASS: 32 real processes race for one occurrence; exactly one claim')
 PYWORKERS
+
+# AT-3: 生产 TaskTimerManager(weak viewModel handoff)单文件编译——定时回调
+# 的 schedule 源路由与 weak 失效静默。HOME 隔离默认 App Support 存储目录。
+swiftc -parse-as-library \
+    MeoAsstMac/Utils/TaskTimerManager.swift \
+    MeoAsstMac/Scheduling/DailyTaskSchedule.swift \
+    MeoAsstMac/Scheduling/ScheduleOccurrenceStore.swift \
+    MeoAsstMac/Scheduling/ScheduleHandoff.swift \
+    MeoAsstMac/Scheduling/BackgroundScheduleCheck.swift \
+    MeoAsstMac/Scheduling/BackgroundScheduleSchema.swift \
+    MeoAsstMac/RunHooks/RunContext.swift \
+    Tests/ScheduleTimerManagerTests.swift \
+    -o "$build_dir/timer-tests"
+mkdir -p "$build_dir/home"
+HOME="$build_dir/home" "$build_dir/timer-tests"

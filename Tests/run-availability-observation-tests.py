@@ -5,17 +5,52 @@ import re,subprocess,tempfile
 root=Path(__file__).resolve().parents[1]
 model=(root/'MeoAsstMac/Model/MAAViewModel.swift').read_text()
 bridge=(root/'MeoAsstMac/Model/NewViewModel.swift').read_text()
+menu=(root/'MeoAsstMac/Views/TaskButtons.swift').read_text()
 def block(source,pattern):
  m=re.search(pattern,source,re.M);assert m,pattern
  a=source.index('{',m.start());d=1;b=a+1
  while d:d+=(source[b]=='{')-(source[b]=='}');b+=1
  return source[m.start():b]
+# TO-2: read the real SwiftUI menu predicates (start/stop buttons), not a copy.
+disabled=re.findall(r'\.disabled\(([^\n]+)\)',menu)
+assert len(disabled)==2,'expected start/stop .disabled predicates in TaskButtons.swift'
+menu_predicates='\n'.join(
+ ' var menu%sDisabled: Bool { %s }'%(side,predicate.strip().replace('viewModel.',''))
+ for side,predicate in zip(('Start','Stop'),disabled))
 subscriptions='\n'.join(re.findall(r'        parent\.(?:\$\w+|objectWillChange)\.sink.*?        \.store\(in: &cancellables\)',bridge,re.S))
 wiring=re.search(r'^        dailyRunCoordinator\.didChange = .*$',model,re.M)[0]
+# TO-4: the production startCopilot bridge verbatim; token semantics preserved.
+copilot_bridge=block(bridge,r'^    nonisolated\(nonsending\) func startCopilot\(')
 support='''import Foundation
 import Combine
 import Observation
 struct DailyTask {}
+enum FixtureError: Error { case connection }
+@MainActor final class Gate {
+ private var continuation: CheckedContinuation<Void, Never>?
+ private(set) var entered = false
+ func wait() async { entered = true; await withCheckedContinuation { continuation = $0 } }
+ func release() { continuation?.resume(); continuation = nil }
+}
+enum MAATaskType { case Copilot, SSSCopilot, ParadoxCopilot }
+enum CopilotCategory { case bundled, list }
+enum CopilotKind { case regular, sss, paradox }
+struct CopilotSet { var kind = CopilotKind.regular }
+struct CopilotItem { var isOn = true; var url = URL(filePath: "/fixture.json"); var isRaid: Bool? }
+enum CopilotContent { case copilot(URL, CopilotKind, Bool); case invalid }
+struct CopilotConfiguration {
+ struct Item { var filename: String; var nav_name_override: String?; var is_raid: Bool }
+ var filename: String?
+ var copilot_list: [Item] = []
+ func jsonString() throws -> String { "{}" }
+}
+struct CopilotContext {
+ var config = CopilotConfiguration()
+ var category = CopilotCategory.bundled
+ var copilotSet: CopilotSet? = CopilotSet()
+ var copilotList = [CopilotItem]()
+ var content = CopilotContent.copilot(URL(filePath: "/fixture.json"), .regular, false)
+}
 @MainActor final class MAAViewModel: ObservableObject {
  enum Status { case idle, busy, pending }
  @Published var status = Status.idle
@@ -23,15 +58,28 @@ struct DailyTask {}
  var blackflowStartAvailable = false
  @Published var isStartStopInFlight = false
  let dailyRunCoordinator = DailyRunCoordinator()
-'''+block(model,r'^    var canStartTasks:')+'\n init() {\n'+wiring+'\n}\n}\n'+'''
+'''+block(model,r'^    var canStartTasks:')+'\n'+menu_predicates+'''
+ var copilotStartCount = 0
+ var failCopilotStart = false
+ var copilotGate: Gate?
+ func startCopilot(type: MAATaskType, params: String) async throws {
+  copilotStartCount += 1
+  if let copilotGate { await copilotGate.wait() }
+  if failCopilotStart { throw FixtureError.connection }
+ }
+ init() {
+'''+wiring+'\n}\n}\n'+'''
 @Observable final class NewModel {
  private let parent: MAAViewModel
+ var copilot = CopilotContext()
+ private(set) var copilotStartToken: UUID?
  @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 '''+block(bridge,r'^    @MainActor var status:')+'\n'+block(bridge,r'^    @MainActor var canStartTasks:')+'''
  @MainActor init(parent: MAAViewModel) {
   self.parent=parent
 '''+subscriptions+'''
  }
+'''+copilot_bridge+'''
 }
 final class Flag: @unchecked Sendable {
  private let lock=NSLock();private var changed=false
@@ -39,16 +87,38 @@ final class Flag: @unchecked Sendable {
  var value: Bool { lock.lock();defer { lock.unlock() };return changed }
 }
 @main struct Probe {
- @MainActor static func main() throws {
+ @MainActor static func main() async throws {
   let parent=MAAViewModel();let bridge=NewModel(parent:parent)
   let run=try parent.dailyRunCoordinator.begin(profileID:"A",origin:.manual)!
   precondition(!bridge.canStartTasks)
+  precondition(parent.menuStartDisabled,"start menu predicate disables start while a run is active")
+  parent.isStartStopInFlight=true
+  precondition(parent.menuStopDisabled,"stop menu predicate disables stop while the operation flag is set")
+  parent.isStartStopInFlight=false
   let flag=Flag()
   withObservationTracking { _=bridge.canStartTasks } onChange: { flag.set() }
   _=try parent.dailyRunCoordinator.finish(run,outcome:.completed,cleanupSucceeded:true)
   precondition(bridge.canStartTasks && flag.value)
   precondition(parent.status == .idle && !parent.isStartStopInFlight)
-  print("RunAvailabilityObservationTests: 3 production assertions passed")
+  // TO-4: invalid/failed/pending emit no token; only success announces one.
+  let copilotParent=MAAViewModel();let copilotBridge=NewModel(parent:copilotParent)
+  copilotBridge.copilot.content = .invalid
+  try! await copilotBridge.startCopilot()
+  precondition(copilotBridge.copilotStartToken == nil,"invalid Copilot selection emits no token")
+  precondition(copilotParent.copilotStartCount == 0,"invalid Copilot selection never reaches the core boundary")
+  copilotBridge.copilot.content = .copilot(URL(filePath:"/fixture.json"), .regular, false)
+  copilotParent.failCopilotStart = true
+  do { try await copilotBridge.startCopilot() } catch {}
+  precondition(copilotBridge.copilotStartToken == nil,"failed Copilot start emits no token")
+  copilotParent.failCopilotStart = false
+  let copilotGate=Gate(); copilotParent.copilotGate = copilotGate
+  let copilotTask = Task { try await copilotBridge.startCopilot() }
+  while !copilotGate.entered { await Task.yield() }
+  precondition(copilotBridge.copilotStartToken == nil,"pending Copilot start does not announce success")
+  copilotGate.release()
+  try! await copilotTask.value
+  precondition(copilotBridge.copilotStartToken != nil,"successful Copilot start emits a token")
+  print("RunAvailabilityObservationTests: 10 production assertions passed")
  }
 }
 '''

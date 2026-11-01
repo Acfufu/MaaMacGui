@@ -93,7 +93,7 @@ struct VideoRecognitionConfiguration {
     var stoneUsedTimes = 0
     var recruitConfirmTimes = 0
     // LogStore 协议成员(161 会话基线日志保留):本夹具不覆盖日志行为,提供最小
-    // 实现以满足协议;保留语义由 #161 自有套件(TaskOperationTests)验证。
+    // 实现以满足协议;该保留语义在现行套件中断言真空,见 Tests/SKIP-SUCCESSION.md(TO-9)。
     private var retained: [String] = []
     var logCount: Int { retained.count }
     func clearLogs(upTo index: Int) {
@@ -320,6 +320,8 @@ struct AchievementEvent {
 }
 @MainActor final class AchievementStore {
     static let shared = AchievementStore()
-    func record(_ event: AchievementEvent) {}
+    // AT-1 观察窗:startDailyTasks(origin: .schedule) 的 .scheduledStart 事件落账。
+    private(set) var recordedEvents: [AchievementEvent] = []
+    func record(_ event: AchievementEvent) { recordedEvents.append(event) }
     func recordLaunch() {}
 }

@@ -17,10 +17,34 @@ menu = (source_root / 'MeoAsstMac/Views/TaskButtons.swift').read_text()
 # 单版本树(#161×#178×#179 合并)中定时触发路径由 #179 的 handoff 架构接管,
 # startDailyTaskIfNeeded 已不存在;本套件锚定旧 timer 入口,准入/竞态不变量由
 # 179 族套件(run-schedule-tests.sh、run-background-schedule-tests.sh、
-# run-completion-lifecycle-tests.py、run-daily-preparation-tests.py)接掌。
+# run-completion-lifecycle-tests.py、run-daily-preparation-tests.py)与
+# run-availability-observation-tests.py(TO-2/TO-4)接掌。
+# SKIP 前自证承接:承接脚本与其"断言意图"级标记必须存在,否则退出码 1。
 if 'private func startDailyTaskIfNeeded' not in (source_root / 'MeoAsstMac/Utils/TaskTimerManager.swift').read_text():
+    successors=[
+     ('Tests/run-schedule-tests.sh','Tests/ScheduleTests.swift',
+      ['first claim','force leaves utility alone']),
+     ('Tests/run-background-schedule-tests.sh','Tests/BackgroundScheduleTests.swift',
+      ['stable same minute winner']),
+     ('Tests/run-completion-lifecycle-tests.py','Tests/run-completion-lifecycle-tests.py',
+      ['waiter must not finish a new run','new waiter completes same run exactly once']),
+     ('Tests/run-daily-preparation-tests.py','Tests/DailyPreparationTests.swift',
+      ['stale recovery flag must not block a full stop',
+       'stop during live recovery requests an abort instead of stopping Core']),
+     ('Tests/run-availability-observation-tests.py','Tests/run-availability-observation-tests.py',
+      ['start menu predicate disables start','successful Copilot start emits a token']),
+    ]
+    missing=[]
+    for runner,suite,markers in successors:
+        if not (root/runner).is_file(): missing.append(f'missing successor runner {runner}');continue
+        if not (root/suite).is_file(): missing.append(f'missing successor suite {suite}');continue
+        content=(root/suite).read_text()
+        missing+= [f"{suite} lacks assertion marker {marker!r}" for marker in markers if marker not in content]
+    if missing:
+        print('succession broken: '+'; '.join(missing));sys.exit(1)
     print('SKIP: timer fire path superseded by #179 scheduling architecture '
-          '(invariants covered by schedule/background/completion/daily-prep suites)')
+          '(invariants covered by schedule/background/completion/daily-prep/availability-observation suites)')
+    print('succession verified: '+', '.join(runner for runner,_,_ in successors))
     sys.exit(0)
 
 def declaration(source, pattern):
