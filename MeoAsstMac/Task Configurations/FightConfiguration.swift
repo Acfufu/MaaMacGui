@@ -212,6 +212,16 @@ struct DropItem: Codable, Equatable {
     let usage: String?
 }
 
+/// 活动关卡 Drop 字段的展示口径（P05.2）：纯数字按物品 ID 查已加载物品表；
+/// 表未加载或查不到时原样返回，不伪造物品名。
+@MainActor
+enum StageDropLabel {
+    static func text(_ raw: String) -> String {
+        guard !raw.isEmpty, raw.allSatisfy(\.isNumber) else { return raw }
+        return FightConfiguration.dropItems.first { $0.id == raw }?.item.name ?? raw
+    }
+}
+
 private enum LegacyCodingKeys: String, CodingKey {
     case expiring_medicine
 }

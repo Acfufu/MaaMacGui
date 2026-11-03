@@ -178,6 +178,15 @@ struct StageCatalogTests {
                 "open activity stages must appear in tips at \(sample)")
         }
 
+        // MARK: 目录稳定排序（P05.2 backlog ①收敛：组键字典序）
+
+        for _ in 0..<3 {
+            let codes = officialCatalog.activityEntries(at: date("2026-10-15T12:00:00+08:00")).map(\.code)
+            check(
+                codes == ["SSReopen-AT", "AT-8", "AT-7", "YW-8", "YW-7", "YW-6"],
+                "activity entries must be stably ordered by group key: \(codes)")
+        }
+
         // MARK: F04 存量选择的关闭处理
 
         check(officialCatalog.isSelectable("YW-8", at: date("2026-10-15T12:00:00+08:00")), "open activity stage selectable")
@@ -203,6 +212,15 @@ struct StageCatalogTests {
         check(tolerantCatalog.activityEntries(at: date("2026-10-15T12:00:00+08:00")).isEmpty, "group without period must be filtered")
         check(tolerant["Official"]?.resourceCollection?.interval == nil, "malformed all-open window must not parse")
         check(tolerant["Official"]?.miniGame.first?.Value == "MG@X", "miniGame must survive bad activity data")
+
+        // MARK: 离线缓存读取器坏 JSON 容错（P05.1 评审 B 建议 1 的读取器侧收敛；
+        // MAAViewModel catch 接线层断言仍归 P29）
+
+        let garbageURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("stage-catalog-garbage-\(UUID()).json")
+        try! Data("not-json{{".utf8).write(to: garbageURL)
+        check(StageActivityCache.loadActivities(from: garbageURL) == nil, "garbage cache file must yield nil, preserving last-known-good")
+        try? FileManager.default.removeItem(at: garbageURL)
 
         print("stage-catalog: \(checks) assertions passed")
     }

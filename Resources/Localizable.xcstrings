@@ -6548,6 +6548,22 @@
     },
     "⚠️ 屏幕录制权限未开启" : {},
     "✅ 屏幕录制权限已开启" : {},
+    "「%@」今日未开放，已切换为手动输入；可保留原值或改选其他关卡。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" is not open today; switched to manual input. Keep the value or pick another stage."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" 오늘 미개방으로 수동 입력으로 전환되었습니다. 값을 유지하거나 다른 관문을 선택하세요."
+          }
+        }
+      }
+    },
     "一层远见密文板" : {
       "localizations" : {
         "ko" : {
@@ -7047,6 +7063,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Today's open stages"
+          }
+        }
+      }
+    },
+    "今日资源收集" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today's resource stages"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오늘의 자원 관문"
           }
         }
       }
@@ -9989,6 +10021,22 @@
       }
     },
     "帮助与公告…" : {},
+    "常用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frequent"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자주 쓰는"
+          }
+        }
+      }
+    },
     "常规作业" : {
       "localizations" : {
         "en" : {
@@ -10395,7 +10443,22 @@
         }
       }
     },
-    "当期活动" : {},
+    "当期活动" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current events"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진행 중 이벤트"
+          }
+        }
+      }
+    },
     "录制" : {
       "localizations" : {
         "zh-Hans" : {
@@ -11944,6 +12007,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "活动数据不可用，沿用原临期药设置"
+          }
+        }
+      }
+    },
+    "活动数据未加载，仅显示常驻资源关卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activity data not loaded; showing regular resource stages only"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "활동 데이터 미로딩, 상시 자원 관문만 표시됩니다"
           }
         }
       }
@@ -14461,6 +14540,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "무역소 - 용문폐"
+          }
+        }
+      }
+    },
+    "资源关卡全开放中" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All resource stages are open"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자원 관문 전부 개방 중"
           }
         }
       }

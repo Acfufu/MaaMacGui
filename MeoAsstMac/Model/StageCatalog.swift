@@ -89,7 +89,8 @@ extension StageCatalog {
     /// 判定（未开始/已结束均为 false，但保留在目录里供 F04 提示）。
     func activityEntries(at date: Date) -> [Entry] {
         guard let groups = context.activities?.sideStoryStage, !groups.isEmpty else { return [] }
-        return groups.values
+        return groups
+            .sorted { $0.key < $1.key }.map(\.value)  // 组键无序，按字典序稳定输出（P05.2 backlog ①收敛）
             .filter { group in
                 guard let period = group.Activity, period.interval != nil else { return false }
                 return StageVersionGate.isSatisfied(minimum: group.MinimumRequired, current: appVersion)

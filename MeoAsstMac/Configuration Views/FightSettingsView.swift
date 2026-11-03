@@ -24,14 +24,30 @@ struct FightSettingsView: View {
                         if useCustomStage || stageNotListed {
                             TextField("关卡名", text: $config.stage)
                         } else {
-                            Picker("关卡选择", selection: $config.stage) {
-                                Text("当前/上次").tag("")
-                                Text("1-7").tag("1-7")
-                                Text("CE-6").tag("CE-6")
-                                Text("AP-5").tag("AP-5")
-                                Text("CA-5").tag("CA-5")
-                                Text("LS-6").tag("LS-6")
-                                Text("剿灭模式").tag("Annihilation")
+                            TimelineView(.everyMinute) { timeline in
+                                Picker("关卡选择", selection: $config.stage) {
+                                    Section("常用") {
+                                        Text("当前/上次").tag("")
+                                        Text("1-7").tag("1-7")
+                                        Text("剿灭模式").tag("Annihilation")
+                                    }
+                                    Section("当期活动") {
+                                        ForEach(
+                                            stageCatalog.openEntries(at: timeline.date)
+                                                .filter { $0.group == .activity }, id: \.code
+                                        ) { entry in
+                                            Text(activityEntryTitle(entry)).tag(entry.code)
+                                        }
+                                    }
+                                    Section("今日资源收集") {
+                                        ForEach(
+                                            stageCatalog.openEntries(at: timeline.date)
+                                                .filter { $0.group == .resourceCollection }, id: \.code
+                                        ) { entry in
+                                            Text(entry.name).tag(entry.code)
+                                        }
+                                    }
+                                }
                             }
                         }
                         Toggle("手动输入关卡名", isOn: isUsingCustomStage)
@@ -41,6 +57,9 @@ struct FightSettingsView: View {
 
                 if useCustomStage || stageNotListed {
                     Text("<无忧梦呓>请使用特殊关卡名，如AveMujica-8").foregroundStyle(.secondary)
+                }
+                if let closedStageHint {
+                    Text(closedStageHint).foregroundStyle(.secondary)
                 }
 
                 Divider()
@@ -180,7 +199,7 @@ struct FightSettingsView: View {
 
             Divider()
 
-            DailyStageTipView()
+            DailyStageTipView(channel: viewModel.clientChannel, activities: viewModel.stageActivity)
             }
             .padding()
             .animation(.default, value: useCustomStage)
@@ -319,8 +338,35 @@ struct FightSettingsView: View {
         }
     }
 
-    private var stageNotListed: Bool { !listedStages.contains(config.stage) }
-    private let listedStages = ["", "1-7", "CE-6", "AP-5", "CA-5", "LS-6", "Annihilation"]
+    private var stageNotListed: Bool { !openStageCodes.contains(config.stage) }
+
+    // MARK: 关卡目录（P05.2）：提示与可选关卡共用同一 StageCatalog 判定源
+
+    private var stageCatalog: StageCatalog {
+        StageCatalog(context: StageActivityContext(
+            channel: viewModel.clientChannel,
+            activities: viewModel.stageActivity))
+    }
+
+    /// 今日可选代码集：目录开放项 + 常驻主线 1-7（主线无数据源，保留常驻项与手输）。
+    private var openStageCodes: Set<String> {
+        var codes = Set(stageCatalog.openEntries(at: .now).map(\.code))
+        codes.insert("1-7")
+        return codes
+    }
+
+    /// F04：存量选择今日关闭（目录内但未开放）的可见提示；目录外关卡不打扰。
+    private var closedStageHint: String? {
+        guard !useCustomStage, !config.stage.isEmpty else { return nil }
+        let entry = stageCatalog.entries(at: .now).first { $0.code == config.stage }
+        guard let entry, !entry.isOpen else { return nil }
+        return String(localized: "「\(config.stage)」今日未开放，已切换为手动输入；可保留原值或改选其他关卡。")
+    }
+
+    private func activityEntryTitle(_ entry: StageCatalog.Entry) -> String {
+        guard let drop = entry.drop else { return entry.name }
+        return "\(entry.name)（\(StageDropLabel.text(drop))）"
+    }
 }
 
 struct FightSettingsView_Previews: PreviewProvider {
