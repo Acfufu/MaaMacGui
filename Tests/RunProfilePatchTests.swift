@@ -110,7 +110,9 @@ import Foundation
 
         // R3 Q1 regression: the production finishDailyRun consumes once-only
         // tasks only when the run's own terminal completes, and keeps them
-        // armed on cancellation (hook exercised on the extracted body).
+        // armed on cancellation (hook exercised on the extracted body). Since
+        // P03.3/N1 the consumption scope is the frozen run snapshot, so the
+        // armed task must ride in dailyRunTasks too.
         let hookURL = root.appendingPathComponent("Hook.plist")
         let hookModel = MAAViewModel(directory: root)
         var hookMall = mall; hookMall.buy_first = ["Hook armed"]
@@ -120,6 +122,7 @@ import Foundation
         hookModel.dailyTaskProfile = "Hook"
         let hookRun = try hookModel.dailyRunCoordinator.begin(profileID: "Hook", origin: .schedule)!
         try hookModel.dailyRunCoordinator.transition(.running, for: hookRun)
+        hookModel.dailyRunTasks = [hookArmed]
         await hookModel.finishDailyRun(hookRun, outcome: .cancelled, preparationCleanupSucceeded: true)
         let cancelledDisk = try load(hookURL)
         check(cancelledDisk[0].runOnce && cancelledDisk[0].enabled,
@@ -128,6 +131,7 @@ import Foundation
               "cancelled finish keeps the live list armed")
         let hookRun2 = try hookModel.dailyRunCoordinator.begin(profileID: "Hook", origin: .schedule)!
         try hookModel.dailyRunCoordinator.transition(.running, for: hookRun2)
+        hookModel.dailyRunTasks = [hookArmed]
         await hookModel.finishDailyRun(hookRun2, outcome: .completed, preparationCleanupSucceeded: true)
         // Consumption disables the once task; the spent runOnce flag stays for
         // traceability (same contract as the once-only medicine/stone path).
@@ -194,6 +198,22 @@ import Foundation
         check(DailyRunOnceSemantics.consumeOnceTasks(tasks: consumedTasks, outcome: .completed) == consumedTasks,
               "repeated consumption is idempotent")
 
+        // N1 (P03.3): consumption is scoped to the run's frozen snapshot —
+        // entries armed after the snapshot froze never executed and stay armed.
+        let outsider = DailyTask(id: UUID(), task: .mall(mall), enabled: true, runOnce: true)
+        let snapshotIDs = Set(armedTasks.filter(\.enabled).map(\.id))
+        let withOutsider = armedTasks + [outsider]
+        let scoped = DailyRunOnceSemantics.consumeOnceTasks(
+            tasks: withOutsider, outcome: .completed, eligibleIDs: snapshotIDs)
+        check(scoped[0].enabled == false, "snapshot runOnce task consumed under scope")
+        if case .fight(let scopedFight) = scoped[1].task {
+            check(scopedFight.medicine == nil && scopedFight.stone == nil, "snapshot once-only fight consumed under scope")
+        } else { fatalError() }
+        check(scoped[4].enabled == true && scoped[4].runOnce, "mid-run armed once task stays armed")
+        check(DailyRunOnceSemantics.consumeOnceTasks(tasks: armedTasks, outcome: .completed)
+              == DailyRunOnceSemantics.consumeOnceTasks(tasks: armedTasks, outcome: .completed, eligibleIDs: snapshotIDs),
+              "nil scope equals the snapshot-id scope on the snapshot list itself")
+
         // Legacy plists without the new keys decode the once switches as false.
         // (Enum payloads are stored positionally under "_0", matching the
         // production plists written by PropertyListEncoder.)
@@ -241,6 +261,7 @@ import Foundation
         let terminal = MAAViewModel(directory: onceRoot)
         terminal.dailyTaskProfile = "A"
         terminal.tasks = armedTasks
+        terminal.dailyRunTasks = armedTasks  // 运行期冻结的快照（N1 消费范围）
         let terminalRun = try terminal.dailyRunCoordinator.begin(profileID: "A", origin: .schedule)!
         try terminal.dailyRunCoordinator.transition(.running, for: terminalRun)
         try terminal.dailyRunCoordinator.finish(terminalRun, outcome: .completed, cleanupSucceeded: true)
@@ -293,12 +314,89 @@ import Foundation
         let cross = MAAViewModel(directory: onceRoot)
         cross.dailyTaskProfile = "B"
         cross.tasks = [DailyTask(id: UUID(), task: .mall(mall), enabled: true)]
+        cross.dailyRunTasks = armedTasks  // A 的冻结快照（N1 消费范围）
         let crossRun = try cross.dailyRunCoordinator.begin(profileID: "A", origin: .schedule)!
         try cross.dailyRunCoordinator.finish(crossRun, outcome: .completed, cleanupSucceeded: true)
         cross.consumeRunOnceSemantics(terminal: cross.dailyRunCoordinator.lastTerminal!)
         check(cross.tasks.count == 1 && cross.tasks[0].runOnce == false, "selected other-profile UI untouched")
         check(try load(armedURL) == DailyRunOnceSemantics.consumeOnceTasks(tasks: armedTasks, outcome: .completed),
               "run profile consumed even while another profile is selected")
+
+        // N1 (P03.3) 端到端：快照里只有 runOnce 任务；运行中新武装的 once
+        // 任务（最新列表/磁盘都有）终态不被消费，快照内的照常消费。
+        let n1 = MAAViewModel(directory: onceRoot)
+        n1.dailyTaskProfile = "A"
+        n1.dailyRunTasks = [armedTasks[0]]  // 快照冻结时仅含 runOnce 任务
+        var midRunArmed = armedTasks
+        midRunArmed.append(DailyTask(id: UUID(), task: .fight(armedFight(medicine: 5, stone: nil, medicineOnce: true)), enabled: true))
+        n1.tasks = midRunArmed
+        try PropertyListEncoder().encode(midRunArmed).write(to: armedURL, options: .atomic)
+        let n1Run = try n1.dailyRunCoordinator.begin(profileID: "A", origin: .schedule)!
+        try n1.dailyRunCoordinator.transition(.running, for: n1Run)
+        try n1.dailyRunCoordinator.finish(n1Run, outcome: .completed, cleanupSucceeded: true)
+        n1.consumeRunOnceSemantics(terminal: n1.dailyRunCoordinator.lastTerminal!)
+        let n1Saved = try load(armedURL)
+        check(n1Saved[0].enabled == false, "snapshot runOnce task consumed")
+        if case .fight(let n1Fight) = n1Saved[4].task {
+            check(n1Saved[4].enabled == true && n1Fight.medicine == 5 && n1Fight.medicineOnce,
+                  "mid-run armed once task stays armed on disk")
+        } else { fatalError() }
+        check(n1.tasks == n1Saved, "live list mirrors the snapshot-scoped consumption")
+
+        // P03.3 切档隔离：程序化 switchProfile 在运行中被拒（UI 禁用只是
+        // 第一层防线）；运行中编辑另一档案不影响进行中运行的回写目标——
+        // 回写按 runID 所属档案路由的断言见上文 multi-profile 段，这里补
+        // "编辑非运行档案后，回写仍落运行时档案且不污染冻结快照"。
+        let isoRoot = FileManager.default.temporaryDirectory.appendingPathComponent("maa-profile-switch-iso-\(UUID())")
+        try FileManager.default.createDirectory(at: isoRoot, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: isoRoot) }
+        let isoRegistry = ProfileStore(rootURL: isoRoot)
+        let isoAlt = try isoRegistry.create(name: "小号")
+        try isoRegistry.saveTasks(profileID: ProfileStore.defaultProfileID, tasks: [frozen])
+        var isoAltConfig = mall; isoAltConfig.shopping = false
+        let isoAltTasks = [DailyTask(id: otherID, task: .mall(isoAltConfig), enabled: true)]
+        try isoRegistry.saveTasks(profileID: isoAlt.id, tasks: isoAltTasks)
+        try isoRegistry.setActive(isoAlt.id)
+        let iso = MAAViewModel(directory: isoRoot)
+        iso.dailyTaskProfile = isoAlt.id  // UI 停在小号；init 的指针同步是 P03.2 行为，此处直设
+        iso.tasks = isoAltTasks
+        iso.taskIDMap[9] = id
+        iso.dailyRunTasks = [frozen]  // 调度快照：Default 的冻结任务
+        let isoRun = try iso.dailyRunCoordinator.begin(
+            profileID: ProfileStore.defaultProfileID, origin: .schedule)!
+        try iso.dailyRunCoordinator.transition(.running, for: isoRun)
+
+        // 运行中程序化切换被拒：UI 档案、active 指针、任务列表均不动。
+        iso.switchProfile(ProfileStore.defaultProfileID)
+        check(iso.dailyTaskProfile == isoAlt.id, "mid-run programmatic switch refused: UI profile stays")
+        check(try isoRegistry.activeProfileID() == isoAlt.id, "mid-run switch refused: active pointer stays")
+        check(iso.tasks == isoAltTasks, "mid-run switch refused: task list stays")
+
+        // 运行中编辑非运行档案（小号）后，回调回写仍落运行时档案（Default）。
+        var isoAltEdited = mall; isoAltEdited.shopping = false
+        let isoAltEditedTasks = [DailyTask(id: otherID, task: .mall(isoAltEdited), enabled: false)]
+        try isoRegistry.saveTasks(profileID: isoAlt.id, tasks: isoAltEditedTasks)
+        check(iso.applyDailyTaskCallback(.creditFightDate(event), coreID: 9), "callback applies after other-profile edit")
+        guard case .mall(let isoSaved) = try load(isoRoot.appendingPathComponent("Default.plist"))[0].task else { fatalError() }
+        check(isoSaved.creditFightDate == event && isoSaved.buy_first == ["Original A"],
+              "write-back still lands on the run's profile")
+        check(try load(isoRoot.appendingPathComponent("\(isoAlt.id).plist")) == isoAltEditedTasks,
+              "mid-run edit of the other profile preserved")
+        guard case .mall(let isoFrozen) = iso.dailyRunTasks![0].task else { fatalError() }
+        check(isoFrozen.buy_first == ["Original A"] && isoFrozen.creditFightDate == event,
+              "frozen snapshot untouched by the other-profile edit")
+        check(iso.tasks == isoAltTasks, "selected profile's UI list untouched by the run's write-back")
+
+        // 收口窗口防御：运行已终态但冻结快照尚存时，切换同样被拒。
+        try iso.dailyRunCoordinator.finish(isoRun, outcome: .completed, cleanupSucceeded: true)
+        iso.status = .idle  // finishDailyRun 收口后的正常状态
+        iso.switchProfile(ProfileStore.defaultProfileID)
+        check(iso.dailyTaskProfile == isoAlt.id, "switch refused while a frozen snapshot is still live")
+        iso.dailyRunTasks = nil  // 生产中由 finishDailyRun 清空
+        iso.switchProfile(ProfileStore.defaultProfileID)
+        check(iso.dailyTaskProfile == ProfileStore.defaultProfileID, "switch proceeds once the run fully closed")
+        check(try load(isoRoot.appendingPathComponent("Default.plist")) == iso.tasks,
+              "switch loads the target profile's stored tasks")
         print("RunProfilePatchTests: \(checks) assertions passed")
     }
 }

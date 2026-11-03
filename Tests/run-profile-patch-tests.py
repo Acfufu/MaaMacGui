@@ -49,8 +49,14 @@ support+='''
  var isApplyingDailyCallbackPatch = false
  var errors = [String]()
  // R3 Q1: production finishDailyRun extraction needs the status/hook surface.
+ // P03.3: switchProfile/canStartTasks/profileStore are stitched verbatim below;
+ // these minimal members stand in for the status/start-gate state the real
+ // model owns.
  enum Status: Equatable { case busy, idle, pending }
- var status = Status.busy
+ var status: Status = .idle
+ var isStartStopInFlight = false
+ var isTestingHook = false
+ var profileIdentities: [ProfileIdentity] = []
  var runHookConfiguration = HookConfiguration()
  struct HookResult { var succeeded: Bool }
  func executeHook(_ command: HookCommand, context: RunContext, outcome: DailyRunOutcome?,
@@ -61,7 +67,11 @@ support+='''
  func logError(_ resource: LocalizedStringResource) { logError(verbatim: .init(localized: resource)) }
 ''' + declaration(model,r'^    func applyDailyTaskCallback\(') + '\n' \
  + declaration(model,r'^    func consumeRunOnceSemantics\(') + '\n' \
- + declaration(model,r'^    private func finishDailyRun\(').replace('private func finishDailyRun','func finishDailyRun',1) + '\n}\n' \
+ + declaration(model,r'^    private func finishDailyRun\(').replace('private func finishDailyRun','func finishDailyRun',1) + '\n' \
+ + declaration(model,r'^    var canStartTasks: Bool') + '\n' \
+ + declaration(model,r'^    var profileStore: ProfileStore') + '\n' \
+ + declaration(model,r'^    func switchProfile\(') + '\n' \
+ + declaration(model,r'^    private func reloadProfileIdentities\(') + '\n}\n' \
  + daily_task_array_subscript_extension() + '\n'
 mall=(root/'MeoAsstMac/Task Configurations/MallConfiguration.swift').read_text().replace('import JBird','')
 hg=(root/'MeoAsstMac/Utils/HGCalendar.swift').read_text()

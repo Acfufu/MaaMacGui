@@ -623,18 +623,24 @@ extension MAAViewModel {
 
     /// Q05 一次性开关的消费：仅在运行已完整收口（该 run 已成为 lastTerminal
     /// 且无进行中的运行）且结局为成功时，把 once 语义落回运行所属档案。
-    /// 失败/取消保持 once 状态；携带旧 runID 的迟到终态因 lastTerminal 已
-    /// 指向新运行而被拒绝，不会二次消费。
+    /// P03.3/N1：消费范围收敛到运行冻结快照中 enabled 的任务 id——运行中
+    /// 新增/新武装的 once 任务从未执行，终态不被消费（快照缺失时范围为空，
+    /// 保守不消费）。失败/取消保持 once 状态；携带旧 runID 的迟到终态因
+    /// lastTerminal 已指向新运行而被拒绝，不会二次消费。
     func consumeRunOnceSemantics(terminal: RunContext) {
         guard terminal.outcome == .completed,
               dailyRunCoordinator.active == nil,
               dailyRunCoordinator.lastTerminal?.id == terminal.id else { return }
+        // 冻结快照（dailyRunTasks）此刻仍指向刚收口的运行；其 enabled id
+        // 集合即"本次真正执行过"的任务范围。
+        let eligibleIDs = Set(dailyRunTasks?.filter(\.enabled).map(\.id) ?? [])
         let isCurrentProfile = terminal.profileID == dailyTaskProfile
         do {
             if let updated = try DailyRunOnceConsumption.apply(
                 profileID: terminal.profileID,
                 currentTasks: isCurrentProfile ? tasks : nil,
-                directory: tasksDirectory) {
+                directory: tasksDirectory,
+                eligibleIDs: eligibleIDs) {
                 if isCurrentProfile {
                     isApplyingDailyCallbackPatch = true
                     tasks = updated
@@ -1513,11 +1519,13 @@ extension MAAViewModel {
     }
 
     /// 切换活跃档案：先读取新档案任务、再落 active 指针与 UI 状态，读取
-    /// 失败时保持原档案不动。运行期间拒绝切换，冻结快照仍是本次运行的
-    /// 权威（回调补丁按 runID 所属档案路由，不受切换影响）。
+    /// 失败时保持原档案不动。P03.3：除 UI 禁用外这里对运行直接拒绝——
+    /// 程序化调用与 UI 同受此限；运行占用之外，冻结快照尚存的收口窗口
+    /// 同样拒绝，避免切换污染快照或令回写/一次性消费的 isCurrentProfile
+    /// 判别错位（回写本身按 RunContext.profileID 路由，不随切换漂移）。
     func switchProfile(_ profileID: String) {
         guard profileID != dailyTaskProfile else { return }
-        guard canStartTasks else {
+        guard canStartTasks, dailyRunTasks == nil else {
             logError("任务正在运行，请先停止后再切换档案。")
             return
         }

@@ -139,7 +139,7 @@ struct ProfileIdentity: Codable, Equatable, Identifiable {
 
 /// Registry and task storage for multiple daily-task profiles (pure
 /// Foundation; UI wiring, `--config` and switch notifications are P03.2,
-/// versioned migrations beyond `formatVersion` 1 are P03.3).
+/// versioned index migrations are P03.3 — see `IndexMigration`).
 ///
 /// Layout inside the injectable `rootURL` — the app's existing
 /// `…/Application Support/DailyTasks` directory, reusing pre-P03 files in
@@ -160,14 +160,21 @@ struct ProfileStore {
     }
 
     /// Ordered registry persisted as `index.plist`.
-    private struct Index: Codable, Equatable {
+    struct Index: Codable, Equatable {
         let formatVersion: Int
         var profiles: [ProfileIdentity]
         var activeProfileID: String
+        /// v2: when the active pointer last moved. Absent (nil) in v1 files
+        /// and until the first switch after migration — additive-only so a
+        /// v1 decoder still reads every v1 field.
+        var lastSwitchedAt: Date?
     }
 
     static let defaultProfileID = "Default"
-    static let currentFormatVersion = 1
+    /// v1 (P03.1): ordered identities + active pointer.
+    /// v2 (P03.3): adds `lastSwitchedAt` (nil = never switched). Older files
+    /// walk `IndexMigration` up to here in place; newer ones are refused.
+    static let currentFormatVersion = 2
 
     /// The app's pre-P03 daily-task directory; profiles live directly in it.
     static func defaultRootURL() -> URL {
@@ -193,7 +200,8 @@ struct ProfileStore {
         try loadIndex().activeProfileID
     }
 
-    /// Switching only moves the active pointer; change notifications are P03.2.
+    /// Switching only moves the active pointer (v2 also stamps
+    /// `lastSwitchedAt`); change notifications are P03.2.
     func setActive(_ profileID: String) throws {
         var index = try loadIndex()
         guard index.profiles.contains(where: { $0.id == profileID }) else {
@@ -201,6 +209,7 @@ struct ProfileStore {
         }
         guard index.activeProfileID != profileID else { return }
         index.activeProfileID = profileID
+        index.lastSwitchedAt = Date()
         try persist(index)
     }
 
@@ -293,14 +302,34 @@ struct ProfileStore {
             .appendingPathComponent(url.lastPathComponent)
     }
 
-    /// Load the registry, bootstrapping it on first run and repairing a
-    /// damaged one by rescanning the directory.
+    /// Load the registry, bootstrapping it on first run, migrating older
+    /// formats in place and repairing a damaged one by rescanning the
+    /// directory.
     private func loadIndex() throws -> Index {
         var persisted: Index?
+        var didMigrate = false
         if let data = try? Data(contentsOf: indexURL) {
-            persisted = try? PropertyListDecoder().decode(Index.self, from: data)
-            if let persisted, persisted.formatVersion > Self.currentFormatVersion {
-                throw ProfileError.unsupportedIndexVersion(persisted.formatVersion)
+            if let decoded = try? PropertyListDecoder().decode(Index.self, from: data) {
+                if decoded.formatVersion > Self.currentFormatVersion {
+                    throw ProfileError.unsupportedIndexVersion(decoded.formatVersion)
+                }
+                if decoded.formatVersion < Self.currentFormatVersion {
+                    // Older formats walk the migration chain; the rewritten
+                    // bytes are re-decoded so a broken step cannot reach the
+                    // registry.
+                    let (migrated, _) = try IndexMigration.migrate(
+                        index: data, from: decoded.formatVersion)
+                    persisted = try PropertyListDecoder().decode(Index.self, from: migrated)
+                    didMigrate = true
+                } else {
+                    persisted = decoded
+                }
+            } else if let raw = Self.rawFormatVersion(of: data), raw > Self.currentFormatVersion {
+                // R3-1: a schema-breaking future format fails Index decoding
+                // but still names its version. Refuse it here, or the
+                // corrupt-index fallback below would rewrite the file to
+                // this build's format and destroy the newer metadata.
+                throw ProfileError.unsupportedIndexVersion(raw)
             }
         }
 
@@ -310,15 +339,38 @@ struct ProfileStore {
         // an empty registry from the file falls back to a fresh Default.
         var index = persisted.map(sanitize) ?? scan()
         if index.profiles.isEmpty { index = scan() }
-        if index != persisted { try persist(index) }
+        // A migration persists immediately: leaving the older bytes on disk
+        // would re-run the chain (and risk divergence) on every launch.
+        if didMigrate || index != persisted { try persist(index) }
         return index
     }
 
-    /// Drop duplicate ids and clamp the active pointer to a real profile.
+    /// Raw `formatVersion` probe for undecodable indexes (R3-1). Only a
+    /// positively-identified newer version matters here; anything else
+    /// (missing, unparseable) falls through to the corrupt-index recovery.
+    private static func rawFormatVersion(of data: Data) -> Int? {
+        guard let plist = try? PropertyListSerialization.propertyList(from: data, format: nil),
+              let raw = (plist as? [String: Any])?["formatVersion"] else { return nil }
+        if let number = raw as? NSNumber { return number.intValue }
+        if let string = raw as? String { return Int(string) }
+        return nil
+    }
+
+    /// Ids double as file stems, so only plain single-component names may
+    /// enter the registry (shared by scan and sanitize; R3-2).
+    static func isSafeProfileStem(_ id: String) -> Bool {
+        !id.isEmpty && ![".", ".."].contains(id)
+            && URL(fileURLWithPath: id).lastPathComponent == id
+    }
+
+    /// Drop duplicate ids, unsafe file stems, and clamp the active pointer
+    /// to a real profile.
     private func sanitize(_ index: Index) -> Index {
         var seen = Set<String>()
         var sanitized = index
-        sanitized.profiles = index.profiles.filter { seen.insert($0.id).inserted }
+        sanitized.profiles = index.profiles.filter {
+            Self.isSafeProfileStem($0.id) && seen.insert($0.id).inserted
+        }
         if !sanitized.profiles.contains(where: { $0.id == sanitized.activeProfileID }) {
             sanitized.activeProfileID = sanitized.profiles.first?.id ?? Self.defaultProfileID
         }
@@ -335,8 +387,7 @@ struct ProfileStore {
         where url.lastPathComponent != "index.plist" && url.pathExtension == "plist" {
             let id = url.deletingPathExtension().lastPathComponent
             // Ids become path components; skip non-plain single-component names.
-            guard !id.isEmpty, ![".", ".."].contains(id),
-                URL(fileURLWithPath: id).lastPathComponent == id else { continue }
+            guard Self.isSafeProfileStem(id) else { continue }
             let createdAt =
                 (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? Date()
             profiles.append(ProfileIdentity(id: id, displayName: id, createdAt: createdAt))
@@ -353,7 +404,9 @@ struct ProfileStore {
                 ProfileIdentity(id: Self.defaultProfileID, displayName: Self.defaultProfileID, createdAt: Date()))
         }
         let active = profiles.first(where: { $0.id == Self.defaultProfileID })?.id ?? profiles[0].id
-        return Index(formatVersion: Self.currentFormatVersion, profiles: profiles, activeProfileID: active)
+        return Index(
+            formatVersion: Self.currentFormatVersion, profiles: profiles,
+            activeProfileID: active, lastSwitchedAt: nil)
     }
 
     /// Atomic replace: a crash mid-write can never destroy the previous index.
@@ -387,5 +440,56 @@ struct ProfileStore {
         case 2...: return .ambiguous(argument: argument, matches: byName.map(\.id))
         default: return .notFound(argument: argument)
         }
+    }
+}
+
+// MARK: - Index Migration (P03.3 / Q03)
+
+/// Versioned rewrites of `index.plist` (P03.3 / Q03). Each step is a pure
+/// `v(n) → v(n+1)` byte transform; `ProfileStore.loadIndex` walks files
+/// older than `currentFormatVersion` up the chain in place and refuses
+/// newer ones without writing anything back — the "旧版本读写不丢设置"
+/// contract: an older build meeting a newer index throws, it never
+/// downgrades or corrupts it.
+enum IndexMigration {
+    /// The hop out of `version`, or nil when this build knows no step for it
+    /// (a gap below the formats it understands).
+    private static func step(from version: Int) -> ((Data) throws -> Data)? {
+        switch version {
+        case 1: return v1toV2
+        default: return nil
+        }
+    }
+
+    /// Walk `data` from `version` up to the format this build writes. A
+    /// same-version input passes through unchanged; a newer version throws
+    /// — downgrades do not exist, because a newer file may use fields this
+    /// build cannot reconstruct.
+    static func migrate(index data: Data, from version: Int) throws -> (Data, Int) {
+        guard version <= ProfileStore.currentFormatVersion else {
+            throw ProfileStore.ProfileError.unsupportedIndexVersion(version)
+        }
+        var current = data
+        var currentVersion = version
+        while currentVersion < ProfileStore.currentFormatVersion {
+            guard let rewrite = step(from: currentVersion) else {
+                throw ProfileStore.ProfileError.unsupportedIndexVersion(currentVersion)
+            }
+            current = try rewrite(current)
+            currentVersion += 1
+        }
+        return (current, currentVersion)
+    }
+
+    /// v1 → v2: introduce `lastSwitchedAt` with its "never switched"
+    /// default. The typed round-trip preserves every v1 field — identities,
+    /// their order and the active pointer — by construction.
+    private static func v1toV2(_ data: Data) throws -> Data {
+        let index = try PropertyListDecoder().decode(ProfileStore.Index.self, from: data)
+        return try PropertyListEncoder().encode(ProfileStore.Index(
+            formatVersion: index.formatVersion + 1,
+            profiles: index.profiles,
+            activeProfileID: index.activeProfileID,
+            lastSwitchedAt: nil))
     }
 }
