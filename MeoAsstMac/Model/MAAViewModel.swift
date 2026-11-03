@@ -1633,6 +1633,32 @@ extension MAAViewModel {
         try await appendTrackedTask(type: type, params: params)
         try await startCoreTasks()
     }
+
+    /// C16：作业列表批量入队——占用与启动各一次，列表逐项 append（与 Core
+    /// 队列模型 AsstAppendTask × N + AsstStart × 1 对齐，日常任务即此模式）。
+    /// 中途 append 失败：用 Core stop 清空已入队残留（Assistant::stop 清任务
+    /// 列表），不把半个作业集留在队列里，再上抛由入口记日志。
+    func startCopilot(tasks: [(type: MAATaskType, params: String)]) async throws {
+        guard !tasks.isEmpty else { return }
+        try await beginTaskOperation()
+        defer { isStartStopInFlight = false }
+
+        status = .pending
+        defer { handleEarlyReturn(backTo: .idle) }
+
+        try await ensureHandle()
+        do {
+            for task in tasks {
+                try await appendTrackedTask(type: task.type, params: task.params)
+            }
+        } catch {
+            do { try await handle?.stop() } catch {
+                logError(verbatim: "作业队列清理失败：\(error.localizedDescription)")
+            }
+            throw error
+        }
+        try await startCoreTasks()
+    }
 }
 
 // MARK: Utility

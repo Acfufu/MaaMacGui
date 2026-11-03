@@ -241,7 +241,20 @@ private struct CopilotListToolbar: ToolbarContent {
 
     private func start() {
         Task {
-            try await newModel.startCopilot()
+            do {
+                try await newModel.startCopilot()
+            } catch MAAError.taskOperationInProgress, MAAError.taskAlreadyRunning {
+                // beginTaskOperation already reported these through the log channel.
+            } catch {
+                // Surface queueing failures (e.g. appendTask) that used to be
+                // swallowed by the unobserved Task result.
+                newModel.appendLog(
+                    .init(
+                        date: .now,
+                        content: String(
+                            localized: "作业启动失败：\(String(describing: error))"),
+                        color: .error))
+            }
         }
     }
 

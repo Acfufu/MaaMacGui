@@ -21,6 +21,16 @@ struct CopilotConfiguration: Codable, Hashable {
 
     var copilot_list = [CopilotItem]()
 
+    struct ParadoxListItem: Codable, Hashable {
+        let id: Int
+        let filename: String
+    }
+
+    /// ParadoxCopilot 专用：Core 的 ParadoxCopilotTask 只读 filename（单文件）
+    /// 或 list（元素为 {id, filename}），不读 copilot_list。Optional 在合成
+    /// Codable 下 nil 不编码，其余任务类型的 payload 保持不变。
+    var list: [ParadoxListItem]?
+
     var loop_times = 1
 
     var use_sanity_potion = false
@@ -80,6 +90,187 @@ struct VideoRecognitionConfiguration: Codable {
 
     var params: String? {
         try? jsonString()
+    }
+}
+
+// MARK: - Copilot Compiler
+
+/// Rejections produced while compiling copilot execution parameters (C16).
+///
+/// Every case is reported to the user through the log channel instead of
+/// letting the start request silently do nothing.
+enum CopilotCompileError: Error, Equatable {
+    /// List mode: the list is empty or every entry is toggled off.
+    case emptyList
+    /// List mode: the active set carries no kind information.
+    case missingKind
+    /// Single-file mode: the selected content is not a copilot JSON.
+    case unsupportedContent
+    /// Referenced files are missing on disk; every missing path is reported.
+    case missingFile([String])
+    /// List mode: files whose on-disk kind differs from the set kind. Files
+    /// that no longer parse as a copilot count as offenders: their kind cannot
+    /// be confirmed to match the set.
+    case mixedKind(expected: MAACopilot.Kind, offenders: [String])
+}
+
+extension CopilotCompileError {
+    /// User-facing log line for this rejection.
+    var logMessage: String {
+        switch self {
+        case .emptyList:
+            return String(localized: "没有可运行的作业：请先在列表中勾选至少一个作业。")
+        case .missingKind:
+            return String(localized: "作业集缺少类型信息，请重新激活此作业集。")
+        case .unsupportedContent:
+            return String(localized: "所选内容不是可执行的作业文件。")
+        case .missingFile(let files):
+            return String(localized: "以下作业文件不存在：\(files.joined(separator: "、"))")
+        case .mixedKind(let expected, let offenders):
+            return String(
+                localized: "以下作业与作业集类型（\(expected.displayName)）不符：\(offenders.joined(separator: "、"))")
+        }
+    }
+}
+
+/// Pure compiler that turns the copilot tab state into queueable task
+/// parameters. It touches neither MaaCore nor any actor, so every rejection
+/// path is validated before a task is queued.
+enum CopilotCompiler {
+    /// Core-free summary of the copilot tab state needed for compilation.
+    struct Input {
+        enum Selection {
+            /// List mode: the set's kind and its toggleable entries.
+            case list(kind: MAACopilot.Kind?, items: [Item])
+            /// Single-file mode: the selected copilot file and its kind.
+            case single(url: URL, kind: MAACopilot.Kind)
+            /// Single-file mode: anything else (no selection, set, directory, invalid).
+            case other
+        }
+
+        struct Item {
+            let url: URL
+            var isOn: Bool
+            var isRaid: Bool?
+            /// 激活期 mapLevelCode 的结果（集合列表自带）；nil = 无映射语境
+            /// （直构/测试），此时 kind 判定回退到 `Kind(of:)` 前缀推断。
+            var stageCode: String?
+
+            init(url: URL, isOn: Bool, isRaid: Bool? = nil, stageCode: String? = nil) {
+                self.url = url
+                self.isOn = isOn
+                self.isRaid = isRaid
+                self.stageCode = stageCode
+            }
+        }
+
+        var selection: Selection
+        var config = CopilotConfiguration()
+    }
+
+    /// One queueable append: a task type plus its params carrier.
+    struct Output: Equatable {
+        let type: MAATaskType
+        let config: CopilotConfiguration
+    }
+
+    static func compile(
+        _ input: Input
+    ) -> Result<[Output], CopilotCompileError> {
+        var config = input.config
+
+        switch input.selection {
+        case .list(let kind, let items):
+            let enabled = items.filter(\.isOn)
+            guard !enabled.isEmpty else {
+                return .failure(.emptyList)
+            }
+            guard let kind else {
+                return .failure(.missingKind)
+            }
+
+            let filenames = enabled.map { $0.url.path(percentEncoded: false) }
+            let missing = filenames.filter { !FileManager.default.fileExists(atPath: $0) }
+            guard missing.isEmpty else {
+                return .failure(.missingFile(missing))
+            }
+
+            let offenders = zip(enabled, filenames).compactMap { item, filename -> String? in
+                guard let copilot = MAACopilot(url: item.url) else {
+                    // Not parseable as a copilot: its kind cannot be confirmed
+                    // to match the set, so it is reported as an offender.
+                    return filename
+                }
+                // Same source as the activation-time judgment: the mapped level
+                // code rides on the item and is never re-inferred from a prefix.
+                let itemKind = item.stageCode.map { copilot.kind(code: $0) }
+                    ?? MAACopilot.Kind(of: copilot)
+                return itemKind == kind ? nil : filename
+            }
+            guard offenders.isEmpty else {
+                return .failure(.mixedKind(expected: kind, offenders: offenders))
+            }
+
+            config.filename = nil
+            switch kind {
+            case .regular:
+                // CopilotTask 消费 copilot_list（每项可带 nav/is_raid）。
+                config.copilot_list = zip(enabled, filenames).map { item, filename in
+                    .init(filename: filename, nav_name_override: nil, is_raid: item.isRaid ?? false)
+                }
+                return .success([Output(type: kind.taskType, config: config)])
+            case .paradox:
+                // ParadoxCopilotTask 消费 list（元素 {id, filename}），不读
+                // copilot_list；id 从 1 起计数。
+                config.copilot_list = []
+                config.list = filenames.enumerated().map { offset, filename in
+                    .init(id: offset + 1, filename: filename)
+                }
+                return .success([Output(type: kind.taskType, config: config)])
+            case .sss:
+                // SSSCopilotTask 只读 filename：按列表顺序逐个排单文件任务；
+                // 同一文件的常态/磨难两行只排一次。
+                config.copilot_list = []
+                var seen = Set<String>()
+                let orderedFilenames = enabled.compactMap { item -> String? in
+                    let filename = item.url.path(percentEncoded: false)
+                    return seen.insert(filename).inserted ? filename : nil
+                }
+                return .success(orderedFilenames.map { filename in
+                    var taskConfig = config
+                    taskConfig.filename = filename
+                    return Output(type: kind.taskType, config: taskConfig)
+                })
+            }
+        case .single(let url, let kind):
+            let filename = url.path(percentEncoded: false)
+            guard FileManager.default.fileExists(atPath: filename) else {
+                return .failure(.missingFile([filename]))
+            }
+            config.filename = filename
+            return .success([Output(type: kind.taskType, config: config)])
+        case .other:
+            return .failure(.unsupportedContent)
+        }
+    }
+}
+
+extension CopilotCompiler.Input {
+    /// Summarizes the live copilot tab for the compiler.
+    init(context: CopilotContext) {
+        if context.category == .list {
+            self.init(
+                selection: .list(
+                    kind: context.copilotSet?.kind,
+                    items: context.copilotList.map { item in
+                        .init(url: item.url, isOn: item.isOn, isRaid: item.isRaid,
+                              stageCode: item.stageCode)
+                    }))
+        } else if case .copilot(let url, let kind, _) = context.content {
+            self.init(selection: .single(url: url, kind: kind))
+        } else {
+            self.init(selection: .other)
+        }
     }
 }
 
@@ -271,6 +462,49 @@ extension MAACopilot {
                 return .paradox
             }
             return .regular
+        }
+    }
+}
+
+extension MAACopilot.Kind {
+    /// Fallback kind judgment for items that carry no activation-time level
+    /// code: the runtime judgment resolves the code through MaaCore, which the
+    /// compiler must not touch. Paradox level codes are `mem_`-prefixed and
+    /// survive that mapping unchanged, so a prefix check on `stage_name`
+    /// reaches the same verdict when `stage_name` itself is the code. List
+    /// items built from an activated set always carry `stageCode` and take the
+    /// mapped-code path instead (`CopilotCompiler.Input.Item.stageCode`).
+    init(of copilot: MAACopilot) {
+        if copilot.type == "SSS" {
+            self = .sss
+        } else if copilot.stage_name.hasPrefix("mem_") {
+            self = .paradox
+        } else {
+            self = .regular
+        }
+    }
+
+    /// The core task type this kind queues.
+    var taskType: MAATaskType {
+        switch self {
+        case .regular:
+            return .Copilot
+        case .sss:
+            return .SSSCopilot
+        case .paradox:
+            return .ParadoxCopilot
+        }
+    }
+
+    /// Short user-facing name used in compile-rejection messages.
+    var displayName: String {
+        switch self {
+        case .regular:
+            return String(localized: "常规作业")
+        case .sss:
+            return String(localized: "保全作业")
+        case .paradox:
+            return String(localized: "悖论模拟作业")
         }
     }
 }

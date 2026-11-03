@@ -149,53 +149,33 @@ extension NewViewModel {
     }
 
     nonisolated(nonsending) func startCopilot() async throws {
-        var config = copilot.config
-        let type: MAATaskType
-
-        if copilot.category == .list {
-            guard let kind = copilot.copilotSet?.kind else {
-                return
-            }
-
-            config.filename = nil
-            config.copilot_list = copilot.copilotList.filter(\.isOn).map {
-                .init(
-                    filename: $0.url.path(percentEncoded: false),
-                    nav_name_override: nil,
-                    is_raid: $0.isRaid ?? false)
-            }
-
-            switch kind {
-            case .regular:
-                type = .Copilot
-            case .sss:
-                type = .SSSCopilot
-            case .paradox:
-                type = .ParadoxCopilot
-            }
-        } else {
-            switch copilot.content {
-            case .copilot(let url, let kind, _):
-                config.filename = url.path(percentEncoded: false)
-                switch kind {
-                case .regular:
-                    type = .Copilot
-                case .sss:
-                    type = .SSSCopilot
-                case .paradox:
-                    type = .ParadoxCopilot
-                }
-            default:
-                return
-            }
-        }
-
-        guard let params = try? config.jsonString() else {
+        // Compile and validate the copilot parameters before anything is queued
+        // (C16); rejections are user-visible instead of silent no-ops. A list
+        // compiles to one append per task (SSS sets expand to ordered
+        // single-filename tasks); a failed append stops queueing the rest.
+        switch CopilotCompiler.compile(.init(context: copilot)) {
+        case .failure(let error):
+            appendLog(.init(date: .now, content: error.logMessage, color: .error))
             return
-        }
+        case .success(let outputs):
+            // 一次性序列化全部任务后走批量入口：占用/启动各一次，避免逐项
+            // start 让第二个任务撞上「任务正在运行」的 idle 守卫。
+            var tasks = [(type: MAATaskType, params: String)]()
+            for output in outputs {
+                guard let params = try? output.config.jsonString() else {
+                    appendLog(
+                        .init(
+                            date: .now,
+                            content: String(localized: "作业参数序列化失败，请重试。"),
+                            color: .error))
+                    return
+                }
+                tasks.append((type: output.type, params: params))
+            }
 
-        try await parent.startCopilot(type: type, params: params)
-        copilotStartToken = UUID()
+            try await parent.startCopilot(tasks: tasks)
+            copilotStartToken = UUID()
+        }
     }
 
     nonisolated(nonsending) func recognizeVideo(url: URL) async throws {

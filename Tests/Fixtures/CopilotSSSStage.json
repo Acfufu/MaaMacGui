@@ -1,0 +1,9 @@
+{
+  "minimum_required": "v4.9.0",
+  "stage_name": "多索雷斯在建地块",
+  "type": "SSS",
+  "equipment": ["A", "B"],
+  "strategy": "优选策略",
+  "tool_men": { "重装干员": 1 },
+  "opers": []
+}

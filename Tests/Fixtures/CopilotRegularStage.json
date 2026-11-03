@@ -1,0 +1,7 @@
+{
+  "minimum_required": "v4.0.0",
+  "stage_name": "1-7",
+  "opers": [
+    { "name": "阿米娅", "skill": 2 }
+  ]
+}

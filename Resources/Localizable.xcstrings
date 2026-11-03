@@ -7071,6 +7071,38 @@
         }
       }
     },
+    "以下作业与作业集类型（%@）不符：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These copilots do not match the set kind (%1$@): %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "以下作业与作业集类型（%@）不符：%@"
+          }
+        }
+      }
+    },
+    "以下作业文件不存在：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These copilot files are missing: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "以下作业文件不存在：%@"
+          }
+        }
+      }
+    },
     "任务" : {
       "localizations" : {
         "ko" : {
@@ -7285,6 +7317,54 @@
       }
     },
     "作业信息" : {},
+    "作业参数序列化失败，请重试。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to serialize copilot parameters. Please try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "作业参数序列化失败，请重试。"
+          }
+        }
+      }
+    },
+    "作业启动失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to start copilot: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "作业启动失败：%@"
+          }
+        }
+      }
+    },
+    "作业集缺少类型信息，请重新激活此作业集。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The copilot set is missing its kind. Please reactivate the set."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "作业集缺少类型信息，请重新激活此作业集。"
+          }
+        }
+      }
+    },
     "使用 /bin/zsh -f 执行脚本" : {
       "localizations" : {
         "zh-Hans" : {
@@ -7346,6 +7426,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用种子开局"
+          }
+        }
+      }
+    },
+    "保全作业" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSS copilot"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "保全作业"
           }
         }
       }
@@ -9871,6 +9967,22 @@
       }
     },
     "帮助与公告…" : {},
+    "常规作业" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regular copilot"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "常规作业"
+          }
+        }
+      }
+    },
     "常规模式" : {
       "localizations" : {
         "ko" : {
@@ -10305,6 +10417,22 @@
       }
     },
     "忽视干员属性要求" : {},
+    "悖论模拟作业" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paradox copilot"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "悖论模拟作业"
+          }
+        }
+      }
+    },
     "成功！" : {},
     "我已知晓，继续" : {
       "localizations" : {
@@ -10321,6 +10449,22 @@
     "截图分辨率：" : {},
     "截图宽高比不符合16:9" : {},
     "截图模式" : {},
+    "所选内容不是可执行的作业文件。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected content is not an executable copilot file."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "所选内容不是可执行的作业文件。"
+          }
+        }
+      }
+    },
     "所选程序不可执行或脚本无法读取" : {
       "localizations" : {
         "zh-Hans" : {
@@ -11707,6 +11851,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "사막 이야기"
+          }
+        }
+      }
+    },
+    "没有可运行的作业：请先在列表中勾选至少一个作业。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No copilot to run: enable at least one copilot in the list first."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "没有可运行的作业：请先在列表中勾选至少一个作业。"
           }
         }
       }

@@ -1,0 +1,7 @@
+{
+  "minimum_required": "v4.0.0",
+  "stage_name": "mem_haak_1",
+  "opers": [
+    { "name": "赫克提卡", "skill": 3 }
+  ]
+}
