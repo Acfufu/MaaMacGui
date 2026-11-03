@@ -191,14 +191,20 @@ import Foundation
         if end.cleanupSucceeded == false {
             result = .failed
         } else {
+            // P04 结果四态:超时是一等终态;台账无独立超时位,记为失败并携带
+            // detail 供界面解释,不得落入 interrupted(「结果未知」)。
             switch end.outcome {
             case .completed: result = .completed
             case .cancelled: result = .cancelled
-            case .failed: result = .failed
+            case .failed, .timedOut: result = .failed
             default: result = .interrupted
             }
         }
-        record(occurrence, result: result, detail: end.cleanupSucceeded == false ? "cleanupFailed" : "", runID: end.id)
+        let detail: String
+        if end.cleanupSucceeded == false { detail = "cleanupFailed" }
+        else if end.outcome == .timedOut { detail = "runTimedOut" }
+        else { detail = "" }
+        record(occurrence, result: result, detail: detail, runID: end.id)
     }
 
     private func reloadRecords() {

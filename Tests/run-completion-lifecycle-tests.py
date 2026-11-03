@@ -141,6 +141,15 @@ main = '''
   while !stopGate.entered { await Task.yield() }
   stop.cancel(); stopGate.release(); await stop.value
   precondition(p.dailyRunCoordinator.active == nil && p.dailyRunCoordinator.lastTerminal?.id == stopped, "cancelled explicit stop must still finish cleanup")
+  // P04 结果四态:超时是一等终态,入口层(lastRunOutcome)可直接判别;
+  // 同一 run 的迟到重复终态仍被拒绝,不覆盖既有落账。
+  let timed = try p.dailyRunCoordinator.begin(profileID: "T", origin: .manual)!
+  try p.dailyRunCoordinator.transition(.running, for: timed)
+  try p.dailyRunCoordinator.finish(timed, outcome: .timedOut, cleanupSucceeded: true)
+  precondition(p.dailyRunCoordinator.active == nil && p.dailyRunCoordinator.lastTerminal?.outcome == .timedOut && p.canStartTasks, "timeout is a distinct terminal outcome that releases ownership")
+  let duplicate = try p.dailyRunCoordinator.finish(timed, outcome: .completed, cleanupSucceeded: true)
+  precondition(!duplicate, "late duplicate terminal for a finished run is rejected")
+  precondition(p.dailyRunCoordinator.lastTerminal?.outcome == .timedOut, "late duplicate terminal must not overwrite the recorded outcome")
   let dir = FileManager.default.temporaryDirectory.appendingPathComponent("maa-failing-journal-" + UUID().uuidString)
   let journal = dir.appendingPathComponent("journal.json")
   let failure = Probe(journalURL: journal)
@@ -157,7 +166,7 @@ main = '''
   // #178 92ee14c 语义:写盘失败→降级内存模式,finish 照常收口并释放占用;
   // 重启后由 interrupted 恢复兜底。重复回调因 active==nil 不再重试。
   precondition(failure.dailyRunCoordinator.active == nil && failure.dailyRunCoordinator.lastTerminal?.id == failureID && failure.status == .idle && failure.errors.count == 0, "journal failure degrades to memory mode and still releases ownership")
-  print("Completion lifecycle: 10 production-path assertions passed")
+  print("Completion lifecycle: 13 production-path assertions passed")
  }
 }
 '''

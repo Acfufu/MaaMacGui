@@ -155,6 +155,7 @@ private extension ScheduleOccurrence {
         case "cleanupFailed": String(localized: "后置清理未成功，本次不再开始。")
         case "stopFailed": String(localized: "停止当前任务失败，本次不再开始。")
         case "startFailed": String(localized: "任务启动失败，请检查连接与配置。")
+        case "runTimedOut": String(localized: "任务执行超时，已记为失败。")
         case "admissionRejected": String(localized: "任务入口正忙，本次已跳过。")
         case "runChanged": String(localized: "等待期间已开始其他运行，定时交接已取消。")
         case "scheduleChanged": String(localized: "计划已修改或停用，定时交接已取消。")

@@ -15,9 +15,12 @@ def declaration(source,pattern):
 parts=[declaration(model,r'^    enum Status:'),declaration(model,r'^    enum TaskStartResult:')]
 for pattern in [r'^    private var dailyCompletionTask: .*$', r'^    private var dailyFinishAttemptedRunID: .*$', r'^    @Published private\(set\) var status = .*$',r'^    @Published private\(set\) var isStartStopInFlight = .*$',r'^    private var taskCompletionGeneration = .*$']:
  parts.append(re.search(pattern,model,re.M)[0])
-for name in ['canStartTasks','beginTaskOperation','handleEarlyReturn','startCoreTasks','startDailyTasks','startTasks','stop','finishDailyRunIfStopped','reconcileDailyRunStatus','discardPreparedDailyTasks','resetStatus','waitForDailyRunCompletion','forceRecoveryEligibility']:
+for name in ['canStartTasks','beginTaskOperation','handleEarlyReturn','startCoreTasks','startDailyTasks','startTasks','stop','finishDailyRunIfStopped','reconcileDailyRunStatus','discardPreparedDailyTasks','resetStatus','waitForDailyRunCompletion','forceRecoveryEligibility','requestStopRun','requestDailyRun','miniGame']:
  pattern=rf'^    (?:private )?(?:func|var) {name}\b'
  if re.search(pattern,model,re.M):parts.append(declaration(model,pattern))
+# P04 入口边界成员是本套件的断言对象,缺失即红,不允许静默跳过。
+for name in ['requestStopRun','requestDailyRun','miniGame']:
+ assert re.search(rf'^    (?:private )?(?:func|var) {name}\b',model,re.M), f'P04 entry boundary member {name} missing from MAAViewModel.swift'
 for name in ['dailyTask','taskID']:parts.append(declaration(message,rf'^    (?:private )?func {name}\('))
 support=(root/'Tests/DailyPreparationTestSupport.swift').read_text().replace('// PRODUCTION_MODEL_MEMBERS','\n'.join(parts)).replace('// PRODUCTION_CORE_RUNNING_GUARD',declaration(model,r'^        guard await handle\?\.running == false else'))
 tasks=(source_root/'MeoAsstMac/Model/MAATask.swift').read_text()

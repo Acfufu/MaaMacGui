@@ -145,6 +145,79 @@ import Foundation
   let scheduledEvents=AchievementStore.shared.recordedEvents.filter { $0.metric == .scheduledStart }
   check(scheduledEvents.count == 1, "scheduled start records exactly one .scheduledStart achievement event")
   check(scheduledEvents.first?.runID == scheduledModel.dailyRunCoordinator.active?.id, "the achievement event carries the scheduled run's ID")
+  // P04 入口边界:工具入口(miniGame)与日常入口共用 beginTaskOperation 准入——
+  // 同一实例同一时刻至多一个有效运行,冲突即拒绝且互斥随之释放(TO-1 族)。
+  let toolBusy=MAAViewModel(); let toolBusyCore=toolBusy.handle!
+  toolBusy.tasks=[.init(task:.fixture)]
+  check(await toolBusy.startDailyTasks() == .started && toolBusy.status == .busy, "daily run occupies the instance through the shared admission")
+  var toolRejected=false
+  do { try await toolBusy.miniGame(name:"Fixture") } catch { toolRejected=true }
+  check(toolRejected && toolBusy.status == .busy && toolBusyCore.appendCount == 1, "tool entry is refused while a daily run owns the instance and appends nothing")
+  check(!toolBusy.operationInFlightForTest && toolBusy.errors.contains("任务正在运行，请先停止当前任务。"), "refused tool entry releases the admission mutex and reports the conflict")
+  // 互斥占用期的重复工具启动:独立报错,不触碰 Core(TO-3 族)。
+  let toolInFlight=MAAViewModel(); let inFlightGate=Gate(); toolInFlight.connectionGate=inFlightGate
+  let toolStart=Task { try await toolInFlight.miniGame(name:"Fixture") }
+  for _ in 0..<10000 { if inFlightGate.entered { break }; await Task.yield() }
+  var duplicateRejected=false
+  do { try await toolInFlight.miniGame(name:"Fixture") } catch { duplicateRejected=true }
+  check(duplicateRejected && toolInFlight.operationInFlightForTest && toolInFlight.errors.last == "当前正在启动或停止任务，请稍后重试。", "duplicate tool start is refused while the first holds the admission mutex")
+  inFlightGate.release()
+  check((try? await toolStart.value) != nil && toolInFlight.status == .busy && !toolInFlight.canStartTasks, "the first tool run still owns the instance after a refused duplicate")
+  try? await toolInFlight.stop()
+  check(toolInFlight.status == .idle && toolInFlight.canStartTasks, "stopping the tool run releases the instance")
+  // 钩子测试占用期(isTestingHook):工具入口必须被拒,不得并发占用 Core。
+  let hookTesting=MAAViewModel(); hookTesting.isTestingHook=true
+  var hookTestRejected=false
+  do { try await hookTesting.miniGame(name:"Fixture") } catch { hookTestRejected=true }
+  check(hookTestRejected && hookTesting.handle?.appendCount == 0 && hookTesting.status == .idle, "tool entries cannot start while a hook test owns the boundary")
+  // 工具运行成功路径:占用实例,停止后无协调器残留(工具运行不落协调器账)。
+  let toolRun=MAAViewModel(); let toolCore=toolRun.handle!
+  try! await toolRun.miniGame(name:"Fixture")
+  check(toolRun.status == .busy && toolCore.startCount == 1 && toolCore.appendCount == 1 && !toolRun.canStartTasks, "a started tool run occupies the instance through the shared boundary")
+  try? await toolRun.stop()
+  check(toolRun.status == .idle && toolRun.canStartTasks && toolRun.dailyRunCoordinator.active == nil && toolCore.stopCount == 1, "stop clears a tool run and leaves no coordinator residue")
+  // P04 结果四态:准备期钩子超时按 .timedOut 落账;钩子脚本执行失败按 .failed
+  // 落账(A 审 Q1:与"成功/失败/取消/超时"字面一致,不再混入 .cancelled)。
+  // startDailyTasks 每次从 hookSettings 重载钩子配置,须在 store 上注入。
+  let hookTimeout=MAAViewModel()
+  hookTimeout.hookSettings.configuration=HookConfiguration(enabled:true,before:HookCommand())
+  hookTimeout.hookResult=HookResult(succeeded:false,exitCode:-9,timedOut:true)
+  check(await hookTimeout.startDailyTasks() == .failed && hookTimeout.dailyRunCoordinator.lastTerminal?.outcome == .timedOut && hookTimeout.canStartTasks, "timed-out preparation hook records a timedOut terminal and releases the instance")
+  let hookFailed=MAAViewModel()
+  hookFailed.hookSettings.configuration=HookConfiguration(enabled:true,before:HookCommand())
+  hookFailed.hookResult=HookResult(succeeded:false,exitCode:1)
+  check(await hookFailed.startDailyTasks() == .failed && hookFailed.dailyRunCoordinator.lastTerminal?.outcome == .failed && hookFailed.canStartTasks, "failing preparation hook records a failed terminal and releases the instance")
+  // R3 回归:任务树取消（定时取消/计划编辑）杀钩子进程 → HookResult.cancelled
+  // 须回归基点的 .cancelled,不得因 PreparationHookFailure 误记 .failed。
+  let hookTreeCancelled=MAAViewModel()
+  hookTreeCancelled.hookSettings.configuration=HookConfiguration(enabled:true,before:HookCommand())
+  hookTreeCancelled.hookResult=HookResult(succeeded:false,exitCode:-9,cancelled:true)
+  check(await hookTreeCancelled.startDailyTasks() == .failed && hookTreeCancelled.dailyRunCoordinator.lastTerminal?.outcome == .cancelled && hookTreeCancelled.canStartTasks, "tree-cancelled preparation hook records a cancelled terminal")
+  // 强制恢复超时同样按 .timedOut 落账(此前混入 .failed)。
+  let recoveryTimeout=MAAViewModel(); recoveryTimeout.tasks=[.init(task:.fixture)]
+  recoveryTimeout.recoveryError=ForcedRecoveryFailure.timedOut
+  check(await recoveryTimeout.startDailyTasks(recoverGame:true) == .failed && recoveryTimeout.dailyRunCoordinator.lastTerminal?.outcome == .timedOut, "forced recovery timeout records a timedOut terminal")
+  // P04 停止路由:无可停对象不触碰 Core;后置清理期拒绝;运行中正常收口。
+  let idleStop=MAAViewModel(); let idleStopCore=idleStop.handle!
+  check(await idleStop.requestStopRun() == false && idleStopCore.stopCount == 0, "stop routing with no run reports false and never touches the core")
+  let postStop=MAAViewModel(); let postStopCore=postStop.handle!
+  let postID=try! postStop.dailyRunCoordinator.begin(profileID:"A",origin:.manual)!
+  try! postStop.dailyRunCoordinator.transition(.postHook, for: postID)
+  check(await postStop.requestStopRun() == false && postStopCore.stopCount == 0 && postStop.dailyRunCoordinator.active?.id == postID, "stop routing refuses during post-run cleanup without touching the core")
+  _=try! postStop.dailyRunCoordinator.finish(postID,outcome:.cancelled,cleanupSucceeded:true)
+  let routeStop=MAAViewModel(); let routeCore=routeStop.handle!
+  routeStop.tasks=[.init(task:.fixture)]
+  check(await routeStop.startDailyTasks() == .started, "routing fixture starts a daily run")
+  check(await routeStop.requestStopRun() == true && routeCore.stopCount == 1 && routeStop.dailyRunCoordinator.active == nil && routeStop.dailyRunCoordinator.lastTerminal?.outcome == .cancelled, "stop routing finishes the owned run as cancelled")
+  // P04 准入 + runID 归属:被拒返回 nil,成功返回的 runID 与终态记录一致。
+  let busyEntry=MAAViewModel(); busyEntry.tasks=[.init(task:.fixture)]
+  check(await busyEntry.startDailyTasks() == .started, "entry fixture run started")
+  check(await busyEntry.requestDailyRun(origin:.schedule) == nil && busyEntry.dailyRunCoordinator.active != nil, "requestDailyRun is refused while a run owns the instance")
+  check(await busyEntry.requestStopRun() == true, "the owned run remains stoppable through the boundary")
+  let freshEntry=MAAViewModel(); freshEntry.tasks=[.init(task:.fixture)]
+  let admittedID=await freshEntry.requestDailyRun(origin:.schedule)
+  check(admittedID != nil && freshEntry.dailyRunCoordinator.active?.id == admittedID, "admitted entry returns the coordinator run ID")
+  check(await freshEntry.requestStopRun() == true && freshEntry.dailyRunCoordinator.lastTerminal?.id == admittedID, "the admitted run ID tracks stop routing into the terminal record")
   print("DailyPreparationTests: \(count) production async assertions passed")
  }
 }

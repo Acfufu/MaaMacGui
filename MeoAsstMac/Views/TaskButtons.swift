@@ -25,7 +25,7 @@ struct TaskButtons: View {
             }
         }
         .keyboardShortcut(".", modifiers: .command)
-        .disabled(viewModel.isStartStopInFlight)
+        .disabled(!viewModel.canStopTasks)
 
         Button("全部启用") {
             for (index, task) in viewModel.tasks.enumerated() {

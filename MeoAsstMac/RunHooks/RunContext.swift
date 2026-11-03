@@ -9,7 +9,7 @@ extension Notification.Name {
 /// Shared identity and terminal contract for daily automation entry points.
 enum DailyRunOrigin: String, Codable { case manual, schedule, hotkey }
 enum DailyRunPhase: String, Codable { case preparing, preHook, connecting, running, stopping, postHook, finished }
-enum DailyRunOutcome: String, Codable { case completed, cancelled, failed, interrupted }
+enum DailyRunOutcome: String, Codable { case completed, cancelled, failed, timedOut, interrupted }
 
 struct RunContext: Codable, Equatable, Identifiable {
     let id: UUID

@@ -49,7 +49,25 @@ struct CopilotContext {
  var category = CopilotCategory.bundled
  var copilotSet: CopilotSet? = CopilotSet()
  var copilotList = [CopilotItem]()
- var content = CopilotContent.copilot(URL(filePath: "/fixture.json"), .regular, false)
+ var content = CopilotContent.copilot(URL(filePath:"/fixture.json"), .regular, false)
+}
+// P01.2 起生产桥经 CopilotCompiler 编译后才入队;本夹具按同一边界形态
+// 提供纯编译器:invalid 内容编译失败,其余产出单个 Copilot 追加项。
+struct MAALog {
+ enum LogColor { case error }
+ var date: Date; var content: String; var color: LogColor
+ init(date: Date, content: String, color: LogColor) { self.date=date; self.content=content; self.color=color }
+}
+enum CopilotCompiler {
+ struct Input { var context: CopilotContext; init(context: CopilotContext) { self.context=context } }
+ struct Output { var type: MAATaskType; var config: CopilotConfiguration }
+ struct CompileError: Error { var logMessage: String }
+ static func compile(_ input: Input) -> Result<[Output], CompileError> {
+  switch input.context.content {
+  case .invalid: return .failure(CompileError(logMessage: "invalid"))
+  case .copilot: return .success([Output(type: .Copilot, config: CopilotConfiguration())])
+  }
+ }
 }
 @MainActor final class MAAViewModel: ObservableObject {
  enum Status { case idle, busy, pending }
@@ -58,11 +76,11 @@ struct CopilotContext {
  var blackflowStartAvailable = false
  @Published var isStartStopInFlight = false
  let dailyRunCoordinator = DailyRunCoordinator()
-'''+block(model,r'^    var canStartTasks:')+'\n'+menu_predicates+'''
+'''+block(model,r'^    var canStartTasks:')+'\n'+block(model,r'^    var canStopTasks:')+'\n'+block(model,r'^    var activeRun:')+'\n'+block(model,r'^    var lastRunOutcome:')+'\n'+menu_predicates+'''
  var copilotStartCount = 0
  var failCopilotStart = false
  var copilotGate: Gate?
- func startCopilot(type: MAATaskType, params: String) async throws {
+ func startCopilot(tasks: [(type: MAATaskType, params: String)]) async throws {
   copilotStartCount += 1
   if let copilotGate { await copilotGate.wait() }
   if failCopilotStart { throw FixtureError.connection }
@@ -73,6 +91,8 @@ struct CopilotContext {
  private let parent: MAAViewModel
  var copilot = CopilotContext()
  private(set) var copilotStartToken: UUID?
+ var logs=[MAALog]()
+ func appendLog(_ entry: MAALog) { logs.append(entry) }
  @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 '''+block(bridge,r'^    @MainActor var status:')+'\n'+block(bridge,r'^    @MainActor var canStartTasks:')+'''
  @MainActor init(parent: MAAViewModel) {
@@ -94,12 +114,28 @@ final class Flag: @unchecked Sendable {
   precondition(parent.menuStartDisabled,"start menu predicate disables start while a run is active")
   parent.isStartStopInFlight=true
   precondition(parent.menuStopDisabled,"stop menu predicate disables stop while the operation flag is set")
+  precondition(!parent.canStopTasks,"stop boundary predicate refuses while the operation flag is set")
   parent.isStartStopInFlight=false
   let flag=Flag()
   withObservationTracking { _=bridge.canStartTasks } onChange: { flag.set() }
   _=try parent.dailyRunCoordinator.finish(run,outcome:.completed,cleanupSucceeded:true)
   precondition(bridge.canStartTasks && flag.value)
   precondition(parent.status == .idle && !parent.isStartStopInFlight)
+  // P04 入口薄层:runID 归属与终态判别只读转发到协调器。
+  precondition(parent.activeRun == nil,"activeRun clears once the terminal is recorded")
+  precondition(parent.lastRunOutcome == .completed,"lastRunOutcome exposes the finished run's outcome")
+  // P04 Q02:停止键与 stop 路由同源——后置清理期禁停(此刻 stop 只会报错),
+  // 运行中(未互斥)可停。谓词文本逐字取自 TaskButtons 的 .disabled。
+  let postRun=try parent.dailyRunCoordinator.begin(profileID:"A",origin:.manual)!
+  try parent.dailyRunCoordinator.transition(.postHook, for: postRun)
+  precondition(!parent.canStopTasks,"stop boundary predicate refuses during post-run cleanup")
+  precondition(parent.menuStopDisabled,"stop menu predicate disables stop during post-run cleanup")
+  _=try parent.dailyRunCoordinator.finish(postRun,outcome:.cancelled,cleanupSucceeded:true)
+  let stopping=try parent.dailyRunCoordinator.begin(profileID:"A",origin:.manual)!
+  try parent.dailyRunCoordinator.transition(.running, for: stopping)
+  precondition(parent.canStopTasks,"stop boundary predicate allows stopping a running run")
+  precondition(!parent.menuStopDisabled,"stop menu predicate allows stop while a run is running")
+  _=try parent.dailyRunCoordinator.finish(stopping,outcome:.cancelled,cleanupSucceeded:true)
   // TO-4: invalid/failed/pending emit no token; only success announces one.
   let copilotParent=MAAViewModel();let copilotBridge=NewModel(parent:copilotParent)
   copilotBridge.copilot.content = .invalid
@@ -118,7 +154,7 @@ final class Flag: @unchecked Sendable {
   copilotGate.release()
   try! await copilotTask.value
   precondition(copilotBridge.copilotStartToken != nil,"successful Copilot start emits a token")
-  print("RunAvailabilityObservationTests: 10 production assertions passed")
+  print("RunAvailabilityObservationTests: 17 production assertions passed")
  }
 }
 '''

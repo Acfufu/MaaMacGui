@@ -137,6 +137,8 @@ struct MiniGameView: View {
                 } else {
                     try await viewModel.miniGame(name: selectedGame.taskName, params: taskParams)
                 }
+            } catch MAAError.taskOperationInProgress, MAAError.taskAlreadyRunning {
+                // beginTaskOperation already reported these through the log channel.
             } catch {
                 startError = error.localizedDescription
             }

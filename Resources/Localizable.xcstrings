@@ -7157,6 +7157,28 @@
         }
       }
     },
+    "任务执行超时，已记为失败。" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务执行超时，已记为失败。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The task timed out and was recorded as failed."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 실행이 시간 초과되어 실패로 기록되었습니다."
+          }
+        }
+      }
+    },
     "任务正在运行，请先停止后再切换档案。" : {
       "localizations" : {
         "zh-Hans" : {

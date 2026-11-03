@@ -109,6 +109,9 @@ enum ClientChannel { case official, bilibili
 }
 struct MAAStageActivity {}
 struct PreparationCleanupFailure: Error {}
+// P04:先置钩子超时/脚本失败判别;与生产 private 类型同名的边界桩。
+struct PreparationHookTimeout: Error {}
+struct PreparationHookFailure: Error {}
 struct RoguelikeCfgStub: Equatable { func validateBlackflowStart(available: Bool) throws {} }
 struct DropItemStub {}
 struct InventoryTarget: Equatable { var itemID: String = ""; var quantity: Int = 0 }
@@ -176,6 +179,8 @@ struct DailyTask: Equatable {
     var id = UUID()
     var task: Kind
     var enabled = true
+    // P03.3 起 startTasks 逐字抽取携带 runOnce;桩字段保持成员序一致。
+    var runOnce = false
 }
 @MainActor final class MAAViewModel: ObservableObject {
     let dailyRunCoordinator: DailyRunCoordinator
@@ -219,8 +224,11 @@ struct DailyTask: Equatable {
     func checkStartupCancellation() throws {}
     var startupCancellationLocked = false
     enum SecretFrontResult { case stopped }
-    struct SecretFrontRunStub { var taskID: Int32? = nil; func finish(taskID: Int32, result: SecretFrontResult) {} ; func release() {} }
+    struct SecretFrontRunStub { var taskID: Int32? = nil; func finish(taskID: Int32, result: SecretFrontResult) {} ; func release() {}
+        mutating func begin(taskID: Int32, configuration: SecretFrontConfiguration?) {}
+        func finishStartupFailureIfOwned(beganRun: Bool) {} }
     var secretFrontRun = SecretFrontRunStub()
+    var secretFrontUnavailableReason: String? = nil
     var blackflowStartAvailable = false
     var achievementEvents = AchievementEventAdapter()
     let hookSettings = HookSettingsStore()
@@ -229,7 +237,8 @@ struct DailyTask: Equatable {
     var activeHookTask: Task<HookResult, Error>?
     var runTerminationDeadline: Date?
     private(set) var hookTestResult: String?
-    private(set) var isTestingHook = false
+    // P04:工具入口在 isTestingHook 期必须被拒,测试需要直接置位该占用。
+    var isTestingHook = false
     var startGameCount = 0
     func startGame(client: ClientChannel) async -> Bool { startGameCount += 1; return true }
     var recruitConfig = RecruitConfiguration()
@@ -242,9 +251,13 @@ struct DailyTask: Equatable {
     var failRecoveryCleanup = false
     var recoverCalled = false
     var recoveryGate: Gate?
+    // P04:强制恢复可注入终态错误(如 ForcedRecoveryFailure.timedOut),
+    // 供结果四态映射断言使用。
+    var recoveryError: Error?
     func recoverGameToHome(runID: UUID, isCurrent: @escaping @MainActor () -> Bool) async throws {
         recoverCalled = true
         if let recoveryGate { await recoveryGate.wait() }
+        if let recoveryError { throw recoveryError }
         if failRecoveryCleanup {
             handle?.isRunning = true
             forceRecoveryCleanupPending = true
@@ -255,8 +268,10 @@ struct DailyTask: Equatable {
     var errors = [String]()
     var infos = [String]()
     var operationInFlightForTest: Bool { isStartStopInFlight }
+    // P04:先置钩子结果可注入 timedOut/普通失败,供结果四态映射断言使用。
+    var hookResult = HookResult()
     func executeHook(_ command: HookCommand, context: RunContext, outcome: DailyRunOutcome?,
-                      cancellable: Bool = true) async throws -> HookResult { HookResult() }
+                      cancellable: Bool = true) async throws -> HookResult { hookResult }
     func finishDailyRun(_ id: UUID, outcome: DailyRunOutcome, preparationCleanupSucceeded: Bool = true) async {
         try? dailyRunCoordinator.finish(id, outcome: outcome, cleanupSucceeded: preparationCleanupSucceeded)
         dailyRunTasks = nil
@@ -283,6 +298,11 @@ struct DailyTask: Equatable {
 
 
 typealias MAATask = DailyTask.Kind
+// P04 工具入口(miniGame)逐字抽取所需的边界类型。
+enum MaaCoreError: Error { case appendTaskFailed }
+struct SecretFrontConfiguration {
+    var params: [String: Any] = [:]
+}
 struct HookCommand: Codable, Equatable { var executable: String = "/bin/true" }
 struct HookResult: Equatable {
     var succeeded: Bool = true

@@ -11,8 +11,14 @@ import SwiftUI
 
 @MainActor class MAAViewModel: ObservableObject {
     /// 追加队列的预备清理失败(队列内隔离已由内层完成);外层收口据此把
-/// cleanupSucceeded 记为 false。与 ForcedRecoveryCleanupFailure 同族。
-private struct PreparationCleanupFailure: Error {}
+    /// cleanupSucceeded 记为 false。与 ForcedRecoveryCleanupFailure 同族。
+    private struct PreparationCleanupFailure: Error {}
+    /// 先置钩子超时(P04 结果四态):与用户取消(CancellationError)区分,
+    /// 终态落账为 .timedOut 而非 .cancelled。
+    private struct PreparationHookTimeout: Error {}
+    /// 先置钩子脚本执行失败(exit≠0,非超时):记 .failed 而非 .cancelled,
+    /// 使结果四态与任务卡"成功/失败/取消/超时"字面一致(A 审 Q1)。
+    private struct PreparationHookFailure: Error {}
 
 // MARK: - Core Status
 
@@ -1048,7 +1054,15 @@ extension MAAViewModel {
                         throw CancellationError()
                     }
                     let result = try await executeHook(command, context: activeRun, outcome: nil)
-                    guard result.succeeded else { throw CancellationError() }
+                    guard result.succeeded else {
+                        // R3:宿主任务树取消（定时取消/计划编辑杀钩子进程）须
+                        // 回归基点的 CancellationError → .cancelled，否则与
+                        // 定时台账的 .cancelled 口径冲突;用户停止仍由
+                        // dailyStartCancelled 优先兜底。
+                        if result.cancelled { throw CancellationError() }
+                        if result.timedOut { throw PreparationHookTimeout() }
+                        throw PreparationHookFailure()
+                    }
                 }
                 if dailyStartCancelled { throw CancellationError() }
                 try Task.checkCancellation()
@@ -1079,8 +1093,18 @@ extension MAAViewModel {
                 } else {
                     let cleaned = await discardPreparedDailyTasks(for: runID)
                         && !(error is ForcedRecoveryCleanupFailure) && !(error is PreparationCleanupFailure)
-                    await finishDailyRun(runID, outcome: dailyStartCancelled || error is CancellationError ? .cancelled : .failed,
-                                         preparationCleanupSucceeded: cleaned)
+                    // P04 结果四态:用户取消/任务树取消记 .cancelled;准备期钩
+                    // 子超时与强制恢复超时记 .timedOut;其余为 .failed。取消判
+                    // 别优先——停止请求与超时同时发生时以用户意志为准。
+                    if dailyStartCancelled || error is CancellationError {
+                        await finishDailyRun(runID, outcome: .cancelled, preparationCleanupSucceeded: cleaned)
+                    } else if error is PreparationHookTimeout {
+                        await finishDailyRun(runID, outcome: .timedOut, preparationCleanupSucceeded: cleaned)
+                    } else if case .timedOut = error as? ForcedRecoveryFailure {
+                        await finishDailyRun(runID, outcome: .timedOut, preparationCleanupSucceeded: cleaned)
+                    } else {
+                        await finishDailyRun(runID, outcome: .failed, preparationCleanupSucceeded: cleaned)
+                    }
                 }
                 throw error
             }
@@ -1511,6 +1535,52 @@ extension MAAViewModel {
     }
 }
 
+// MARK: - Unified Run Entry Boundary (P04 · Q01/Q02)
+
+extension MAAViewModel {
+    /// 定时、热键、通知、远控共用的入口薄层：准入判别、runID 归属、终态判
+    /// 别与停止路由的单一命名面。不引入新状态——占用互斥仍由 beginTaskOperation
+    /// 承载，运行账目仍由 DailyRunCoordinator 承载；工具入口（作业/识别/小
+    /// 游戏）经同一准入获得占用保证，但按既有语义不落协调器账、不触发运行
+    /// 钩子与一次性消费。
+    ///
+    /// 当前有效运行的归属凭据；nil 表示无日常运行（工具运行按既有语义不落
+    /// 协调器账，判断实例空闲请结合 status / canStartTasks）。同一实例同一
+    /// 时刻至多一个；终态落账后即清空，迟到的停止/替换请求凭 runID 在协调
+    /// 器内被拒绝。
+    var activeRun: RunContext? { dailyRunCoordinator.active }
+
+    /// 最近一次完整终态：completed/failed/cancelled/timedOut/interrupted。
+    var lastRunOutcome: DailyRunOutcome? { dailyRunCoordinator.lastTerminal?.outcome }
+
+    /// 停止入口可用性：与停止键（TaskButtons）同源。启动/停止互斥期与后置
+    /// 清理期都不可停止——互斥期 stop 会被拒绝，后置清理期 stop 只会报错。
+    /// 强制恢复中止窗口该谓词同为 false（按钮禁用），但 stop() 程序化路径
+    /// 不经此谓词，保留中止恢复途径。
+    var canStopTasks: Bool {
+        !isStartStopInFlight && dailyRunCoordinator.active?.status != .postHook
+    }
+
+    /// 请求启动一次日常运行：准入冲突（已有运行/占用中）返回 nil，冲突由
+    /// startDailyTasks 记日志；成功返回本次运行的 runID，供停止路由、通知
+    /// 归属与迟到回调判别使用。极快收口时 active 已清空，此刻 lastTerminal
+    /// 即本次运行（均在主 actor 上读取，无交错）。
+    @discardableResult
+    func requestDailyRun(origin: DailyRunOrigin, snapshot: DailyRunSnapshot? = nil) async -> UUID? {
+        guard await startDailyTasks(origin: origin, snapshot: snapshot) == .started else { return nil }
+        return dailyRunCoordinator.active?.id ?? dailyRunCoordinator.lastTerminal?.id
+    }
+
+    /// 请求停止当前运行。无可停对象（空闲且无运行）返回 false 且不触碰
+    /// Core；占用/后置清理等拒绝情形由 stop 记日志，此处收敛为 Bool 供
+    /// 热键/远控判别。准入门与热键停止路由一致：状态非空闲或存在运行即可尝试。
+    @discardableResult
+    func requestStopRun() async -> Bool {
+        guard status != .idle || dailyRunCoordinator.active != nil else { return false }
+        do { try await stop(); return true } catch { return false }
+    }
+}
+
 // MARK: - Profile Management (P03.2 / Q03)
 
 extension MAAViewModel {
@@ -1750,7 +1820,11 @@ extension MAAViewModel {
     }
 
     func miniGame(name: String, params: Any? = nil, secretFront: SecretFrontConfiguration? = nil) async throws {
-        guard status == .idle else { return }
+        // P04 入口边界:与日常/作业入口共用同一准入(互斥占用 + 空闲复核 +
+        // 钩子测试占用判别),不再以静默 no-op 吞掉冲突。
+        try await beginTaskOperation()
+        defer { isStartStopInFlight = false }
+
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
