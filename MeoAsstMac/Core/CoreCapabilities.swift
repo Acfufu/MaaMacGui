@@ -16,8 +16,8 @@ struct CoreCapabilities: Equatable, Sendable {
     /// 隐秘战线可用：区服 + 资源判据复用 `SecretFrontConfiguration.unavailableReason`。
     var secretFrontAvailable: Bool
     /// 基建回收站产物上报（B15）可用。Core 侧该插件在 InfrastTask.cpp:47
-    /// 无条件注册——需 pin ≥ 51dac87（P02.1 升级落地后生效；当前 pin
-    /// 4d948320 的检出尚无该插件）。资源节点 `InfrastRewardRecycleProduct`
+    /// 无条件注册——需 pin ≥ 51dac87（P02.1 已升级至此，旧 pin 4d948320
+    /// 的检出尚无该插件）。资源节点 `InfrastRewardRecycleProduct`
     /// verify 通过即生效，故判据 = 资源节点就绪 && Core 版本可读（版本
     /// 拿不到时保守关断）。已知误报窗口：coreVersion 接通后若资源 OTA
     /// 新于 pin（资源节点在、核心插件缺），recycle 会误报 true；追加

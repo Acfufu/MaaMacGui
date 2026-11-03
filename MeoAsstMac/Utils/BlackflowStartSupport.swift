@@ -4,10 +4,10 @@ import MachO
 import OSLog
 
 /// A development-only protocol attestation, until a released Core capability contract is available.
-/// Matches dev-v2 4d948320d and its resources, never an inferred minimum version.
+/// Matches dev-v2 51dac871d (P02.1 pin) and its resources, never an inferred minimum version.
 enum BlackflowStartSupport {
-    static let coreFingerprint = "bcf6a6a255bbfa1f743e2e709dfdad8694099022a6709d6494da84bb0fc658bd"
-    static let resourceFingerprint = "90fb3155ca90c2b4497bb5825e4949fdf87fd8ab0c9316f4dde1a3c7165cc8b4"
+    static let coreFingerprint = "6c2596a518b5a8112af30bc8c3f0b48bbce2c416e18bfa4518cb107a0caf4823"
+    static let resourceFingerprint = "c4bd5cdb29d7665e28021619828b7d2a6fd46c4389ae61d86a6d9bd67f629ef6"
     private static let resourcePaths = ["tasks", "roguelike/BlackFlow", "template/Roguelike/BlackFlow"]
 
     private static let logger = Logger(subsystem: "com.hguandl.MeoAsstMac", category: "BlackflowStartSupport")
