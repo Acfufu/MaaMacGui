@@ -12,9 +12,13 @@ struct FightConfiguration: MAATaskConfiguration {
 
     var stage: String
     var medicine: Int?
+    /// Q05 药仅一次：完整成功的运行结束后 medicine 置 nil（旧数据缺键解码 false）。
+    var medicineOnce: Bool = false
     var medicine_expire_days: Int
     var useActivityMedicine: Bool = false
     var stone: Int?
+    /// Q05 源石仅一次：完整成功的运行结束后 stone 置 nil（旧数据缺键解码 false）。
+    var stoneOnce: Bool = false
     var times: Int?
     // 作战倍率(Core m_series 契约):-1=保留游戏内当前;0=AUTO 按理智自动;1...10=指定。
     // nil 为 GUI 存储形态,编码省略;Core JSON 缺省为 1(params.get("series",1)),即切至单倍,≠-1。
@@ -217,6 +221,7 @@ extension FightConfiguration {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.stage = try container.decodeIfPresent(String.self, forKey: .stage) ?? ""
         self.medicine = try container.decodeIfPresent(Int.self, forKey: .medicine)
+        self.medicineOnce = try container.decodeIfPresent(Bool.self, forKey: .medicineOnce) ?? false
         if let days = try container.decodeIfPresent(Int.self, forKey: .medicine_expire_days) {
             medicine_expire_days = days
         } else {
@@ -226,6 +231,7 @@ extension FightConfiguration {
         }
         self.useActivityMedicine = try container.decodeIfPresent(Bool.self, forKey: .useActivityMedicine) ?? false
         self.stone = try container.decodeIfPresent(Int.self, forKey: .stone)
+        self.stoneOnce = try container.decodeIfPresent(Bool.self, forKey: .stoneOnce) ?? false
         self.times = try container.decodeIfPresent(Int.self, forKey: .times)
         self.series = try container.decodeIfPresent(Int.self, forKey: .series)
         self.drops = try container.decodeIfPresent([String: Int].self, forKey: .drops)

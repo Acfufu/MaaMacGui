@@ -50,8 +50,18 @@ struct FightSettingsView: View {
                         Toggle("吃理智药", isOn: useMedicine)
                     }
 
+                    if config.medicine != nil {
+                        Toggle("理智药仅一次", isOn: $config.medicineOnce)
+                            .help("完整成功的运行结束后自动清除理智药设置；失败或取消不消耗")
+                    }
+
                     TextField(value: $config.stone, format: .number) {
                         Toggle("吃源石", isOn: useStone)
+                    }
+
+                    if config.stone != nil {
+                        Toggle("源石仅一次", isOn: $config.stoneOnce)
+                            .help("完整成功的运行结束后自动清除源石设置；失败或取消不消耗")
                     }
 
                     TextField(value: $config.times, format: .number) {

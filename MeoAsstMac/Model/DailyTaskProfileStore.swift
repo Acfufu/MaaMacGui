@@ -95,7 +95,8 @@ struct DailyTaskProfileStore {
             config.fiammetta_recovery_enabled =
                 (inline.recoveryEnabled ?? backup.recoveryEnabled
                     ?? config.fiammetta_recovery_enabled) && !config.fiammetta_targets.isEmpty
-            return DailyTask(id: task.id, task: .infrast(config), enabled: task.enabled)
+            return DailyTask(id: task.id, task: .infrast(config), enabled: task.enabled,
+                             runOnce: task.runOnce)
         }
     }
 
@@ -130,7 +131,7 @@ struct DailyTaskProfileStore {
 /// `DailyTaskProfile` user default, run snapshots and patches address it by —
 /// while profiles created through `ProfileStore` receive a fresh UUID.
 /// Renaming only changes `displayName`; the disk identity stays stable.
-struct ProfileIdentity: Codable, Equatable {
+struct ProfileIdentity: Codable, Equatable, Identifiable {
     let id: String
     var displayName: String
     let createdAt: Date
@@ -359,5 +360,32 @@ struct ProfileStore {
     private func persist(_ index: Index) throws {
         try FileManager.default.createDirectory(at: rootURL, withIntermediateDirectories: true)
         try PropertyListEncoder().encode(index).write(to: indexURL, options: .atomic)
+    }
+
+    // MARK: - Launch Argument (P03.2 / Q04)
+
+    /// Outcome of resolving a `--config <id-or-name>` value against the registry.
+    enum ConfigArgumentResolution: Equatable {
+        case resolved(String)
+        case notFound(argument: String)
+        /// Several profiles share this display name; refuse to guess.
+        case ambiguous(argument: String, matches: [String])
+    }
+
+    /// Resolve a `--config` value (pure; the caller applies `.resolved` via
+    /// `setActive`). An exact id wins over display names; a display name must
+    /// match exactly one profile, otherwise the launch keeps the saved active
+    /// profile instead of guessing.
+    static func resolveConfigArgument(_ argument: String, identities: [ProfileIdentity])
+        -> ConfigArgumentResolution {
+        if let exact = identities.first(where: { $0.id == argument }) {
+            return .resolved(exact.id)
+        }
+        let byName = identities.filter { $0.displayName == argument }
+        switch byName.count {
+        case 1: return .resolved(byName[0].id)
+        case 2...: return .ambiguous(argument: argument, matches: byName.map(\.id))
+        default: return .notFound(argument: argument)
+        }
     }
 }

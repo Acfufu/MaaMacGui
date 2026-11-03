@@ -65,6 +65,17 @@ struct TaskDetail: View {
         }
     }
 
+    /// Q05 任务级“仅一次”开关绑定到选中任务的 runOnce 标记。
+    private func runOnceBinding(_ id: UUID) -> Binding<Bool> {
+        Binding {
+            guard let index = viewModel.tasks.firstIndex(id: id) else { return false }
+            return viewModel.tasks[index].runOnce
+        } set: { value in
+            guard let index = viewModel.tasks.firstIndex(id: id) else { return }
+            viewModel.tasks[index].runOnce = value
+        }
+    }
+
     // MARK: - Toolbar
 
     @ToolbarContentBuilder private func detailToolbar() -> some ToolbarContent {
@@ -79,6 +90,11 @@ struct TaskDetail: View {
                 Label("添加", systemImage: "plus")
             }
             .help("添加任务")
+
+            if let id, viewModel.tasks.firstIndex(id: id) != nil {
+                Toggle("仅一次", isOn: runOnceBinding(id))
+                    .help("该任务在下一次完整成功的运行结束后自动停用；失败或取消不消耗")
+            }
         }
 
         ToolbarItem {

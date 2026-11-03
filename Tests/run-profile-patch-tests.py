@@ -17,14 +17,26 @@ def declaration(source, pattern):
 support='''import Foundation
 protocol MAATaskConfiguration: Codable, Hashable, Sendable { associatedtype Params: Encodable; var params: Params { get } }
 extension MAATaskConfiguration { init() { self = try! JSONDecoder().decode(Self.self, from: Data("{}".utf8)) } }
-enum MAATaskType { case Infrast, Mall; var description: String { "fixture" } }
-enum MAATask: Codable, Equatable { case infrast(InfrastConfiguration), mall(MallConfiguration) }
+enum MAATaskType { case Infrast, Mall, Fight; var description: String { "fixture" } }
+enum MAATask: Codable, Equatable { case infrast(InfrastConfiguration), mall(MallConfiguration), fight(FightConfiguration) }
 struct MAAInfrast { var title: String?; var plans: [Plan] = []; struct Plan { var name: String? }; init(path: String) throws {} }
+// P03.2: FightConfiguration.params(at:stageActivity:) needs the activity context;
+// the real one lives in MeoAsstMac/Model/StageActivity.swift (activity-medicine suite).
+struct StageActivityContext {
+ enum MedicineWindow: Equatable { case inactive, unavailable, extended(Int) }
+ func medicineWindow(at date: Date, enabled: Bool) -> MedicineWindow { .inactive }
+}
 '''
 protocol=(root/'MeoAsstMac/Task Configurations/MAATaskConfiguration.swift').read_text()
 support+=protocol[protocol.index('extension KeyedDecodingContainer'):]
 tasks=(root/'MeoAsstMac/Model/MAATask.swift').read_text()
 support+=declaration(tasks,r'^struct DailyTask:')
+def daily_task_array_subscript_extension():
+    # R3 regression surface: the production DailyTask-array subscript (runOnce
+    # propagation). The append/remove conveniences need the full projectedTask
+    # machinery outside this harness, so the extension is cut before them.
+    ext=declaration(tasks,r'^extension Array where Element == DailyTask')
+    return ext[:ext.index('    mutating func append')]+'}'
 model=(root/'MeoAsstMac/Model/MAAViewModel.swift').read_text()
 support+='''
 @MainActor final class MAAViewModel {
@@ -36,11 +48,21 @@ support+='''
  let tasksDirectory: URL
  var isApplyingDailyCallbackPatch = false
  var errors = [String]()
+ // R3 Q1: production finishDailyRun extraction needs the status/hook surface.
+ enum Status: Equatable { case busy, idle, pending }
+ var status = Status.busy
+ var runHookConfiguration = HookConfiguration()
+ struct HookResult { var succeeded: Bool }
+ func executeHook(_ command: HookCommand, context: RunContext, outcome: DailyRunOutcome?,
+                  cancellable: Bool = true) async throws -> HookResult { HookResult(succeeded: true) }
  init(directory: URL) { tasksDirectory = directory }
  func logWarn(_ value: String) { errors.append(value) }
  func logError(verbatim value: String) { errors.append(value) }
  func logError(_ resource: LocalizedStringResource) { logError(verbatim: .init(localized: resource)) }
-'''+declaration(model,r'^    func applyDailyTaskCallback\(')+'\n}\n'
+''' + declaration(model,r'^    func applyDailyTaskCallback\(') + '\n' \
+ + declaration(model,r'^    func consumeRunOnceSemantics\(') + '\n' \
+ + declaration(model,r'^    private func finishDailyRun\(').replace('private func finishDailyRun','func finishDailyRun',1) + '\n}\n' \
+ + daily_task_array_subscript_extension() + '\n'
 mall=(root/'MeoAsstMac/Task Configurations/MallConfiguration.swift').read_text().replace('import JBird','')
 hg=(root/'MeoAsstMac/Utils/HGCalendar.swift').read_text()
 _channel=(root/'MeoAsstMac/Task Configurations/StartupConfiguration.swift').read_text()
@@ -58,6 +80,10 @@ with tempfile.TemporaryDirectory(prefix='maa-profile-patch-tests-') as temporary
     binary=tmp/'tests'
     subprocess.run(['xcrun','swiftc','-parse-as-library',str(tmp/'HGCalendar.swift'),str(tmp/'Support.swift'),
         str(root/'MeoAsstMac/Task Configurations/InfrastConfiguration.swift'),str(tmp/'MallConfiguration.swift'),
+        str(root/'MeoAsstMac/Task Configurations/FightConfiguration.swift'),
+        str(root/'MeoAsstMac/Model/InventoryTarget.swift'),
         str(root/'MeoAsstMac/RunHooks/RunContext.swift'),str(root/'MeoAsstMac/RunHooks/DailyRunProfilePatch.swift'),
+        str(root/'MeoAsstMac/RunHooks/HookConfiguration.swift'),
+        str(root/'MeoAsstMac/Model/DailyTaskProfileStore.swift'),
         str(root/'Tests/RunProfilePatchTests.swift'),'-o',str(binary)],check=True)
     subprocess.run([str(binary)],check=True)

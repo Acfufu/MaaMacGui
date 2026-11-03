@@ -141,6 +141,8 @@ private struct PreparationCleanupFailure: Error {}
     }
 
     @Published var tasks = [DailyTask]()
+    // P03.2 档案注册表的 UI 投影；活跃档案 id 仍由 dailyTaskProfile 承载。
+    @Published private(set) var profileIdentities: [ProfileIdentity] = []
     @Published var taskIDMap: [Int32: UUID] = [:]
     // Preserve the exact parameters submitted to Core for delayed medicine callbacks.
     var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
@@ -265,6 +267,11 @@ private struct PreparationCleanupFailure: Error {}
     // MARK: - Initializer
 
     init() {
+        // P03.2: 注册表的活跃指针在启动时是权威的（Q04 的 --config 在本类
+        // 构造前已写入指针）；AppStorage 仅作 UI 侧缓存同步。
+        if let active = try? profileStore.activeProfileID(), active != dailyTaskProfile {
+            dailyTaskProfile = active
+        }
         do {
             tasks = try DailyTaskProfileStore(profileURL: tasksURL).load()
         } catch {
@@ -289,6 +296,7 @@ private struct PreparationCleanupFailure: Error {}
 
         $tasks.sink(receiveValue: writeBack).store(in: &cancellables)
         $status.sink(receiveValue: switchAwakeGuard).store(in: &cancellables)
+        reloadProfileIdentities()
 
         globalHotkeys.command = { [weak self] command in
             guard let self else { return false }
@@ -596,6 +604,11 @@ extension MAAViewModel {
                 }
             }
             try dailyRunCoordinator.finish(id, outcome: outcome, cleanupSucceeded: cleanupSucceeded)
+            // Q05 消费挂点：完整终态落账后才处理一次性开关；失败/取消与
+            // 迟到回调在 consumeRunOnceSemantics 内被 runID/结局判别拒绝。
+            if let terminal = dailyRunCoordinator.lastTerminal, terminal.id == id {
+                consumeRunOnceSemantics(terminal: terminal)
+            }
             dailyRunTasks = nil
             status = .idle
             if !cleanupSucceeded { logError("后置清理失败，请检查脚本输出并手动恢复设备设置") }
@@ -605,6 +618,31 @@ extension MAAViewModel {
             // Ownership is deliberately retained to avoid retry loops, so make
             // the resulting stuck state visible and actionable for the user.
             logError("运行日志写入失败，本次运行将保持未完成状态，重启应用后即可恢复。")
+        }
+    }
+
+    /// Q05 一次性开关的消费：仅在运行已完整收口（该 run 已成为 lastTerminal
+    /// 且无进行中的运行）且结局为成功时，把 once 语义落回运行所属档案。
+    /// 失败/取消保持 once 状态；携带旧 runID 的迟到终态因 lastTerminal 已
+    /// 指向新运行而被拒绝，不会二次消费。
+    func consumeRunOnceSemantics(terminal: RunContext) {
+        guard terminal.outcome == .completed,
+              dailyRunCoordinator.active == nil,
+              dailyRunCoordinator.lastTerminal?.id == terminal.id else { return }
+        let isCurrentProfile = terminal.profileID == dailyTaskProfile
+        do {
+            if let updated = try DailyRunOnceConsumption.apply(
+                profileID: terminal.profileID,
+                currentTasks: isCurrentProfile ? tasks : nil,
+                directory: tasksDirectory) {
+                if isCurrentProfile {
+                    isApplyingDailyCallbackPatch = true
+                    tasks = updated
+                    isApplyingDailyCallbackPatch = false
+                }
+            }
+        } catch {
+            logError("一次性任务回写失败：\(error.localizedDescription)")
         }
     }
 
@@ -881,7 +919,8 @@ extension MAAViewModel {
 
             config.client_type = channel
 
-            tasks[index] = .init(id: task.id, task: .startup(config), enabled: task.enabled)
+            tasks[index] = .init(id: task.id, task: .startup(config), enabled: task.enabled,
+                                 runOnce: task.runOnce)
         }
 
         Task {
@@ -933,7 +972,8 @@ extension MAAViewModel {
             // in the latest saved profile must not rewrite the running snapshot.
             if let snapshotUpdate = update.applying(to: original, expecting: original),
                let old = dailyRunTasks?[index] {
-                dailyRunTasks?[index] = DailyTask(id: old.id, task: snapshotUpdate, enabled: old.enabled)
+                dailyRunTasks?[index] = DailyTask(id: old.id, task: snapshotUpdate,
+                                                  enabled: old.enabled, runOnce: old.runOnce)
             }
             if isCurrentProfile {
                 isApplyingDailyCallbackPatch = true
@@ -1091,7 +1131,8 @@ extension MAAViewModel {
             }
 
             config.client_type = clientChannel
-            runTasks[index] = .init(id: task.id, task: .startup(config), enabled: task.enabled)
+            runTasks[index] = .init(id: task.id, task: .startup(config), enabled: task.enabled,
+                                    runOnce: task.runOnce)
 
             if touchMode == .MacPlayTools, task.enabled, config.start_game_enabled, firstStart {
                 // Do not launch or switch a PlayCover game before recovery proves
@@ -1461,6 +1502,65 @@ extension MAAViewModel {
             return
         }
         scheduledDailyTaskTimers.append(DailyTaskTimer(id: UUID(), hour: 9, minute: 0, isEnabled: false))
+    }
+}
+
+// MARK: - Profile Management (P03.2 / Q03)
+
+extension MAAViewModel {
+    var profileStore: ProfileStore {
+        ProfileStore(rootURL: tasksDirectory)
+    }
+
+    /// 切换活跃档案：先读取新档案任务、再落 active 指针与 UI 状态，读取
+    /// 失败时保持原档案不动。运行期间拒绝切换，冻结快照仍是本次运行的
+    /// 权威（回调补丁按 runID 所属档案路由，不受切换影响）。
+    func switchProfile(_ profileID: String) {
+        guard profileID != dailyTaskProfile else { return }
+        guard canStartTasks else {
+            logError("任务正在运行，请先停止后再切换档案。")
+            return
+        }
+        do {
+            let reloaded = try profileStore.loadTasks(profileID: profileID)
+            try profileStore.setActive(profileID)
+            dailyTaskProfile = profileID
+            tasks = reloaded
+            reloadProfileIdentities()
+        } catch {
+            logError("切换档案失败：\(error.localizedDescription)")
+        }
+    }
+
+    func createProfile(named name: String) {
+        performProfileMutation { try $0.create(name: name) } onFailure: { "新建档案失败：\($0.localizedDescription)" }
+    }
+
+    func duplicateProfile(_ profileID: String) {
+        performProfileMutation { try $0.duplicate(profileID) } onFailure: { "复制档案失败：\($0.localizedDescription)" }
+    }
+
+    func renameProfile(_ profileID: String, to name: String) {
+        performProfileMutation { try $0.rename(profileID, to: name) } onFailure: { "重命名档案失败：\($0.localizedDescription)" }
+    }
+
+    func deleteProfile(_ profileID: String) {
+        performProfileMutation { try $0.delete(profileID) } onFailure: { "删除档案失败：\($0.localizedDescription)" }
+    }
+
+    /// 每个调用点用字面量错误文案，使各失败消息拥有独立的本地化 key。
+    private func performProfileMutation(_ body: (ProfileStore) throws -> Void,
+                                        onFailure message: (Error) -> LocalizedStringResource) {
+        do {
+            try body(profileStore)
+            reloadProfileIdentities()
+        } catch {
+            logError(message(error))
+        }
+    }
+
+    private func reloadProfileIdentities() {
+        profileIdentities = (try? profileStore.list()) ?? []
     }
 }
 

@@ -83,6 +83,26 @@ struct DailyTask: Codable, Equatable, Identifiable {
     let id: UUID
     let task: MAATask
     var enabled: Bool
+    /// Q05 仅执行一次：下一次完整成功的运行结束后自动停用（消费见
+    /// DailyRunOnceSemantics）。旧档案缺少该键，解码为 false。
+    var runOnce: Bool = false
+
+    init(id: UUID = UUID(), task: MAATask, enabled: Bool, runOnce: Bool = false) {
+        self.id = id
+        self.task = task
+        self.enabled = enabled
+        self.runOnce = runOnce
+    }
+
+    enum CodingKeys: String, CodingKey { case id, task, enabled, runOnce }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        task = try container.decode(MAATask.self, forKey: .task)
+        enabled = try container.decode(Bool.self, forKey: .enabled)
+        runOnce = try container.decodeIfPresent(Bool.self, forKey: .runOnce) ?? false
+    }
 }
 
 extension DailyTask {
@@ -103,7 +123,8 @@ extension Array where Element == DailyTask {
         }
         set {
             if let newValue, let index = firstIndex(id: id) {
-                self[index] = .init(id: id, task: newValue, enabled: self[index].enabled)
+                self[index] = .init(id: id, task: newValue, enabled: self[index].enabled,
+                                    runOnce: self[index].runOnce)
             }
         }
     }

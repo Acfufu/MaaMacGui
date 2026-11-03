@@ -5,8 +5,11 @@
 //  Created by hguandl on 8/10/2022.
 //
 
+import OSLog
 import Sparkle
 import SwiftUI
+
+private let appLogger = Logger(subsystem: "com.hguandl.MeoAsstMac", category: "MeoAsstMacApp")
 
 @main
 struct MeoAsstMacApp: App {
@@ -19,6 +22,7 @@ struct MeoAsstMacApp: App {
     private let updaterDelegate = MaaUpdaterDelegate()
 
     init() {
+        Self.applyConfigArgument()
         let viewModel = MAAViewModel()
         let newModel = NewViewModel(parent: viewModel)
         _appViewModel = StateObject(wrappedValue: viewModel)
@@ -89,6 +93,28 @@ struct MeoAsstMacApp: App {
             }
             .environmentObject(appViewModel)
             .frame(maxWidth: 360, minHeight: 240)
+        }
+    }
+    /// Q04: `--config <id-or-name>` selects the active profile before the UI
+    /// loads; ambiguous or unknown values log an error and keep the saved one.
+    private static func applyConfigArgument() {
+        let arguments = CommandLine.arguments
+        guard let index = arguments.firstIndex(of: "--config") else {
+            if let attached = arguments.first(where: { $0.hasPrefix("--config=") }) {
+                appLogger.error("\(attached, privacy: .public) uses the unsupported --config=<value> form; pass \"--config <value>\" as two arguments")
+            }
+            return
+        }
+        guard index + 1 < arguments.count else { return appLogger.error("--config requires a profile id or name") }
+        let store = ProfileStore(rootURL: ProfileStore.defaultRootURL())
+        do {
+            switch ProfileStore.resolveConfigArgument(arguments[index + 1], identities: try store.list()) {
+            case .resolved(let profileID): try store.setActive(profileID)
+            case .notFound(let value), .ambiguous(let value, _):
+                appLogger.error("--config \(value, privacy: .public) matched no unique profile; keeping the active one")
+            }
+        } catch {
+            appLogger.error("--config failed: \(error)")
         }
     }
 }

@@ -198,10 +198,63 @@ func testProfileStoreInterruptedIndexWrite() throws {
     }
 }
 
+func testProfileStoreConfigArgumentResolution() throws {
+    try withProfileRoot { root in
+        let store = ProfileStore(rootURL: root)
+        let second = try store.create(name: "小号")
+        try store.rename(second.id, to: "大号")
+        let clashA = try store.create(name: "同名")
+        let clashB = try store.create(name: "同名")
+        let identities = try store.list()
+
+        // Exact id always resolves, even when a display name matches another profile.
+        check(ProfileStore.resolveConfigArgument(second.id, identities: identities) == .resolved(second.id))
+        // A unique display name resolves to that profile's stable disk id.
+        check(ProfileStore.resolveConfigArgument("大号", identities: identities) == .resolved(second.id))
+        // The default profile resolves by both its id and its display name.
+        check(ProfileStore.resolveConfigArgument("Default", identities: identities)
+            == .resolved(ProfileStore.defaultProfileID))
+        // Ambiguous display names refuse to guess between the matches.
+        check(ProfileStore.resolveConfigArgument("同名", identities: identities)
+            == .ambiguous(argument: "同名", matches: [clashA.id, clashB.id]))
+        // Unknown values never resolve.
+        check(ProfileStore.resolveConfigArgument("missing", identities: identities) == .notFound(argument: "missing"))
+        check(ProfileStore.resolveConfigArgument(ProfileStore.defaultProfileID, identities: [])
+            == .notFound(argument: ProfileStore.defaultProfileID))
+
+        // A resolved --config value is applied by switching the active pointer.
+        try store.setActive(second.id)
+        check(try store.activeProfileID() == second.id)
+        try store.setActive(ProfileStore.defaultProfileID)
+    }
+}
+
+func testProfileStoreRunOnceSurvivesRoundTrip() throws {
+    try withProfileRoot { root in
+        let store = ProfileStore(rootURL: root)
+        // An armed infrast task gets a Fiammetta sidecar entry on save, so the
+        // load-side tolerant restore rebuilds the DailyTask from scratch; the
+        // rebuild must carry the run-once flag (R3 regression).
+        var infrast = InfrastConfiguration()
+        infrast.mode = .custom
+        infrast.filename = "Plan A"
+        let armedInfra = DailyTask(id: UUID(), task: .infrast(infrast), enabled: true, runOnce: true)
+        let armedPlain = DailyTask(id: UUID(), task: .closedown("收尾"), enabled: true, runOnce: true)
+        try store.saveTasks(profileID: ProfileStore.defaultProfileID, tasks: [armedInfra, armedPlain])
+        let loaded = try store.loadTasks(profileID: ProfileStore.defaultProfileID)
+        // Whole-struct Equatable: the sidecar-restore rebuild must keep runOnce.
+        check(loaded[0] == armedInfra)
+        check(loaded[1] == armedPlain)
+    }
+}
+
 try testProfileStoreBootstrapAndMigration()
 try testProfileStoreCRUDAndSwitching()
 try testProfileStoreCorruptIndexRecovery()
 try testProfileStoreInterruptedIndexWrite()
+try testProfileStoreConfigArgumentResolution()
+try testProfileStoreRunOnceSurvivesRoundTrip()
 print(
     "PASS: profile store bootstrap, legacy Default migration, create/duplicate/rename/delete, "
-        + "active switching, corrupt-index scan recovery, future-version refusal and interrupted index writes")
+        + "active switching, corrupt-index scan recovery, future-version refusal, interrupted index writes "
+        + "and --config argument resolution")
