@@ -29,6 +29,9 @@ private struct PreparationCleanupFailure: Error {}
     @Published private(set) var isCoreInitialized = false
     @Published var secretFrontRun = SecretFrontRun()
     @Published private(set) var secretFrontUnavailableReason: String?
+    /// 按加载产物推导的能力快照（P02.2）：series 上限挂点留给 P01.1 接线，
+    /// secretFront/recycle 为门控布尔；刷新点与下方 SecretFront 缓存一致。
+    @Published private(set) var coreCapabilities: CoreCapabilities = .conservativeDefault
 
     private var wakeupAssertionID: UInt32?
     private var awakeAssertionID: UInt32?
@@ -706,7 +709,7 @@ extension MAAViewModel {
 
     /// Reloads the resources from the documents directory after update.
     func reloadResources(channel: MAAClientChannel) async throws {
-        defer { refreshSecretFrontAvailability() }
+        defer { refreshCoreCapabilities() }
         let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         try await loadResource(url: documentsDirectory, channel: channel)
     }
@@ -811,7 +814,7 @@ extension MAAViewModel {
     ///
     /// Should be the outermost call to load resources.
     private func loadResource(channel: MAAClientChannel) async throws {
-        defer { refreshSecretFrontAvailability() }
+        defer { refreshCoreCapabilities() }
         blackflowStartAvailable = BlackflowStartSupport.matchesLoadedCore() && !channel.isGlobal
             && touchMode != .MacPlayTools && BlackflowStartSupport.matchesBundledResources(at: Bundle.main.resourceURL!)
         let (preferUser, currentResourceVersion) = try resourceChannel.version()
@@ -869,7 +872,7 @@ extension MAAViewModel {
         // reflects the new channel while the async resource reload below is
         // still running; the global-channel branch performs no IO. The reload
         // refreshes it again once the new resources are loaded.
-        refreshSecretFrontAvailability()
+        refreshCoreCapabilities()
 
         for (index, task) in tasks.enumerated() {
             guard case .startup(var config) = task.task else {
@@ -1470,10 +1473,35 @@ extension MAAViewModel {
     /// so cache the outcome instead of recomputing it in every view update;
     /// `loadResource`/`reloadResources` refresh it whenever resources change,
     /// and channel switches refresh it immediately in `updateChannel`.
-    private func refreshSecretFrontAvailability() {
+    ///
+    /// Generalized in P02.2: the same refresh points now also rederive the
+    /// full `coreCapabilities` snapshot. `secretFrontUnavailableReason` keeps
+    /// its original semantics for the startup gate copy (its bool equivalent
+    /// is `coreCapabilities.secretFrontAvailable`). Core version source is
+    /// nil for now: Maa.swift exposes no AsstGetVersion wrapper (the C symbol
+    /// exists in MaaCore's AsstCaller.h); wire it there first to lift
+    /// `minimumCoreVersionMet`/recycle gating.
+    private func refreshCoreCapabilities() {
+        let baseRoot = secretFrontResourceRoot()
+        // R2-1：series/recycle 判据改用覆盖层感知根（与 FightSettingsView
+        // 的 series 上限同口径）；SecretFront 保持 base 根历史语义。
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let preferUser = (try? resourceChannel.version())?.0 ?? false
+        let tasksRoot = CoreCapabilities.effectiveResourceRoot(
+            channel: clientChannel,
+            cacheRoot: documents.appendingPathComponent("cache"),
+            userRoot: preferUser ? documents : nil,
+            bundleRoot: Bundle.main.resourceURL!
+        )
+        coreCapabilities = CoreCapabilities.derive(
+            coreVersion: nil,
+            resourceRoot: baseRoot,
+            channel: clientChannel,
+            tasksResourceRoot: tasksRoot
+        )
         secretFrontUnavailableReason = SecretFrontConfiguration.unavailableReason(
             isGlobalChannel: clientChannel.isGlobal,
-            resourceRoot: { secretFrontResourceRoot() }
+            resourceRoot: { baseRoot }
         )
     }
 

@@ -235,29 +235,17 @@ struct FightSettingsView: View {
         }
     }
 
-    // 与 MAAViewModel.loadResource(channel:) 同源的根解析:按 OTA 缓存 → 外部资源(preferUser)
-    // → 内置资源的加载顺序取首个含 tasks 定义的根;国际服优先 global 覆盖层(旧倍率 flag 在覆盖层)。
+    // 根解析提升为 CoreCapabilities.effectiveResourceRoot（R2-1）：与
+    // MAAViewModel 的能力推导共用同一覆盖层感知口径，国际服读 global 覆盖层。
     private func refreshSeriesUpperBound() {
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        var bases = [documents.appendingPathComponent("cache")]
-        if let (preferUser, _) = try? viewModel.resourceChannel.version(), preferUser {
-            bases.append(documents)
-        }
-        bases.append(Bundle.main.resourceURL!)
-
-        let channel = viewModel.clientChannel
-        let root = bases.lazy.compactMap { base -> URL? in
-            let resource = base.appendingPathComponent("resource")
-            let candidate = channel.isGlobal
-                ? resource.appendingPathComponent("global")
-                    .appendingPathComponent(channel.rawValue)
-                    .appendingPathComponent("resource")
-                : resource
-            let hasTasks = ["tasks/tasks.json", "tasks.json"].contains {
-                FileManager.default.fileExists(atPath: candidate.appendingPathComponent($0).path)
-            }
-            return hasTasks ? candidate : nil
-        }.first
+        let preferUser = (try? viewModel.resourceChannel.version())?.0 ?? false
+        let root = CoreCapabilities.effectiveResourceRoot(
+            channel: viewModel.clientChannel,
+            cacheRoot: documents.appendingPathComponent("cache"),
+            userRoot: preferUser ? documents : nil,
+            bundleRoot: Bundle.main.resourceURL!
+        )
         seriesUpperBound = FightConfiguration.seriesUpperBound(resourceRoot: root)
     }
 
