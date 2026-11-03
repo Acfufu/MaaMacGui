@@ -14,6 +14,10 @@ struct StageActivityContext {
 
 extension StageActivityContext {
     func resourceCollectionStageIsOpen(at date: Date, in weekdays: [Int]?) -> Bool {
+        // 资源全开放窗口（IsResourceCollection）内无视星期表。
+        if activities?.resourceCollection?.contains(date) == true {
+            return true
+        }
         if let weekdays, !weekdays.contains(channel.calendar.weekday(for: date)) {
             return false
         }
@@ -42,7 +46,7 @@ extension StageActivityContext {
                 let period = group.Activity, let range = period.interval
             else { continue }  // One malformed group must not hide valid peers.
             validGroups += 1
-            if range.start <= date && date < range.end {
+            if period.contains(date) {
                 activeEnds.append(range.end)
             }
         }
@@ -58,16 +62,28 @@ extension MAAStageActivity {
     struct SideStoryStage: Decodable, Hashable {
         let Activity: ActivityPeriod?
         let Stages: [SideStoryStageItem]?
+        let MinimumRequired: String?
     }
 
     struct SideStoryStageItem: Decodable, Hashable {
         let Value: String?
+        let Display: String?
+        let Drop: String?
     }
 
     struct ActivityPeriod: Decodable, Hashable {
         let UtcStartTime: String?
         let UtcExpireTime: String?
         let TimeZone: Double?
+        let Tip: String?
+        let StageName: String?
+
+        /// 统一开闭口径：左闭右开 [start, end)，与 medicineWindow 既有语义一致。
+        /// Foundation 的 DateInterval.contains 端点闭区间，不能直接复用。
+        func contains(_ date: Date) -> Bool {
+            guard let interval else { return false }
+            return interval.start <= date && date < interval.end
+        }
 
         var interval: DateInterval? {
             guard let offset = TimeZone, offset.isFinite, (-12...14).contains(offset),

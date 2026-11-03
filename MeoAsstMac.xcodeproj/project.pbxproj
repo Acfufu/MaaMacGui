@@ -86,6 +86,7 @@
 		8366DE0329F2F34100F715E8 /* MAAOperBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8366DE0229F2F34100F715E8 /* MAAOperBox.swift */; };
 		836E9975305338150082748D /* FightStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 836E9974305338150082748D /* FightStage.swift */; };
 		836E997730534A200082748D /* StageActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 836E997630534A200082748D /* StageActivity.swift */; };
+		B05C4A7000000000000000A1 /* StageCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B05C4A7000000000000000A2 /* StageCatalog.swift */; };
 		83782A2B2CFFAF2900A32BDD /* LegacyConfigurations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83782A2A2CFFAF2900A32BDD /* LegacyConfigurations.swift */; };
 		83782A2D2CFFB00000A32BDD /* LegacyUserTasks in Frameworks */ = {isa = PBXBuildFile; productRef = 83782A2C2CFFB00000A32BDD /* LegacyUserTasks */; };
 		83812ED22D5B0B8100CB39D6 /* Binding+semicolonString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83812ED12D5B0B8100CB39D6 /* Binding+semicolonString.swift */; };
@@ -280,6 +281,7 @@
 		8368855029BD851F00C5B999 /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
 		836E9974305338150082748D /* FightStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightStage.swift; sourceTree = "<group>"; };
 		836E997630534A200082748D /* StageActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StageActivity.swift; sourceTree = "<group>"; };
+		B05C4A7000000000000000A2 /* StageCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StageCatalog.swift; sourceTree = "<group>"; };
 		83782A282CFFA43200A32BDD /* LegacyUserTasks */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = LegacyUserTasks; sourceTree = "<group>"; };
 		83782A2A2CFFAF2900A32BDD /* LegacyConfigurations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyConfigurations.swift; sourceTree = "<group>"; };
 		83812ED12D5B0B8100CB39D6 /* Binding+semicolonString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+semicolonString.swift"; sourceTree = "<group>"; };
@@ -635,6 +637,7 @@
 				831100C33026440D00554899 /* NewViewModel.swift */,
 				836E997630534A200082748D /* StageActivity.swift */,
 				836E9974305338150082748D /* FightStage.swift */,
+				B05C4A7000000000000000A2 /* StageCatalog.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -819,6 +822,7 @@
 				832985BB29EFA26D009F7ED5 /* TaskDetail.swift in Sources */,
 				834DEC122C4D94BD0073B5D4 /* ClosedownConfiguration.swift in Sources */,
 				836E997730534A200082748D /* StageActivity.swift in Sources */,
+				B05C4A7000000000000000A1 /* StageCatalog.swift in Sources */,
 				83477CB429FEA7A500A5FF99 /* TaskButtons.swift in Sources */,
 				83BC2509302E0CFA00080642 /* UserDefaults+KVO.swift in Sources */,
 				8355E7B829E9E2B2005D5A1C /* Sidebar.swift in Sources */,

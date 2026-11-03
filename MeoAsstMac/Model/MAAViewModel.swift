@@ -894,6 +894,15 @@ extension MAAViewModel {
             try await loadResource(url: cachedBaseURL, channel: channel)
         } catch {
             logError("关卡数据获取失败: \(error.localizedDescription)")
+            // 离线回退：上次成功下载的活动缓存仍可支撑今日提示与目录，
+            // 已过期组由开放谓词排除。
+            let cachedURL = documentsDirectory
+                .appendingPathComponent("cache", isDirectory: true)
+                .appendingPathComponent("gui/StageActivityV2.json")
+            if let cached = StageActivityCache.loadActivities(from: cachedURL) {
+                stageActivities = cached
+                logInfo("已加载离线关卡活动缓存")
+            }
         }
 
         #if DEBUG

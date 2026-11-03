@@ -49,7 +49,7 @@ extension FightStage {
 }
 
 extension FightStage {
-    fileprivate static let supplies: [FightStage] = [
+    static let supplies: [FightStage] = [
         .init(
             code: "CE-6", name: .init(localized: "龙门币-6/5"),
             drop: .init(localized: "龙门币"),
@@ -79,7 +79,7 @@ extension FightStage {
         .init(baseCode: "PR-D", names: ["近/特芯片", "近/特芯片组"], drop: "近&特芯片", weekdays: [2, 3, 6, 0]),
     ]
 
-    fileprivate static let chips: [FightStage] = metaChips.flatMap { meta in
+    static let chips: [FightStage] = metaChips.flatMap { meta in
         meta.names.enumerated().map { (index, name) in
             .init(
                 code: "\(meta.baseCode)-\(index + 1)", name: .init(localized: name),

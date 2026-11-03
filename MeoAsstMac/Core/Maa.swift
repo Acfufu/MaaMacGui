@@ -379,8 +379,9 @@ extension MAAResourceVersion {
 struct MAAStageActivity: Decodable, Hashable {
     let miniGame: [MiniGame]
     let sideStoryStage: [String: SideStoryStage]?
+    let resourceCollection: ActivityPeriod?
 
-    private enum CodingKeys: String, CodingKey { case miniGame, sideStoryStage }
+    private enum CodingKeys: String, CodingKey { case miniGame, sideStoryStage, resourceCollection }
 
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -388,6 +389,8 @@ struct MAAStageActivity: Decodable, Hashable {
         // Invalid activity data disables the optional medicine extension without
         // breaking existing OTA mini-game decoding.
         sideStoryStage = try? container.decode([String: SideStoryStage].self, forKey: .sideStoryStage)
+        // 资源全开放窗口解析失败仅回退常态星期表，不影响其他活动数据。
+        resourceCollection = try? container.decode(ActivityPeriod.self, forKey: .resourceCollection)
     }
 
     struct MiniGame: Decodable, Hashable {

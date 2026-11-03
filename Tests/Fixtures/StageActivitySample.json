@@ -1,0 +1,33 @@
+{
+  "Official": {
+    "sideStoryStage": {
+      "SSReopen": {
+        "MinimumRequired": "v6.14.0",
+        "Activity": {"Tip": "SideStory「墟」复刻", "StageName": "墟", "UtcStartTime": "2026/08/22 04:00:00", "UtcExpireTime": "2026/09/01 03:59:59", "TimeZone": 8},
+        "Stages": [
+          {"Display": "SSReopen-AT", "Value": "SSReopen-AT", "Drop": "代理1~8关"},
+          {"Display": "AT-8", "Value": "AT-8", "Drop": "31093"},
+          {"Display": "AT-7", "Value": "AT-7", "Drop": "30053"}
+        ]
+      },
+      "YW": {
+        "MinimumRequired": "v6.17.0",
+        "Activity": {"Tip": "SideStory「昨日海」", "StageName": "昨日海", "UtcStartTime": "2026/10/09 12:00:00", "UtcExpireTime": "2026/10/23 03:59:59", "TimeZone": 8},
+        "Stages": [
+          {"Display": "YW-8", "Value": "YW-8", "Drop": "31103"},
+          {"Display": "YW-7", "Value": "YW-7", "Drop": "31063"},
+          {"Display": "YW-6", "Value": "YW-6", "Drop": "30063"}
+        ]
+      }
+    },
+    "resourceCollection": {"Tip": "资源收集", "UtcStartTime": "2026/09/29 16:00:00", "UtcExpireTime": "2026/10/20 03:59:59", "TimeZone": 8, "IsResourceCollection": true},
+    "miniGame": [
+      {"MinimumRequired": "v6.14.0", "Display": "黑流树海刷钱", "Value": "BlackFlowTemporary@Begin", "Tip": "样例条目", "UtcStartTime": "2026/07/19 16:00:00", "UtcExpireTime": "2099/07/19 03:59:59", "TimeZone": 8}
+    ]
+  },
+  "YoStarEN": {
+    "sideStoryStage": {},
+    "resourceCollection": {"Tip": "SUPPLIES & CHIPS EVERYDAY ACCESS", "UtcStartTime": "2026/07/30 10:00:00", "UtcExpireTime": "2026/08/20 03:59:59", "TimeZone": -7, "IsResourceCollection": true},
+    "miniGame": []
+  }
+}
