@@ -264,6 +264,19 @@ struct FightSettingsView: View {
 
             Divider()
 
+            TextField(text: $config.yituliu_id) {
+                Toggle("一图流汇报ID", isOn: $config.report_to_yituliu)
+            }
+            if config.report_to_yituliu {
+                // Core 51dac87 事实：yituliu_id 解析后未消费（FightTask.cpp 误传
+                // penguin_id、插件 m_yituliu_id 零读取），该 pin 下上报为匿名。
+                Text("当前 Core 版本下该 ID 不会生效，上报一图流为匿名。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Divider()
+
             DailyStageTipView(channel: viewModel.clientChannel, activities: viewModel.stageActivity)
             }
             .padding()

@@ -102,6 +102,9 @@ extension FightConfiguration {
         self.drops = config.drops
         self.report_to_penguin = config.report_to_penguin
         self.penguin_id = config.penguin_id
+        // F17：旧档案无一图流字段，零迁移解码缺省（关闭/空 ID）。
+        self.report_to_yituliu = false
+        self.yituliu_id = ""
         self.server = config.server
         self.client_type = config.client_type
         self.DrGrandet = config.DrGrandet

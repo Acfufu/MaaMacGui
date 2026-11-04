@@ -6564,6 +6564,22 @@
         }
       }
     },
+    "一图流汇报ID" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu Report ID"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu 보고 ID"
+          }
+        }
+      }
+    },
     "一层远见密文板" : {
       "localizations" : {
         "ko" : {
@@ -10293,6 +10309,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当前 Core 或资源未经实托邦能力验证。此选项仅向匹配的开发版本开放。"
+          }
+        }
+      }
+    },
+    "当前 Core 版本下该 ID 不会生效，上报一图流为匿名。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The ID has no effect on the current Core version; reports to Yituliu are anonymous."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 Core 버전에서는 이 ID가 적용되지 않으며 Yituliu 보고는 익명으로 처리됩니다."
           }
         }
       }

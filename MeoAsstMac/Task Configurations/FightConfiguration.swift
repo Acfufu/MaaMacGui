@@ -52,6 +52,13 @@ struct FightConfiguration: MAATaskConfiguration {
 
     var report_to_penguin: Bool
     var penguin_id: String
+    /// F17 一图流上报（upstream ThirdPartyServiceSettings.EnableYituliu 为全局面
+    /// 设置）：Mac 沿用任务级配置，与 F16 企鹅同模式。Core 51dac87 消费 enable
+    /// 开关（StageDropsTaskPlugin upload_to_yituliu），但 yituliu_id 解析后未消费
+    /// （FightTask.cpp 误传 penguin_id、插件 m_yituliu_id 零读取）——该 pin 下
+    /// 上报实为匿名，ID 字段为向前兼容存储，divergence 随实现记录。
+    var report_to_yituliu: Bool
+    var yituliu_id: String
     var server: String
     var client_type: String
     var DrGrandet: Bool
@@ -111,13 +118,15 @@ struct FightConfiguration: MAATaskConfiguration {
             try container.encodeIfPresent(c.drops, forKey: .drops)
             try container.encode(c.report_to_penguin, forKey: .report_to_penguin)
             try container.encode(c.penguin_id, forKey: .penguin_id)
+            try container.encode(c.report_to_yituliu, forKey: .report_to_yituliu)
+            try container.encode(c.yituliu_id, forKey: .yituliu_id)
             try container.encode(c.server, forKey: .server)
             try container.encode(c.client_type, forKey: .client_type)
             try container.encode(c.DrGrandet, forKey: .DrGrandet)
         }
         private enum CoreCodingKeys: String, CodingKey {
             case stage, medicine, medicine_expire_days, stone, times, series, drops
-            case report_to_penguin, penguin_id, server, client_type, DrGrandet
+            case report_to_penguin, penguin_id, report_to_yituliu, yituliu_id, server, client_type, DrGrandet
         }
 
         var medicine_expire_days: Int { configuration.medicine_expire_days }
@@ -378,6 +387,8 @@ extension FightConfiguration {
         self.inventoryTarget = try container.decodeIfPresent(InventoryTarget.self, forKey: .inventoryTarget)
         self.report_to_penguin = try container.decodeIfPresent(Bool.self, forKey: .report_to_penguin) ?? false
         self.penguin_id = try container.decodeIfPresent(String.self, forKey: .penguin_id) ?? ""
+        self.report_to_yituliu = try container.decodeIfPresent(Bool.self, forKey: .report_to_yituliu) ?? false
+        self.yituliu_id = try container.decodeIfPresent(String.self, forKey: .yituliu_id) ?? ""
         self.server = try container.decodeIfPresent(String.self, forKey: .server) ?? "CN"
         self.client_type = try container.decodeIfPresent(String.self, forKey: .client_type) ?? ""
         self.DrGrandet = try container.decodeIfPresent(Bool.self, forKey: .DrGrandet) ?? false

@@ -115,6 +115,8 @@ let migrated = FightConfiguration(
 check(
     !migrated.useActivityMedicine && migrated.medicine_expire_days == 2 && migrated.medicine == 5 && migrated.times == 1
 )
+// P06.3 F17：旧档案无一图流字段，迁移零暗改（关闭/空 ID）。
+check(!migrated.report_to_yituliu && migrated.yituliu_id == "")
 if let path = CommandLine.arguments.dropFirst().first {
     let servers = try JSONDecoder().decode(
         [String: MAAStageActivity].self, from: Data(contentsOf: URL(fileURLWithPath: path)))
