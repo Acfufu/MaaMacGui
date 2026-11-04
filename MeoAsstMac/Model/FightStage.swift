@@ -17,9 +17,22 @@ struct FightStage: Identifiable {
     enum OpenType {
         case resourceCollection(weekdays: [Int]?)
         case activity(startTime: Date?, expireTime: Date?)
+
+        var resourceWeekdays: [Int]? {
+            if case .resourceCollection(let weekdays) = self { return weekdays }
+            return nil
+        }
     }
 
     let openType: OpenType
+}
+
+extension FightStage {
+    /// 无星期表限定的常开资源关（LS-6 类）。上游 IsPermanentStage 口径：
+    /// OpenDaysOfWeek 为空且属资源收集 → 常驻（其后的备选永不可达）。
+    static func isAlwaysOpenResource(_ code: String) -> Bool {
+        (supplies + chips).contains { $0.code == code && $0.openType.resourceWeekdays == nil }
+    }
 }
 
 extension FightStage {

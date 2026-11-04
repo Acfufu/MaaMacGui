@@ -50,7 +50,10 @@ final class MedicineLogHarness {
     var recruitTagNames: [String: String] = [:]
     var now = ISO8601DateFormatter().date(from: "2026-10-24T00:00:00Z")!
 
-    func logInfo(_ message: String) {}
+    // P06.1 起入队循环含插值日志与截断警告：桩走 LocalizedStringResource
+    // （与生产 MaaMessage.swift 同签名），不落日志。
+    func logInfo(_ resource: LocalizedStringResource) {}
+    func logWarn(_ resource: LocalizedStringResource) {}
     func dailyTask(coreID: Int32?) -> MAATask? {
         guard let coreID, let id = taskIDMap[coreID] else { return nil }
         return tasks.first { $0.id == id }?.task

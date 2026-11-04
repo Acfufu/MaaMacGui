@@ -39,7 +39,8 @@ p.joinpath('ProductionLogPath.swift').write_text('import Foundation\nextension M
 PYTHON
 xcrun swiftc Tests/ActivityMedicineTestSupport.swift \
   'MeoAsstMac/Task Configurations/FightConfiguration.swift' \
-  MeoAsstMac/Model/StageActivity.swift MeoAsstMac/Utils/HGCalendar.swift MeoAsstMac/Model/InventoryTarget.swift \
+  MeoAsstMac/Model/StageActivity.swift MeoAsstMac/Model/StageCatalog.swift MeoAsstMac/Model/FightStage.swift \
+  MeoAsstMac/Utils/HGCalendar.swift MeoAsstMac/Model/InventoryTarget.swift \
   "$test_dir/ActivityModels.swift" "$test_dir/ProductionLogPath.swift" \
   Tests/MedicineLogTests.swift -o "$test_dir/tests"
 "$test_dir/tests"

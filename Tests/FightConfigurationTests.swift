@@ -12,12 +12,9 @@ enum MAATask {
     case fight(FightConfiguration)
 }
 
-// 172 合并面:params(at:stageActivity:) 引用的活动上下文在单文件编译下的最小桩;
-// 真实实现见 MeoAsstMac/Model/StageActivity.swift,由 activity-medicine 套件覆盖。
-struct StageActivityContext {
-    enum MedicineWindow { case inactive, unavailable, extended(Int) }
-    func medicineWindow(at date: Date, enabled: Bool) -> MedicineWindow { .inactive }
-}
+// P06.1 起 StageCatalog 进入 FightConfiguration 的编译面，真实
+// StageActivityContext 由套件脚本供给（StageActivity.swift + 提取的活动模型），
+// 原最小桩删除。
 
 @main
 struct FightConfigurationTests {

@@ -15467,7 +15467,231 @@
       }
     },
     "龙门币-6/5" : {},
-    "（突袭）" : {}
+    "（突袭）" : {},
+    "启用备选关卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use alternative stages"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대체 관문 사용"
+          }
+        }
+      }
+    },
+    "自上而下执行第一个开放的候选；全部关闭时跳过本任务。常驻候选之后的备选不会执行。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runs the first open candidate from top to bottom; skips this task when all are closed. Alternatives after a permanent candidate never run."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "위에서 아래로 첫 번째 개방된 후보를 실행하고, 모두 닫히면 이 작업을 건너뜁니다. 상주 후보 뒤의 대체 관문은 실행되지 않습니다."
+          }
+        }
+      }
+    },
+    "备选%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternative %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대체 %lld"
+          }
+        }
+      }
+    },
+    "添加备选关卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add alternative stage"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대체 관문 추가"
+          }
+        }
+      }
+    },
+    "（今日关闭）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (closed today)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (오늘 미개방)"
+          }
+        }
+      }
+    },
+    "今日将执行：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Will run today: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오늘 실행: %@"
+          }
+        }
+      }
+    },
+    "「%@」之后的备选不会执行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternatives after \"%@\" will never run"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" 뒤의 대체 관문은 실행되지 않습니다"
+          }
+        }
+      }
+    },
+    "今日全部候选关闭，运行时将跳过本任务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All candidates are closed today; this task will be skipped at run time"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오늘 모든 후보가 닫혀 있어 실행 시 이 작업을 건너뜁니다"
+          }
+        }
+      }
+    },
+    "资源收集" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resource collection"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자원 수집"
+          }
+        }
+      }
+    },
+    "备选" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alt"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대체"
+          }
+        }
+      }
+    },
+    "备选关卡今日全部关闭，已跳过「%@」" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All alternative stages are closed today; skipped \"%@\""
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대체 관문이 오늘 모두 닫혀 \"%@\"을(를) 건너뛰었습니다"
+          }
+        }
+      }
+    },
+    "「当前/上次」为常驻候选，其后的备选关卡不会被执行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Current/Last\" is a permanent candidate; alternatives after it will never run"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"현재/지난번\"은 상주 후보이므로 뒤의 대체 관문은 실행되지 않습니다"
+          }
+        }
+      }
+    },
+    "「%@」为常驻关卡，其后的备选关卡不会被执行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" is a permanent stage; alternatives after it will never run"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\"은(는) 상주 관문이므로 뒤의 대체 관문은 실행되지 않습니다"
+          }
+        }
+      }
+    },
+    "存档关卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved stages"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장된 관문"
+          }
+        }
+      }
+    }
   },
   "version" : "1.0"
 }

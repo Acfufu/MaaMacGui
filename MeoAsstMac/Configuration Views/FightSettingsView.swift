@@ -64,6 +64,44 @@ struct FightSettingsView: View {
 
                 Divider()
 
+                // MARK: 备选关卡（F05）：候选开放判定与可选目录同源（StageCatalog）
+
+                Section {
+                    Toggle("启用备选关卡", isOn: $config.useOptionalStage)
+                    if config.useOptionalStage {
+                        Text("自上而下执行第一个开放的候选；全部关闭时跳过本任务。常驻候选之后的备选不会执行。")
+                            .font(.caption).foregroundStyle(.secondary)
+                        ForEach(config.optionalStages.indices, id: \.self) { index in
+                            HStack {
+                                TimelineView(.everyMinute) { timeline in
+                                    Picker("备选\(index + 1)", selection: optionalStageBinding(index)) {
+                                        optionalStagePickerEntries(
+                                            at: timeline.date, stored: config.optionalStages[index])
+                                    }
+                                }
+                                Button {
+                                    _ = config.optionalStages.remove(at: index)
+                                } label: {
+                                    Image(systemName: "minus.circle")
+                                        .foregroundStyle(.red)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        Button {
+                            config.optionalStages.append("")
+                        } label: {
+                            Label("添加备选关卡", systemImage: "plus")
+                        }
+                        TimelineView(.everyMinute) { timeline in
+                            optionalStageStatus(at: timeline.date)
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
+                Divider()
+
                 Section {
                     TextField(value: $config.medicine, format: .number) {
                         Toggle("吃理智药", isOn: useMedicine)
@@ -366,6 +404,70 @@ struct FightSettingsView: View {
     private func activityEntryTitle(_ entry: StageCatalog.Entry) -> String {
         guard let drop = entry.drop else { return entry.name }
         return "\(entry.name)（\(StageDropLabel.text(drop))）"
+    }
+
+    // MARK: 备选关卡（F05/P06.1）
+
+    /// 下标 binding 的越界防护：删除行导致的暂态 stale index 不得越界崩库
+    /// （评审 A #4；仓库先例 TaskTimerView 为裸下标，此处收紧）。
+    private func optionalStageBinding(_ index: Int) -> Binding<String> {
+        Binding {
+            index < config.optionalStages.count ? config.optionalStages[index] : ""
+        } set: {
+            guard index < config.optionalStages.count else { return }
+            config.optionalStages[index] = $0
+        }
+    }
+
+    /// 备选候选列表：与主选单不同，收录今日关闭的目录关卡并加标注——
+    /// 备选的意义正是跨日回退（如资源收集轮换）。存档中已不在目录的遗留
+    /// 候选（如已轮换活动码）单独成组兜底展示，值不丢失。
+    @ViewBuilder private func optionalStagePickerEntries(at date: Date, stored: String) -> some View {
+        Section("常用") {
+            Text("当前/上次").tag("")
+            Text("1-7").tag("1-7")
+            Text("剿灭模式").tag("Annihilation")
+        }
+        Section("当期活动") {
+            ForEach(stageCatalog.entries(at: date).filter { $0.group == .activity }, id: \.code) { entry in
+                Text(optionalStageTitle(entry)).tag(entry.code)
+            }
+        }
+        Section("资源收集") {
+            ForEach(stageCatalog.entries(at: date).filter { $0.group == .resourceCollection }, id: \.code) { entry in
+                Text(optionalStageTitle(entry)).tag(entry.code)
+            }
+        }
+        if isStoredOutsideCatalog(stored, at: date) {
+            Section("存档关卡") {
+                Text(verbatim: stored).tag(stored)
+            }
+        }
+    }
+
+    private func isStoredOutsideCatalog(_ code: String, at date: Date) -> Bool {
+        let known = ["", "1-7", "Annihilation"]
+            + stageCatalog.entries(at: date).map(\.code)
+        return !known.contains(code)
+    }
+
+    private func optionalStageTitle(_ entry: StageCatalog.Entry) -> String {
+        var title = entry.group == .activity ? activityEntryTitle(entry) : entry.name
+        if !entry.isOpen { title += String(localized: "（今日关闭）") }
+        return title
+    }
+
+    @ViewBuilder private func optionalStageStatus(at date: Date) -> some View {
+        let resolution = config.resolvedStagePlan(at: date, catalog: stageCatalog)
+        switch resolution.outcome {
+        case .dispatch(let code):
+            Text("今日将执行：\(code.isEmpty ? String(localized: "当前/上次") : code)")
+            if let blocked = resolution.truncatedAfter {
+                Text("「\(blocked)」之后的备选不会执行")
+            }
+        case .skipAllClosed:
+            Text("今日全部候选关闭，运行时将跳过本任务")
+        }
     }
 }
 

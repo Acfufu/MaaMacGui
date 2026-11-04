@@ -18,7 +18,8 @@ PY
 xcrun swiftc Tests/ActivityMedicineTestSupport.swift \
   'MeoAsstMac/Task Configurations/FightConfiguration.swift' \
   MeoAsstMac/Model/InventoryTarget.swift \
-  MeoAsstMac/Model/StageActivity.swift MeoAsstMac/Utils/HGCalendar.swift \
+  MeoAsstMac/Model/StageActivity.swift MeoAsstMac/Model/StageCatalog.swift MeoAsstMac/Model/FightStage.swift \
+  MeoAsstMac/Utils/HGCalendar.swift \
   Packages/LegacyUserTasks/Sources/LegacyUserTasks/Fight.swift \
   "$test_dir/ActivityModels.swift" "$test_dir/main.swift" -o "$test_dir/tests"
 "$test_dir/tests" "$@"

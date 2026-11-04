@@ -11,6 +11,11 @@ struct FightConfiguration: MAATaskConfiguration {
     var type: MAATaskType { .Fight }
 
     var stage: String
+    /// F05 备选关卡（upstream FightTask.UseOptionalStage/StagePlan）：启用后
+    /// 自上而下取第一个开放候选（stage 为首选，其后为备选）；全部关闭时
+    /// 明确跳过本任务，而非代理失败后换关。Core 契约不变——只下发解析结果。
+    var useOptionalStage: Bool = false
+    var optionalStages: [String] = []
     var medicine: Int?
     /// Q05 药仅一次：完整成功的运行结束后 medicine 置 nil（旧数据缺键解码 false）。
     var medicineOnce: Bool = false
@@ -58,6 +63,10 @@ struct FightConfiguration: MAATaskConfiguration {
 
         if let times {
             parts.append("\(times)" + String(localized: "次"))
+        }
+
+        if useOptionalStage, !optionalStages.isEmpty {
+            parts.append(String(localized: "备选") + "×\(optionalStages.count)")
         }
 
         return parts.joined(separator: ";")
@@ -136,6 +145,81 @@ struct FightConfiguration: MAATaskConfiguration {
             config.medicine_expire_days = max(medicine_expire_days, days)
         }
         return Params(configuration: config)
+    }
+
+    // MARK: 备选关卡（F05）
+
+    /// 备选计划的解析结果。语义对齐 upstream FightTask 序列化（ISerialize）：
+    /// 全部候选关闭 → 跳过本任务；选中常驻关卡且其后仍有候选 → 截断提示。
+    struct StagePlanResolution: Equatable {
+        enum Outcome: Equatable {
+            /// 下发解析后的关卡（未启用备选时即原 stage）。
+            case dispatch(stage: String)
+            /// 启用备选但全部候选今日关闭：跳过本任务并记录。
+            case skipAllClosed
+        }
+
+        let outcome: Outcome
+        /// 被选中的常驻候选（当前/上次、剿灭、1-7、目录外关卡）其后仍有备选时,
+        /// 记录该候选——后备选永远不会被执行。
+        let truncatedAfter: String?
+    }
+
+    /// 自上而下解析第一个开放候选。开放判定与可选目录同源（StageCatalog.
+    /// isSelectable），叠加一条上游口径：目录外的活动形码（^[A-Za-z]{2}-\d{1,2}$，
+    /// 如 YW-8）按「已过期活动」判关——轮换移除或版本门槛滤除后不得再当作
+    /// 回退候选下发死关卡（upstream StageManager 对未知活动形码的默认态）。
+    /// 其余目录外关卡（主线/手输/特殊导航）维持 fail-open（F19 存量可连性）。
+    /// 未启用备选时行为不变——原样下发 stage（存量档案零迁移、手输/特殊
+    /// 导航语义不受当日开放性影响）。
+    func resolvedStagePlan(at date: Date, catalog: StageCatalog) -> StagePlanResolution {
+        guard useOptionalStage else {
+            return StagePlanResolution(outcome: .dispatch(stage: stage), truncatedAfter: nil)
+        }
+
+        let candidates = ([stage] + optionalStages).map(Self.normalizedStage)
+        let entries = catalog.entries(at: date)
+        let picked = candidates.first { code in
+            if let entry = entries.first(where: { $0.code == code }) {
+                return entry.isOpen
+            }
+            // 目录外：fail-open，但活动形码视为过期活动。
+            return !Self.isExpiredActivityShape(code)
+        }
+        guard let picked else {
+            return StagePlanResolution(outcome: .skipAllClosed, truncatedAfter: nil)
+        }
+
+        var truncatedAfter: String?
+        if let index = candidates.firstIndex(of: picked), index < candidates.count - 1,
+            Self.isPermanentStage(picked, catalog: catalog, at: date)
+        {
+            truncatedAfter = picked
+        }
+        return StagePlanResolution(outcome: .dispatch(stage: picked), truncatedAfter: truncatedAfter)
+    }
+
+    /// 上游 StageManager 口径：目录外但呈活动形（两字母-数字，如 YW-8）的
+    /// 关卡按已过期活动处理。主线（1-7/H10-1-Hard）、特殊名（JT8-2/
+    /// AveMujica-8/SSReopen-*）不匹配此形态。
+    static func isExpiredActivityShape(_ code: String) -> Bool {
+        code.range(of: "^[A-Za-z]{2}-[0-9]{1,2}$", options: .regularExpression) != nil
+    }
+
+    /// 常驻关卡判定（upstream IsPermanentStage：无星期限制且非限时活动）。
+    /// 当前/上次、剿灭、1-7、常开资源关（LS-6 类，无星期表）与目录外关卡
+    /// 常驻；带星期表的资源收集与带窗口的活动关卡非常驻——即便今日开放
+    /// 也不截断后备选。目录外活动形码按过期活动处理，非常驻。
+    static func isPermanentStage(_ code: String, catalog: StageCatalog, at date: Date) -> Bool {
+        if code.isEmpty || code == "Annihilation" || code == "1-7" { return true }
+        if FightStage.isAlwaysOpenResource(code) { return true }
+        guard let entry = catalog.entries(at: date).first(where: { $0.code == code }) else {
+            return !Self.isExpiredActivityShape(code)
+        }
+        switch entry.group {
+        case .currentAndLast, .annihilation: return true
+        case .activity, .resourceCollection: return false
+        }
     }
 
     func preparingInventoryTarget(_ plan: InventoryTargetPlan) -> Self {
@@ -230,6 +314,8 @@ extension FightConfiguration {
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.stage = try container.decodeIfPresent(String.self, forKey: .stage) ?? ""
+        self.useOptionalStage = try container.decodeIfPresent(Bool.self, forKey: .useOptionalStage) ?? false
+        self.optionalStages = try container.decodeIfPresent([String].self, forKey: .optionalStages) ?? []
         self.medicine = try container.decodeIfPresent(Int.self, forKey: .medicine)
         self.medicineOnce = try container.decodeIfPresent(Bool.self, forKey: .medicineOnce) ?? false
         if let days = try container.decodeIfPresent(Int.self, forKey: .medicine_expire_days) {

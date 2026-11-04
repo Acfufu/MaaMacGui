@@ -1321,11 +1321,28 @@ extension MAAViewModel {
                     if context.medicineWindow(at: now, enabled: config.useActivityMedicine) == .unavailable {
                         logInfo("活动数据不可用，沿用原临期药设置")
                     }
-                    let params = config.params(at: now, stageActivity: context)
-                    coreID = try await handle?.appendTask(type: .Fight, params: params.jsonString())
-                    if let coreID {
-                        fightTaskParams[coreID] = params
-                        inventoryFightIDs.insert(coreID)
+                    // F05 备选关卡：与可选目录同源解析，全部关闭时明确跳过本任务。
+                    let resolution = config.resolvedStagePlan(
+                        at: now, catalog: StageCatalog(context: context))
+                    switch resolution.outcome {
+                    case .skipAllClosed:
+                        logInfo("备选关卡今日全部关闭，已跳过「\(config.subtitle)」")
+                        continue
+                    case .dispatch(let resolvedStage):
+                        if let blocked = resolution.truncatedAfter {
+                            logWarn(
+                                blocked.isEmpty
+                                    ? "「当前/上次」为常驻候选，其后的备选关卡不会被执行"
+                                    : "「\(blocked)」为常驻关卡，其后的备选关卡不会被执行")
+                        }
+                        var dispatchConfig = config
+                        dispatchConfig.stage = resolvedStage
+                        let params = dispatchConfig.params(at: now, stageActivity: context)
+                        coreID = try await handle?.appendTask(type: .Fight, params: params.jsonString())
+                        if let coreID {
+                            fightTaskParams[coreID] = params
+                            inventoryFightIDs.insert(coreID)
+                        }
                     }
                 } else {
                     coreID = try await handle?.appendTask(task.task, recruitTagNames: recruitTagNames,
