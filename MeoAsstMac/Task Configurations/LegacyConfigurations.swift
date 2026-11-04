@@ -58,6 +58,7 @@ extension ClosedownConfiguration {
 
 extension RecruitConfiguration {
     fileprivate init(migrating config: LegacyRecruitConfiguration) {
+        // force_refresh=默认开、许可保留=默认关（高资确认保护不因迁移放开）。
         self.init()
         self.refresh = config.refresh
         self.select = config.select

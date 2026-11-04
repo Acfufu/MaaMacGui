@@ -87,6 +87,22 @@
         }
       }
     },
+    "3星招募时间" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level 3 recruitment time"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3성 모집 시간"
+          }
+        }
+      }
+    },
     "3星设置7:40而非9:00" : {
       "localizations" : {
         "ko" : {
@@ -125,6 +141,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "4성"
+          }
+        }
+      }
+    },
+    "4星招募时间" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level 4 recruitment time"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4성 모집 시간"
           }
         }
       }
@@ -7570,6 +7602,22 @@
         }
       }
     },
+    "保留数量: " : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reserve amount: "
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보존 수량: "
+          }
+        }
+      }
+    },
     "保留标签" : {
       "localizations" : {
         "en" : {
@@ -9707,6 +9755,22 @@
         }
       }
     },
+    "尽可能多选四星以上的Tag" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select as many 4-star and above tags as possible"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가능한 한 4성 이상 태그 선택"
+          }
+        }
+      }
+    },
     "岁的界园志异" : {
       "localizations" : {
         "ko" : {
@@ -10745,6 +10809,22 @@
     "抖动" : {},
     "拷贝干员列表JSON" : {},
     "指定" : {},
+    "招聘许可不多于保留数时，自动确认将跳过3星，不消耗许可。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When permits are no more than the reserve, auto-confirm skips 3-star without consuming permits."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모집 허가증이 보존 수량보다 많지 않으면 자동 확인은 3성을 건너뛰며 허가증을 소모하지 않습니다."
+          }
+        }
+      }
+    },
     "指定事件" : {
       "localizations" : {
         "en" : {
@@ -11057,6 +11137,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "저장 없음, 스테이지 진입/퇴장으로 생존 점수 파밍"
+          }
+        }
+      }
+    },
+    "无招募许可时继续刷新" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep refreshing without permits"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모집 허가증이 없어도 계속 새로고침"
           }
         }
       }
@@ -13794,6 +13890,22 @@
         }
       }
     },
+    "自动确认3星时保留招聘许可" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reserve permits when auto-confirming 3-star"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3성 자동 확인 시 모집 허가증 보존"
+          }
+        }
+      }
+    },
     "自动确认4星" : {
       "localizations" : {
         "ko" : {
@@ -14984,6 +15096,22 @@
       }
     },
     "选项" : {},
+    "选满至3个Tag" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select up to 3 tags"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "태그 3개까지 선택"
+          }
+        }
+      }
+    },
     "邮件" : {
       "localizations" : {
         "ko" : {
@@ -15401,6 +15529,22 @@
     },
     "额外绘制间隔" : {},
     "饱和度" : {},
+    "额外标签策略" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extra tags policy"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "추가 태그 정책"
+          }
+        }
+      }
+    },
     "骰子" : {
       "localizations" : {
         "ko" : {
@@ -15456,6 +15600,22 @@
     },
     "黑流树海" : {},
     "默认兼容模式" : {},
+    "默认不选额外标签" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default (no extra tags)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기본값 (추가 태그 없음)"
+          }
+        }
+      }
+    },
     "默认换班" : {
       "localizations" : {
         "ko" : {

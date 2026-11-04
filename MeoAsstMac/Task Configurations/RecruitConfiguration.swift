@@ -11,8 +11,13 @@ struct RecruitConfiguration: MAATaskConfiguration {
     var type: MAATaskType { .Recruit }
 
     var refresh: Bool
+    /// 无招募许可时是否继续尝试刷新 Tags（Core 缺省 true，与 WPF 一致）。
+    var force_refresh: Bool
     var select: [Int]
     var confirm: [Int]
+    /// 自动确认 3 星时保留的招聘许可；下发派生 `enabled ? 数量 : 0`（WPF 同构）。
+    var level3_recruitment_permit_reserve_enabled: Bool
+    var level3_recruitment_permit_reserve: Int
     var first_tags: [String]
     var first_tags_enabled: Bool
     var preserve_tags: [String]
@@ -53,8 +58,10 @@ struct RecruitConfiguration: MAATaskConfiguration {
 
     struct Params: Encodable {
         var refresh: Bool
+        var force_refresh: Bool
         var select: [Int]
         var confirm: [Int]
+        var level3_recruitment_permit_reserve: Int
         var first_tags: [String]
         var preserve_tags: [String]
         var extra_tags_mode: Int
@@ -74,16 +81,27 @@ struct RecruitConfiguration: MAATaskConfiguration {
 
     // Core matches first_tags against the active game's displayed tag names,
     // whereas preserve_tags takes canonical IDs. Persisted selections stay IDs.
+    // recruitment_time is clamped to Core's [60, 540] at dispatch only, so
+    // out-of-range values from legacy profiles persist untouched.
     func params(tagNames: [String: String]) -> Params {
         .init(
-            refresh: refresh, select: select, confirm: confirm,
+            refresh: refresh, force_refresh: force_refresh, select: select, confirm: confirm,
+            level3_recruitment_permit_reserve: level3_recruitment_permit_reserve_enabled
+                ? level3_recruitment_permit_reserve : 0,
             first_tags: first_tags_enabled ? Self.normalizedTags(first_tags).map { tagNames[$0] ?? $0 } : [],
             preserve_tags: preserve_tags_enabled ? Self.normalizedTags(preserve_tags) : [],
             extra_tags_mode: extra_tags_mode, times: times, set_time: set_time,
             expedite: expedite, expedite_times: expedite_times,
-            recruitment_time: recruitment_time, report_to_penguin: report_to_penguin,
+            recruitment_time: recruitment_time.mapValues(Self.clampedRecruitmentTime),
+            report_to_penguin: report_to_penguin,
             penguin_id: penguin_id, report_to_yituliu: report_to_yituliu,
             yituliu_id: yituliu_id, server: server)
+    }
+
+    /// Core clamps per-level recruitment minutes into [60, 540]; mirroring the
+    /// clamp keeps legacy out-of-range profiles from dispatching invalid values.
+    static func clampedRecruitmentTime(_ minutes: Int) -> Int {
+        min(max(minutes, 60), 540)
     }
 
     static func normalizedTags(_ tags: [String]) -> [String] {
@@ -96,7 +114,9 @@ struct RecruitConfiguration: MAATaskConfiguration {
 
     static var recognition: RecruitConfiguration {
         .init(
-            refresh: false, select: [4, 5, 6], confirm: [-1], first_tags: [],
+            refresh: false, force_refresh: false, select: [4, 5, 6], confirm: [-1],
+            level3_recruitment_permit_reserve_enabled: false, level3_recruitment_permit_reserve: 0,
+            first_tags: [],
             first_tags_enabled: false, preserve_tags: ["支援机械"], preserve_tags_enabled: true,
             extra_tags_mode: 0, times: 0, set_time: true, expedite: false,
             expedite_times: 0, skip_robot: true,
@@ -112,8 +132,13 @@ extension RecruitConfiguration {
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.refresh = try container.decodeIfPresent(Bool.self, forKey: .refresh) ?? false
+        self.force_refresh = try container.decodeIfPresent(Bool.self, forKey: .force_refresh) ?? true
         self.select = try container.decodeIfPresent([Int].self, forKey: .select) ?? [4, 5]
         self.confirm = try container.decodeIfPresent([Int].self, forKey: .confirm) ?? [3, 4, 5]
+        self.level3_recruitment_permit_reserve_enabled =
+            try container.decodeIfPresent(Bool.self, forKey: .level3_recruitment_permit_reserve_enabled) ?? false
+        self.level3_recruitment_permit_reserve =
+            try container.decodeIfPresent(Int.self, forKey: .level3_recruitment_permit_reserve) ?? 8
         self.first_tags = Self.normalizedTags(try container.decodeIfPresent([String].self, forKey: .first_tags) ?? [])
         self.first_tags_enabled =
             try container.decodeIfPresent(Bool.self, forKey: .first_tags_enabled) ?? !first_tags.isEmpty

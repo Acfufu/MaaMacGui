@@ -18,6 +18,10 @@ let healing = "治疗"
 let defaults = RecruitConfiguration()
 check(defaults.first_tags.isEmpty && !defaults.first_tags_enabled)
 check(defaults.preserve_tags == [robot] && defaults.preserve_tags_enabled)
+// R05/R06 defaults follow Core and WPF: force_refresh on, permit reserve off
+// (the stored count of 8 only dispatches once explicitly enabled).
+check(defaults.force_refresh)
+check(!defaults.level3_recruitment_permit_reserve_enabled && defaults.level3_recruitment_permit_reserve == 8)
 var count = 0
 for oldFlag in [nil, false, true] as [Bool?] {
     for explicitTags in [nil, [], [healing, "", " \(dps) ", healing]] as [[String]?] {
@@ -41,10 +45,12 @@ for oldFlag in [nil, false, true] as [Bool?] {
                 check(
                     actual["first_tags_enabled"] == nil && actual["preserve_tags_enabled"] == nil
                         && actual["skip_robot"] == nil)
-                check(actual.count == 16)
+                check(actual.count == 18)
                 check(actual["select"] as! [Int] == [4, 5])
                 check(actual["confirm"] as! [Int] == [3, 4, 5])
                 check(actual["times"] as! Int == 4 && actual["expedite"] as! Bool == false)
+                check(actual["force_refresh"] as! Bool == true)
+                check(actual["level3_recruitment_permit_reserve"] as! Int == 0)
                 check(try JSONDecoder().decode(RecruitConfiguration.self, from: JSONEncoder().encode(config)) == config)
                 check(
                     try PropertyListDecoder().decode(
@@ -69,6 +75,47 @@ config.preserve_tags_enabled = true
 check(try params(config)["first_tags"] as! [String] == [dps, healing])
 check(try params(config)["preserve_tags"] as! [String] == [healing, dps])
 
+// The permit reserve dispatches only when enabled, mirroring the WPF
+// Enabled ? count : 0 derivation against level3_recruitment_permit_reserve.
+var reserveConfig = defaults
+reserveConfig.level3_recruitment_permit_reserve_enabled = true
+check(try params(reserveConfig)["level3_recruitment_permit_reserve"] as! Int == 8)
+reserveConfig.level3_recruitment_permit_reserve = 3
+check(try params(reserveConfig)["level3_recruitment_permit_reserve"] as! Int == 3)
+reserveConfig.level3_recruitment_permit_reserve_enabled = false
+check(try params(reserveConfig)["level3_recruitment_permit_reserve"] as! Int == 0)
+var forceOff = defaults
+forceOff.force_refresh = false
+check(try params(forceOff)["force_refresh"] as! Bool == false)
+// Non-default dispatch-relevant values must survive persistence round trips.
+reserveConfig.level3_recruitment_permit_reserve_enabled = true
+reserveConfig.level3_recruitment_permit_reserve = 3
+forceOff.refresh = true
+let reserveRoundtrip = try PropertyListDecoder().decode(
+    RecruitConfiguration.self, from: PropertyListEncoder().encode(reserveConfig))
+check(
+    reserveRoundtrip.level3_recruitment_permit_reserve_enabled
+        && reserveRoundtrip.level3_recruitment_permit_reserve == 3)
+let forceRoundtrip = try PropertyListDecoder().decode(
+    RecruitConfiguration.self, from: PropertyListEncoder().encode(forceOff))
+check(!forceRoundtrip.force_refresh && forceRoundtrip.refresh)
+
+// Dispatch clamps per-level minutes into Core's [60, 540]; the stored
+// dictionary keeps legacy out-of-range values untouched for round-trips.
+var legacyTimes = defaults
+legacyTimes.recruitment_time = ["3": 30, "4": 600, "5": 460, "6": 540]
+let dispatchedTimes = try params(legacyTimes)["recruitment_time"] as! [String: Int]
+check(dispatchedTimes == ["3": 60, "4": 540, "5": 460, "6": 540])
+check(legacyTimes.recruitment_time == ["3": 30, "4": 600, "5": 460, "6": 540])
+for edge in [59, 0, -60] {
+    check(RecruitConfiguration.clampedRecruitmentTime(edge) == 60)
+}
+check(RecruitConfiguration.clampedRecruitmentTime(60) == 60 && RecruitConfiguration.clampedRecruitmentTime(540) == 540)
+check(RecruitConfiguration.clampedRecruitmentTime(541) == 540 && RecruitConfiguration.clampedRecruitmentTime(960) == 540)
+let clampedRoundtrip = try PropertyListDecoder().decode(
+    RecruitConfiguration.self, from: PropertyListEncoder().encode(legacyTimes))
+check(clampedRoundtrip.recruitment_time == legacyTimes.recruitment_time)
+
 for skipRobot in [false, true] {
     let old: [String: Any] = [
         "enable": true, "refresh": true, "select": [4, 5, 6], "confirm": [3], "times": 1, "set_time": false,
@@ -81,11 +128,22 @@ for skipRobot in [false, true] {
     check(migrated.preserve_tags_enabled == skipRobot)
     check(migrated.refresh && migrated.select == [4, 5, 6] && migrated.confirm == [3])
     check(migrated.times == 1 && !migrated.set_time && !migrated.expedite && migrated.recruitment_time == ["3": 460])
+    // Migration must not loosen the high-rarity confirmation guard or enable
+    // permit reservation behind the user's back.
+    check(migrated.force_refresh && !migrated.level3_recruitment_permit_reserve_enabled)
+    check(!migrated.confirm.contains(6))
 }
 let recognition = RecruitConfiguration.recognition
 check(recognition.select == [4, 5, 6] && recognition.confirm == [-1])
 check(recognition.times == 0 && !recognition.refresh && !recognition.expedite && recognition.expedite_times == 0)
 check(recognition.preserve_tags == [robot] && recognition.preserve_tags_enabled)
+// Recognition mirrors the WPF toolbox assembly: force_refresh off, reserve
+// disabled, and the full 18-key parameter set still dispatches.
+check(!recognition.force_refresh && !recognition.level3_recruitment_permit_reserve_enabled)
+let recognitionActual = try params(recognition)
+check(recognitionActual.count == 18)
+check(recognitionActual["force_refresh"] as! Bool == false)
+check(recognitionActual["level3_recruitment_permit_reserve"] as! Int == 0)
 
 // Both parameter paths (daily tasks and recognition) map first_tags through the
 // effective tag names, while preserve_tags always stay canonical IDs.

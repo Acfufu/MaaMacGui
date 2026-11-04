@@ -20,10 +20,24 @@ struct RecruitSettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 Toggle("自动刷新3星Tags", isOn: $config.refresh)
+                Toggle("无招募许可时继续刷新", isOn: $config.force_refresh)
 
                 Toggle("自动使用加急许可", isOn: $config.expedite)
 
-                Toggle("3星设置7:40而非9:00", isOn: level3UseShortTime)
+                Stepper(value: recruitmentTime(level: 3), in: 60...540, step: 10) {
+                    HStack {
+                        Text("3星招募时间")
+                        Spacer()
+                        Text(timeLabel(recruitmentTime(level: 3).wrappedValue))
+                    }
+                }
+                Stepper(value: recruitmentTime(level: 4), in: 60...540, step: 10) {
+                    HStack {
+                        Text("4星招募时间")
+                        Spacer()
+                        Text(timeLabel(recruitmentTime(level: 4).wrappedValue))
+                    }
+                }
 
                 Stepper(value: $config.times, in: 0...1000) {
                     HStack {
@@ -43,6 +57,41 @@ struct RecruitSettingsView: View {
                 Toggle("自动确认4星", isOn: autoConfirm(level: 4))
                 Toggle("自动确认5星", isOn: autoConfirm(level: 5))
                 Toggle("自动确认6星", isOn: .constant(false)).disabled(true)
+                Toggle("自动确认3星时保留招聘许可", isOn: $config.level3_recruitment_permit_reserve_enabled)
+                if config.level3_recruitment_permit_reserve_enabled {
+                    Stepper(value: $config.level3_recruitment_permit_reserve, in: 1...99) {
+                        HStack {
+                            Text("保留数量: ")
+                            TextField(
+                                "", value: $config.level3_recruitment_permit_reserve, format: .number
+                            )
+                            .frame(maxWidth: 50)
+                        }
+                    }
+                    Text("招聘许可不多于保留数时，自动确认将跳过3星，不消耗许可。")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+
+                Picker("额外标签策略", selection: $config.extra_tags_mode) {
+                    Text("默认不选额外标签").tag(0)
+                    Text("选满至3个Tag").tag(1)
+                    Text("尽可能多选四星以上的Tag").tag(2)
+                }
+
+                Divider()
+
+                TextField(text: $config.penguin_id) {
+                    Toggle("企鹅物流汇报ID", isOn: $config.report_to_penguin)
+                }
+
+                Divider()
+
+                TextField(text: $config.yituliu_id) {
+                    Toggle("一图流汇报ID", isOn: $config.report_to_yituliu)
+                }
+                // 评审 B 勘误：公招路径的 yituliu_id 实际生效（AutoRecruitTask.cpp:1066
+                // 经 body["uuid"] 上报）；「ID 未消费」的匿名怪点是 Fight 路径特有
+                // （FightTask.cpp:183 误传 penguin_id），不得外推到公招。
             }
             .padding()
         }
@@ -114,16 +163,18 @@ struct RecruitSettingsView: View {
         }
     }
 
-    private var level3UseShortTime: Binding<Bool> {
+    /// Legacy profiles may hold out-of-range minutes; the stepper displays the
+    /// clamped value while the stored dictionary stays untouched until edited.
+    private func recruitmentTime(level: Int) -> Binding<Int> {
         Binding {
-            config.recruitment_time["3"] == 460
+            RecruitConfiguration.clampedRecruitmentTime(config.recruitment_time["\(level)"] ?? 540)
         } set: { newValue in
-            if newValue {
-                config.recruitment_time["3"] = 460
-            } else {
-                config.recruitment_time["3"] = 540
-            }
+            config.recruitment_time["\(level)"] = RecruitConfiguration.clampedRecruitmentTime(newValue)
         }
+    }
+
+    private func timeLabel(_ minutes: Int) -> String {
+        String(format: "%d:%02d", minutes / 60, minutes % 60)
     }
 
     private func autoConfirm(level: Int) -> Binding<Bool> {
