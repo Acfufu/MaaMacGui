@@ -263,18 +263,103 @@ struct StagePlanTests {
                   "below-minimum activity shape is not permanent")
         }
 
+        // MARK: F06 每周执行日——门控判定与游戏日星期口径
+
+        do {
+            // nil=不启用=每天执行（存量档案缺键语义）
+            let unscheduled = fight("CE-6")
+            for day in 0...6 {
+                check(unscheduled.isScheduled(on: day), "nil weeklyDays must run every day (\(day))")
+            }
+        }
+        do {
+            // 启用后仅勾选星期执行；空数组=每周全跳（上游 WeeklySchedule 全 false 等价）
+            var config = fight("CE-6")
+            config.weeklyDays = [3]
+            check(config.isScheduled(on: 3), "selected weekday must run")
+            check(!config.isScheduled(on: 4), "unselected weekday must skip")
+            config.weeklyDays = []
+            for day in 0...6 {
+                check(!config.isScheduled(on: day), "empty weeklyDays must skip every day (\(day))")
+            }
+        }
+        do {
+            // 游戏日边界：04:00 重置前仍属前一游戏日（Official=UTC+8）
+            let calendar = MAAClientChannel.Official.calendar
+            check(calendar.weekday(for: date("2026-11-05T03:59:00+08:00")) == 3,
+                  "before 04:00 reset must still count as previous game day (Wed)")
+            check(calendar.weekday(for: date("2026-11-05T04:01:00+08:00")) == 4,
+                  "after 04:00 reset must enter new game day (Thu)")
+            // 同一时刻不同区服游戏日：EN（UTC-7）比 Official（UTC+8）早一天
+            let enCalendar = MAAClientChannel.YoStarEN.calendar
+            let instant = date("2026-11-04T12:00:00+08:00")
+            check(calendar.weekday(for: instant) == 3, "Official game day must be Wednesday")
+            check(enCalendar.weekday(for: instant) == 2, "EN game day must be Tuesday at the same instant")
+        }
+
+        // MARK: F20 关卡重置策略——目录外活动形的重置面
+
+        do {
+            // .current + 目录外活动形 → 重置（返回原码供日志）；大小写先归一
+            var config = fight("ZX-3")
+            config.stageResetMode = .current
+            check(config.resetStageForDispatch(at: wednesday, catalog: catalog()) == "ZX-3",
+                  "out-of-catalog activity shape must reset under .current")
+            config.stage = "zx-3"
+            check(config.resetStageForDispatch(at: wednesday, catalog: catalog()) == "ZX-3",
+                  "reset must judge the normalized stage code")
+        }
+        do {
+            // .ignore（缺省）保留原值——Mac 历史行为
+            check(fight("ZX-3").resetStageForDispatch(at: wednesday, catalog: catalog()) == nil,
+                  "legacy default .ignore must keep the stored stage")
+        }
+        do {
+            // 目录内今日关闭（YW 窗口 10-22 已过，关卡仍在目录）不重置——关闭面
+            // 由备选解析/跳过处理，重置只面向已轮换出目录的关卡
+            var config = fight("YW-8")
+            config.stageResetMode = .current
+            check(config.resetStageForDispatch(at: wednesday, catalog: catalog()) == nil,
+                  "in-catalog closed activity stage must not reset")
+        }
+        do {
+            // 主线/特殊名/当前上次不触发（非活动形）
+            var config = fight("1-7")
+            config.stageResetMode = .current
+            check(config.resetStageForDispatch(at: wednesday, catalog: catalog()) == nil,
+                  "mainline must not reset")
+            config.stage = "JT8-2"
+            check(config.resetStageForDispatch(at: wednesday, catalog: catalog()) == nil,
+                  "special stage name must not reset")
+            config.stage = ""
+            check(config.resetStageForDispatch(at: wednesday, catalog: catalog()) == nil,
+                  "current/last must not reset")
+        }
+        do {
+            // 启用备选时由 resolvedStagePlan 接管，重置不生效（休眠备选数据不改写）
+            var config = fight("ZX-3", optional: true, alternatives: ["CA-5"])
+            config.stageResetMode = .current
+            check(config.resetStageForDispatch(at: wednesday, catalog: catalog()) == nil,
+                  "optional plan must own stage resolution instead of reset")
+        }
+
         // MARK: 持久化——旧档案缺键解码缺省，新字段 plist 往返一致
 
         do {
             let legacy = try! JSONDecoder().decode(FightConfiguration.self, from: Data("{}".utf8))
             check(!legacy.useOptionalStage, "legacy profile must default optional off")
             check(legacy.optionalStages.isEmpty, "legacy profile must default empty alternatives")
+            check(legacy.weeklyDays == nil, "legacy profile must default weekly schedule off")
+            check(legacy.stageResetMode == .ignore, "legacy profile must default stage reset to keep")
         }
         do {
-            let full = fight("CE-6", optional: true, alternatives: ["CA-5", ""])
+            var full = fight("CE-6", optional: true, alternatives: ["CA-5", ""])
+            full.weeklyDays = [1, 3, 5]
+            full.stageResetMode = .current
             let data = try! PropertyListEncoder().encode(full)
             let back = try! PropertyListDecoder().decode(FightConfiguration.self, from: data)
-            check(back == full, "optional plan must round-trip through plist")
+            check(back == full, "weekly schedule and reset mode must round-trip through plist")
+            check(back.weeklyDays == [1, 3, 5], "weekly days must survive plist round-trip")
         }
 
         print("stage-plan-tests: \(checks) checks passed")

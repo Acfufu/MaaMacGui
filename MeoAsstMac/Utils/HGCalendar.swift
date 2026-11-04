@@ -28,6 +28,12 @@ public struct HGCalendar: Sendable {
         calendar.weekdaySymbols[weekday(for: date)]
     }
 
+    /// F06 周计划 UI：按游戏日星期序号（0=周日…6=周六，weekday(for:) 同一口径）
+    /// 取本地化星期名，不依赖具体日期。
+    public func weekdaySymbol(at index: Int) -> String {
+        calendar.weekdaySymbols[index]
+    }
+
     /// Core medicine expiry counts include the current partial day. The week
     /// ends at the next Monday reset, independent of the host calendar/locale.
     public func medicineExpiryDaysUntilWeekEnd(at date: Date) -> Int {

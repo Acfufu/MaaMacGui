@@ -62,6 +62,15 @@ struct FightSettingsView: View {
                     Text(closedStageHint).foregroundStyle(.secondary)
                 }
 
+                // MARK: 关卡重置策略（F20）
+
+                Picker("关卡轮换后", selection: $config.stageResetMode) {
+                    Text("保留原值").tag(FightStageResetMode.ignore)
+                    Text("重置为当前/上次").tag(FightStageResetMode.current)
+                }
+                Text("主选关卡已不在目录（活动轮换）时的处理；启用备选关卡时由备选顺序接管。")
+                    .font(.caption).foregroundStyle(.secondary)
+
                 Divider()
 
                 // MARK: 备选关卡（F05）：候选开放判定与可选目录同源（StageCatalog）
@@ -76,10 +85,11 @@ struct FightSettingsView: View {
                                 TimelineView(.everyMinute) { timeline in
                                     Picker("备选\(index + 1)", selection: optionalStageBinding(index)) {
                                         optionalStagePickerEntries(
-                                            at: timeline.date, stored: config.optionalStages[index])
+                                            at: timeline.date, stored: optionalStageStored(index))
                                     }
                                 }
                                 Button {
+                                    guard index < config.optionalStages.count else { return }
                                     _ = config.optionalStages.remove(at: index)
                                 } label: {
                                     Image(systemName: "minus.circle")
@@ -97,6 +107,23 @@ struct FightSettingsView: View {
                             optionalStageStatus(at: timeline.date)
                                 .font(.caption).foregroundStyle(.secondary)
                         }
+                    }
+                }
+
+                Divider()
+
+                // MARK: 每周执行日（F06）：按区服游戏日判定，未勾选的星期跳过
+
+                Section {
+                    Toggle("启用周计划", isOn: weeklyScheduleEnabled)
+                    if config.weeklyDays != nil {
+                        ForEach(0...6, id: \.self) { day in
+                            Toggle(
+                                viewModel.clientChannel.calendar.weekdaySymbol(at: day),
+                                isOn: weeklyDayBinding(day))
+                        }
+                        Text("按区服游戏日（每日 04:00 重置）判定，未勾选的星期自动跳过本任务。")
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
 
@@ -416,6 +443,40 @@ struct FightSettingsView: View {
         } set: {
             guard index < config.optionalStages.count else { return }
             config.optionalStages[index] = $0
+        }
+    }
+
+    /// P06.2 R2 残留①收口：`stored:` 参数与 selection binding 同源走越界防护，
+    /// 删除行后的暂态 stale index 不再直接下标存档数组。
+    private func optionalStageStored(_ index: Int) -> String {
+        index < config.optionalStages.count ? config.optionalStages[index] : ""
+    }
+
+    // MARK: 每周执行日（F06/P06.2）
+
+    /// 启用周计划=weeklyDays 非 nil；开启时按上游 WeeklySchedule 缺省全勾选
+    /// （7 天全选），关闭即恢复每天执行（nil 不写键）。
+    private var weeklyScheduleEnabled: Binding<Bool> {
+        Binding {
+            config.weeklyDays != nil
+        } set: { on in
+            config.weeklyDays = on ? Array(0...6) : nil
+        }
+    }
+
+    /// 单日勾选：直接改写 weeklyDays 数组（保持升序稳定存储）；行仅在启用时
+    /// 渲染，stale index 无从产生。
+    private func weeklyDayBinding(_ day: Int) -> Binding<Bool> {
+        Binding {
+            config.weeklyDays?.contains(day) ?? false
+        } set: { on in
+            var days = config.weeklyDays ?? []
+            if on {
+                if !days.contains(day) { days.append(day) }
+            } else {
+                days.removeAll { $0 == day }
+            }
+            config.weeklyDays = days.sorted()
         }
     }
 

@@ -27,7 +27,7 @@ extension FightConfiguration.Params { func jsonString() throws -> String {
  let data = try JSONEncoder().encode(self); return String(decoding: data, as: UTF8.self)
 } }
 extension MAAStageActivity: Equatable {}
-struct DailyTask: Sendable, Equatable { let id: UUID; let task: MAATask; var enabled: Bool }
+struct DailyTask: Sendable, Equatable { let id: UUID; let task: MAATask; var enabled: Bool; var runOnce: Bool = false }
 enum MAAError: Error { case gameStartFailed }
 enum Touch { case maatouch, MacPlayTools }
 struct StageActivityContext {
@@ -36,9 +36,22 @@ struct StageActivityContext {
  func medicineWindow(at date: Date, enabled: Bool) -> MedicineWindow { .inactive }
 }
 struct MAAStageActivity {}
+// P06.1 起 FightConfiguration 引用目录与备选面；桩满足编译（entries 恒空、
+// 常开资源关 false），解析行为由 stage-plan 套件覆盖。P06.2 周计划门控需要
+// weekday(for:)，日历桩与 Mall 批量准入签名共用同一桩类型。
+struct StageCatalog {
+ enum Group { case currentAndLast, activity, resourceCollection, annihilation }
+ struct Entry { let code: String; let name: String; let drop: String?; let group: Group; let isOpen: Bool }
+ init(context: StageActivityContext) {}
+ func entries(at date: Date) -> [Entry] { [] }
+}
+enum FightStage { static func isAlwaysOpenResource(_ code: String) -> Bool { false } }
 enum ForcedRecoveryFailure: Error { case notReady, timedOut }
 struct PreparationCleanupFailure: Error {}
-extension String { var calendar: Calendar { Calendar(identifier: .gregorian) } }
+struct GameDayCalendarStub {
+ func weekday(for date: Date) -> Int { Calendar(identifier: .gregorian).component(.weekday, from: date) - 1 }
+}
+extension String { var calendar: GameDayCalendarStub { GameDayCalendarStub() } }
 extension String { var isGlobal: Bool { false } }
 struct RoguelikeSeedCfgStub: Equatable { func validateBlackflowStart(available: Bool) throws {} }
 struct MallConfiguration: Equatable {
@@ -48,7 +61,7 @@ struct MallConfiguration: Equatable {
     var friendVisitDate: Date? = nil
     struct Admission { var creditFightMarkedDate: Date?; var friendVisitMarkedDate: Date? }
     static func batchDailyAdmissions(of entries: [(enabled: Bool, config: MallConfiguration)],
-                                     snapshotDate: Date, calendar: Calendar) -> [Admission] {
+                                     snapshotDate: Date, calendar: GameDayCalendarStub) -> [Admission] {
         entries.map { _ in Admission(creditFightMarkedDate: nil, friendVisitMarkedDate: nil) }
     }
 }
@@ -113,6 +126,7 @@ actor FakeHandle {
  var connectionRequests = 0
  func invalidateInventory() { inventory.invalidate() }
  func logInfo(_ message: String) { logs.append(message) }
+ func logWarn(_ message: String) { logs.append(message) }
  func logTrace(verbatim message: String) { logs.append(message) }
  func handleEarlyReturn(backTo: Status) { if status == .pending { status = backTo } }
  func ensureHandle(requireConnect: Bool = true) async throws { taskIDMap.removeAll(); taskStatus.removeAll(); if requireConnect { connectionRequests += 1; invalidateInventory() } }

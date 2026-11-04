@@ -15516,6 +15516,134 @@
         }
       }
     },
+    "启用周计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekly schedule"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "주간 일정 사용"
+          }
+        }
+      }
+    },
+    "按区服游戏日（每日 04:00 重置）判定，未勾选的星期自动跳过本任务。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Judged by the server game day (resets daily at 04:00); the task is skipped automatically on unchecked weekdays."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버 게임일 기준(매일 04:00 초기화)으로 판정하며, 체크하지 않은 요일에는 작업을 자동으로 건너뜁니다."
+          }
+        }
+      }
+    },
+    "关卡轮换后" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After stage rotation"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "관문 로테이션 후"
+          }
+        }
+      }
+    },
+    "保留原值" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep current stage"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기존 값 유지"
+          }
+        }
+      }
+    },
+    "重置为当前/上次" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset to current/last"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재/최근(으)로 초기화"
+          }
+        }
+      }
+    },
+    "主选关卡已不在目录（活动轮换）时的处理；启用备选关卡时由备选顺序接管。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applied when the selected stage is no longer in the catalog (rotated-out event); alternative stage order takes over while optional stages are enabled."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 관문이 목록에 없을(이벤트 종료) 때의 처리이며, 대체 관문 사용 시에는 대체 순서가 대신 처리합니다."
+          }
+        }
+      }
+    },
+    "周计划今日未勾选，已跳过「%@」" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not scheduled for today's weekday; skipped \"%@\""
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "주간 일정에 오늘 요일이 체크되지 않아 \"%@\"을(를) 건너뛰었습니다"
+          }
+        }
+      }
+    },
+    "已将过期活动关卡「%@」重置为当前/上次" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotated-out event stage \"%@\" reset to current/last"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "종료된 이벤트 관문 \"%@\"을(를) 현재/최근(으)로 초기화했습니다"
+          }
+        }
+      }
+    },
     "添加备选关卡" : {
       "localizations" : {
         "en" : {

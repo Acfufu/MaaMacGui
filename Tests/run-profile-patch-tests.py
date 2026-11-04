@@ -26,6 +26,15 @@ struct StageActivityContext {
  enum MedicineWindow: Equatable { case inactive, unavailable, extended(Int) }
  func medicineWindow(at date: Date, enabled: Bool) -> MedicineWindow { .inactive }
 }
+// P06.1 起 FightConfiguration 引用目录与备选面；桩满足编译（entries 恒空、
+// 常开资源关 false），解析行为由 stage-plan 套件覆盖。
+struct StageCatalog {
+ enum Group { case currentAndLast, activity, resourceCollection, annihilation }
+ struct Entry { let code: String; let name: String; let drop: String?; let group: Group; let isOpen: Bool }
+ init(context: StageActivityContext) {}
+ func entries(at date: Date) -> [Entry] { [] }
+}
+enum FightStage { static func isAlwaysOpenResource(_ code: String) -> Bool { false } }
 '''
 protocol=(root/'MeoAsstMac/Task Configurations/MAATaskConfiguration.swift').read_text()
 support+=protocol[protocol.index('extension KeyedDecodingContainer'):]

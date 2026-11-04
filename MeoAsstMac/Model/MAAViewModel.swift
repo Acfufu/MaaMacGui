@@ -1317,13 +1317,27 @@ extension MAAViewModel {
                 let coreID: Int32?
                 if case .fight(let config) = task.task {
                     let now = Date.now
+                    // F06 每周执行日：按区服游戏日（HGCalendar 04:00 重置）判定，
+                    // 未勾选的星期跳过本任务并记录（对齐 upstream SerializeTask 的
+                    // SkippedWeeklySchedule；周计划不进 Core 参数）。
+                    if let weeklyDays = config.weeklyDays,
+                        !weeklyDays.contains(clientChannel.calendar.weekday(for: now)) {
+                        logInfo("周计划今日未勾选，已跳过「\(config.subtitle)」")
+                        continue
+                    }
                     let context = StageActivityContext(channel: clientChannel, activities: stageActivity)
                     if context.medicineWindow(at: now, enabled: config.useActivityMedicine) == .unavailable {
                         logInfo("活动数据不可用，沿用原临期药设置")
                     }
+                    let catalog = StageCatalog(context: context)
+                    // F20 关卡重置策略：已轮换出目录的活动形主选按策略重置为
+                    // 「当前/上次」（仅未启用备选时生效）。
+                    let resetFrom = config.resetStageForDispatch(at: now, catalog: catalog)
+                    if let resetFrom {
+                        logInfo("已将过期活动关卡「\(resetFrom)」重置为当前/上次")
+                    }
                     // F05 备选关卡：与可选目录同源解析，全部关闭时明确跳过本任务。
-                    let resolution = config.resolvedStagePlan(
-                        at: now, catalog: StageCatalog(context: context))
+                    let resolution = config.resolvedStagePlan(at: now, catalog: catalog)
                     switch resolution.outcome {
                     case .skipAllClosed:
                         logInfo("备选关卡今日全部关闭，已跳过「\(config.subtitle)」")
@@ -1336,7 +1350,7 @@ extension MAAViewModel {
                                     : "「\(blocked)」为常驻关卡，其后的备选关卡不会被执行")
                         }
                         var dispatchConfig = config
-                        dispatchConfig.stage = resolvedStage
+                        dispatchConfig.stage = resetFrom != nil ? "" : resolvedStage
                         let params = dispatchConfig.params(at: now, stageActivity: context)
                         coreID = try await handle?.appendTask(type: .Fight, params: params.jsonString())
                         if let coreID {

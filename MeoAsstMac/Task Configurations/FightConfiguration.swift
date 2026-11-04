@@ -7,6 +7,14 @@
 
 import Foundation
 
+/// F20 关卡重置策略（upstream FightStageResetMode.Current/Ignore）。
+/// current=已轮换出目录的活动形主选重置为「当前/上次」（上游缺省）；
+/// ignore=保留原值（Mac 缺省=历史行为）。
+enum FightStageResetMode: String, Codable, Hashable, CaseIterable {
+    case current
+    case ignore
+}
+
 struct FightConfiguration: MAATaskConfiguration {
     var type: MAATaskType { .Fight }
 
@@ -16,6 +24,16 @@ struct FightConfiguration: MAATaskConfiguration {
     /// 明确跳过本任务，而非代理失败后换关。Core 契约不变——只下发解析结果。
     var useOptionalStage: Bool = false
     var optionalStages: [String] = []
+    /// F06 每周执行日（upstream FightTask.UseWeeklySchedule/WeeklySchedule）：
+    /// nil=不启用（每天执行）；非 nil=仅勾选的游戏日星期执行。星期为 HGCalendar
+    /// 口径（0=周日…6=周六，与 FightStage 星期表同源），空数组=每周全跳（用户
+    /// 显式选择，上游 WeeklySchedule 全 false 等价合法态）。GUI 侧门控，不下发
+    /// Core 参数（上游同样只在任务序列化时跳过并记日志）。
+    var weeklyDays: [Int]? = nil
+    /// F20 关卡重置策略（upstream FightTask.StageResetMode）。旧数据缺键解码
+    /// .ignore（Mac 历史行为=从不改写存量选择，避免迁移暗改）；上游缺省为
+    /// .current——divergence 随实现记录。
+    var stageResetMode: FightStageResetMode = .ignore
     var medicine: Int?
     /// Q05 药仅一次：完整成功的运行结束后 medicine 置 nil（旧数据缺键解码 false）。
     var medicineOnce: Bool = false
@@ -222,6 +240,30 @@ struct FightConfiguration: MAATaskConfiguration {
         }
     }
 
+    // MARK: 每周执行日（F06）
+
+    /// 今日（调用方按区服游戏日历换算星期）是否执行。nil=不启用=每天执行；
+    /// 启用后仅勾选的星期执行，未勾选星期由运行入口跳过并记录。
+    func isScheduled(on weekday: Int) -> Bool {
+        weeklyDays?.contains(weekday) ?? true
+    }
+
+    // MARK: 关卡重置策略（F20）
+
+    /// 未启用备选时，主选应重置为「当前/上次」则返回原关卡码（供日志），否则 nil。
+    /// 触发条件=策略 .current 且主选为目录外活动形码（已轮换活动，沿用
+    /// isExpiredActivityShape 口径；上游 RefreshUI 对不在关卡列表的项重置，
+    /// 主线/特殊名在上游列表内故不触发）。目录内今日关闭不重置——关闭面由
+    /// 备选解析/跳过处理。启用备选时由 resolvedStagePlan 接管，不改写休眠
+    /// 备选数据（P06.1 Q3：回开备选即恢复完整计划）。
+    func resetStageForDispatch(at date: Date, catalog: StageCatalog) -> String? {
+        guard stageResetMode == .current, !useOptionalStage else { return nil }
+        let code = Self.normalizedStage(stage)
+        guard Self.isExpiredActivityShape(code) else { return nil }
+        guard !catalog.entries(at: date).contains(where: { $0.code == code }) else { return nil }
+        return code
+    }
+
     func preparingInventoryTarget(_ plan: InventoryTargetPlan) -> Self {
         var prepared = self
         if let target = inventoryTarget {
@@ -316,6 +358,8 @@ extension FightConfiguration {
         self.stage = try container.decodeIfPresent(String.self, forKey: .stage) ?? ""
         self.useOptionalStage = try container.decodeIfPresent(Bool.self, forKey: .useOptionalStage) ?? false
         self.optionalStages = try container.decodeIfPresent([String].self, forKey: .optionalStages) ?? []
+        self.weeklyDays = try container.decodeIfPresent([Int].self, forKey: .weeklyDays)
+        self.stageResetMode = try container.decodeIfPresent(FightStageResetMode.self, forKey: .stageResetMode) ?? .ignore
         self.medicine = try container.decodeIfPresent(Int.self, forKey: .medicine)
         self.medicineOnce = try container.decodeIfPresent(Bool.self, forKey: .medicineOnce) ?? false
         if let days = try container.decodeIfPresent(Int.self, forKey: .medicine_expire_days) {

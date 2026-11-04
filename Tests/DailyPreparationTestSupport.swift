@@ -103,9 +103,15 @@ struct VideoRecognitionConfiguration {
     func setDailyTasksDetailMode(_ mode: MAAViewModel.DailyTasksDetailMode) {}
 }
 enum ClientChannel { case official, bilibili
-    /// 生产侧由 162 的游戏日历提供;夹具下 Mall 批次为空,日历不被消费。
-    var calendar: Calendar { Calendar(identifier: .gregorian) }
+    /// 生产侧为 HGCalendar(区服游戏日 04:00 重置);桩提供 weekday(for:) 供
+    /// F06 周计划门控编译。夹具下 Mall 批次为空,日历不被消费。
+    var calendar: GameDayCalendarStub { GameDayCalendarStub() }
     var isGlobal: Bool { false }
+}
+struct GameDayCalendarStub {
+    func weekday(for date: Date) -> Int {
+        Calendar(identifier: .gregorian).component(.weekday, from: date) - 1
+    }
 }
 struct MAAStageActivity {}
 struct PreparationCleanupFailure: Error {}
@@ -135,10 +141,26 @@ struct StageActivityContext {
     init(channel: ClientChannel, activities: MAAStageActivity?) {}
     func medicineWindow(at date: Date, enabled: Bool) -> MedicineWindow { .inactive }
 }
+// P06.1/P06.2：提取的 startTasks 引用目录与备选/周计划/重置面。桩仅满足
+// 编译（恒下发原 stage、不重置）；解析行为由 stage-plan 套件覆盖。
+struct StageCatalog {
+    init(context: StageActivityContext) {}
+}
 struct FightConfiguration: Equatable {
     var stage: String = "1-7"
+    var subtitle: String { stage.isEmpty ? "当前/上次" : stage }
     var useActivityMedicine = false
     var inventoryTarget: InventoryTarget? = nil
+    var weeklyDays: [Int]? = nil
+    enum StagePlanOutcome: Equatable { case dispatch(stage: String); case skipAllClosed }
+    struct StagePlanResolution: Equatable {
+        var outcome: StagePlanOutcome
+        var truncatedAfter: String?
+    }
+    func resolvedStagePlan(at date: Date, catalog: StageCatalog) -> StagePlanResolution {
+        StagePlanResolution(outcome: .dispatch(stage: stage), truncatedAfter: nil)
+    }
+    func resetStageForDispatch(at date: Date, catalog: StageCatalog) -> String? { nil }
     struct Params: Equatable {
         var stage: String = ""
         var medicine_expire_days: Int = 0
@@ -157,7 +179,7 @@ struct MallConfiguration: Equatable {
     var friendVisitDate: Date?
     struct Admission { var creditFightMarkedDate: Date?; var friendVisitMarkedDate: Date? }
     static func batchDailyAdmissions(of entries: [(enabled: Bool, config: MallConfiguration)],
-                                     snapshotDate: Date, calendar: Calendar) -> [Admission] {
+                                     snapshotDate: Date, calendar: GameDayCalendarStub) -> [Admission] {
         entries.map { _ in Admission(creditFightMarkedDate: nil, friendVisitMarkedDate: nil) }
     }
 }

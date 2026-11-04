@@ -2,8 +2,8 @@ import Foundation
 
 // Compile the production capability derivation without launching the app or
 // linking MaaCore. MAAClientChannel lives in StartupConfiguration.swift in the
-// app target; the stub below mirrors its channel/isGlobal semantics so the
-// production CoreCapabilities.swift compiles against it unchanged.
+// app target; P06.1 起 FightConfiguration 引用真实目录/活动层，桩 enum 失效——
+// MAAClientChannel 由脚本提取的真实定义提供（含 isGlobal 语义），任务壳仍为桩。
 
 typealias MAATaskConfiguration = Codable & Hashable & Sendable
 
@@ -14,24 +14,6 @@ enum MAATaskType: String {
 
 enum MAATask {
     case fight(FightConfiguration)
-}
-
-struct StageActivityContext {
-    enum MedicineWindow { case inactive, unavailable, extended(Int) }
-    func medicineWindow(at date: Date, enabled: Bool) -> MedicineWindow { .inactive }
-}
-
-enum MAAClientChannel: String {
-    case Official
-    case Bilibili
-    case YoStarEN
-    case YoStarJP
-    case YoStarKR
-    case txwy
-
-    var isGlobal: Bool {
-        ![MAAClientChannel.Official, .Bilibili].contains(self)
-    }
 }
 
 @main
