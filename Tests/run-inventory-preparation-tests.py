@@ -20,7 +20,10 @@ extension MAATaskConfiguration { init() { self = try! JSONDecoder().decode(Self.
 enum MAATaskType { case Fight; var description: String { "Fight" } }
 struct Startup: Sendable, Equatable { var client_type = "CN"; var start_game_enabled = false }
 struct Closedown: Sendable, Equatable { var client_type = "CN" }
-enum MAATask: Sendable, Equatable { case fight(FightConfiguration), startup(Startup), closedown(Closedown), mall(MallConfiguration), roguelike(RoguelikeSeedCfgStub), other }
+// P08.1 起 startTasks 抽取面携带基建周计划门控；桩满足编译（真实门控行为
+// 由模型层套件与 P08 交付面覆盖）。
+struct InfrastCfgStub: Sendable, Equatable { var weeklyDays: [Int]? = nil; var subtitle: String = ""; func isScheduled(on weekday: Int) -> Bool { weeklyDays?.contains(weekday) ?? true } }
+enum MAATask: Sendable, Equatable { case fight(FightConfiguration), startup(Startup), closedown(Closedown), mall(MallConfiguration), roguelike(RoguelikeSeedCfgStub), infrast(InfrastCfgStub), other }
 extension FightConfiguration: Sendable {}
 extension FightConfiguration.Params: Sendable {}
 extension FightConfiguration.Params { func jsonString() throws -> String {

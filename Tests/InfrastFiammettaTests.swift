@@ -18,7 +18,11 @@ for mode in [0, 10000, 20000] {
             let old: [String: Any] = [
                 "mode": mode, "facility": ["Dorm", "Mfg"], "drones": "Money", "threshold": 0.6, "replenish": true,
                 "dorm_notstationed_enabled": true, "dorm_trust_enabled": true, "continue_training": false,
-                "reception_message_board": false, "filename": "plan.json", "plan_index": 3,
+                "reception_message_board": false,
+                "reception_clue_exchange": false, "reception_send_clue": true,
+                "use_pinus_sylvestris": true, "use_perception_information": false,
+                "use_worldly_plight": true, "use_abyssal_hunter": false,
+                "filename": "plan.json", "plan_index": 3,
             ]
             var input = old
             if let enabled { input["fiammetta_recovery_enabled"] = enabled }
@@ -62,7 +66,45 @@ for mode in [0, 10000, 20000] {
     let migrated = InfrastConfiguration(migrating: legacy)
     check(!migrated.fiammetta_recovery_enabled && migrated.fiammetta_targets == defaults)
     check(migrated.mode.rawValue == mode && migrated.facility == [.Dorm] && migrated.dorm_trust_enabled)
+    // Legacy migration must not silently turn on grouping, mute clues, or
+    // constrain the weekly schedule.
+    check(migrated.reception_clue_exchange && migrated.reception_send_clue)
+    check(!migrated.use_pinus_sylvestris && !migrated.use_perception_information)
+    check(!migrated.use_worldly_plight && !migrated.use_abyssal_hunter && migrated.weeklyDays == nil)
 }
+// B07/B08/B13 defaults follow the Core and WPF consensus for absent keys:
+// clue exchange/send stay on, all cross-facility groups stay off, no weekly
+// restriction means every game-day weekday schedules the task.
+let absentInput: [String: Any] = ["mode": 0, "facility": ["Mfg"], "drones": "_NotUse"]
+let absentConfig = try JSONDecoder().decode(
+    InfrastConfiguration.self, from: JSONSerialization.data(withJSONObject: absentInput))
+check(absentConfig.reception_clue_exchange && absentConfig.reception_send_clue)
+check(
+    !absentConfig.use_pinus_sylvestris && !absentConfig.use_perception_information
+        && !absentConfig.use_worldly_plight && !absentConfig.use_abyssal_hunter)
+check(absentConfig.weeklyDays == nil && absentConfig.isScheduled(on: 0) && absentConfig.isScheduled(on: 6))
+let absentParams =
+    try JSONSerialization.jsonObject(with: JSONEncoder().encode(absentConfig.params)) as! NSDictionary
+check(absentParams.count == 19)
+check(absentParams["reception_clue_exchange"] as! Bool && absentParams["reception_send_clue"] as! Bool)
+check(absentParams["use_pinus_sylvestris"] as! Bool == false)
+// B13 weekly gating mirrors F06: an explicit day list skips other weekdays,
+// and the restriction survives persistence round trips.
+var gated = absentConfig
+gated.weeklyDays = [1]
+check(gated.isScheduled(on: 1) && !gated.isScheduled(on: 2))
+let gatedRoundtrip = try PropertyListDecoder().decode(
+    InfrastConfiguration.self, from: PropertyListEncoder().encode(gated))
+check(gatedRoundtrip == gated && gatedRoundtrip.weeklyDays == [1])
+// B02: the WPF room domain extends the facility list with Recycle and
+// AssistantChange, and both dispatch verbatim through the facility array.
+var expanded = absentConfig
+expanded.facility = [.Recycle, .AssistantChange]
+let expandedParams = try JSONSerialization.jsonObject(with: JSONEncoder().encode(expanded.params)) as! NSDictionary
+check(expandedParams["facility"] as! [String] == ["Recycle", "AssistantChange"])
+let expandedRoundtrip = try PropertyListDecoder().decode(
+    InfrastConfiguration.self, from: PropertyListEncoder().encode(expanded))
+check(expandedRoundtrip == expanded)
 if let sourcePath = CommandLine.arguments.dropFirst().first {
     let source = try String(contentsOfFile: sourcePath, encoding: .utf8)
     func coreNames(_ name: String) throws -> [String] {

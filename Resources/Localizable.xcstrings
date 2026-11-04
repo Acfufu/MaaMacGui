@@ -8538,6 +8538,22 @@
         }
       }
     },
+    "副手换人" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assistant Change"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부관 교체"
+          }
+        }
+      }
+    },
     "剿灭模式" : {
       "localizations" : {
         "ko" : {
@@ -9203,6 +9219,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "命中任一保留标签时跳过该槽位，不自动招募。"
+          }
+        }
+      }
+    },
+    "回收站" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recycle Station"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재활용 스테이션"
           }
         }
       }

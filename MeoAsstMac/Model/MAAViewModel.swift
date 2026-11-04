@@ -1359,6 +1359,15 @@ extension MAAViewModel {
                         }
                     }
                 } else {
+                    if case .infrast(let config) = task.task {
+                        // B13 每周执行日：与 F06 每周执行日同构（GUI 侧门控跳过并
+                        // 记录，对齐 upstream SkippedWeeklySchedule；周计划不进
+                        // Core 参数）。谓词与模型层 isScheduled(on:) 同源。
+                        if !config.isScheduled(on: clientChannel.calendar.weekday(for: Date.now)) {
+                            logInfo("周计划今日未勾选，已跳过「\(config.subtitle)」")
+                            continue
+                        }
+                    }
                     coreID = try await handle?.appendTask(task.task, recruitTagNames: recruitTagNames,
                                                       blackflowStartAvailable: supportsBlackflowStart,
                                                       supportsRoguelikeSeedInput: touchMode != .MacPlayTools)

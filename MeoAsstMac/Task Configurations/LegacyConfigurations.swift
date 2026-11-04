@@ -86,6 +86,14 @@ extension InfrastConfiguration {
         self.plan_index = config.plan_index
         self.continue_training = true
         self.reception_message_board = true
+        // 线索交流/赠送按 Core/WPF 缺省开；跨设施编组按 Core 缺省关；周计划缺省每天。
+        self.reception_clue_exchange = true
+        self.reception_send_clue = true
+        self.use_pinus_sylvestris = false
+        self.use_perception_information = false
+        self.use_worldly_plight = false
+        self.use_abyssal_hunter = false
+        self.weeklyDays = nil
         self.fiammetta_recovery_enabled = false
         self.fiammetta_targets = Self.defaultFiammettaTargets
     }

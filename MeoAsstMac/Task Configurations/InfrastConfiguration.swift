@@ -29,6 +29,8 @@ struct InfrastConfiguration: MAATaskConfiguration {
         case Dorm
         case Processing
         case Training
+        case Recycle
+        case AssistantChange
     }
 
     enum DroneUsage: String, CaseIterable, Codable {
@@ -53,6 +55,20 @@ struct InfrastConfiguration: MAATaskConfiguration {
 
     var continue_training: Bool
     var reception_message_board: Bool
+    // B08 线索交流/赠送独立开关：Core 缺省双 true（InfrastTask.cpp:264-268），
+    // WPF 配置层同 true；false 才会关闭对应会客室行为。
+    var reception_clue_exchange: Bool
+    var reception_send_clue: Bool
+    // B07 跨设施编组开关：Core 缺省全 false 且仅常规模式消费
+    // （InfrastTask.cpp:250-253 `default_mode &&` 门控）；WPF 恒编码四键。
+    var use_pinus_sylvestris: Bool
+    var use_perception_information: Bool
+    var use_worldly_plight: Bool
+    var use_abyssal_hunter: Bool
+    // B13 每周执行日（upstream InfrastTask.UseWeeklySchedule/WeeklySchedule，
+    // 调度层不进 Core 参数）：nil=每天；游戏日星期 0=周日…6=周六，与
+    // FightConfiguration.weeklyDays（F06）同构同源。
+    var weeklyDays: [Int]?
     var fiammetta_recovery_enabled: Bool
     var fiammetta_targets: [String]
 
@@ -114,10 +130,21 @@ struct InfrastConfiguration: MAATaskConfiguration {
         var dorm_trust_enabled: Bool
         var continue_training: Bool
         var reception_message_board: Bool
+        var reception_clue_exchange: Bool
+        var reception_send_clue: Bool
+        var use_pinus_sylvestris: Bool
+        var use_perception_information: Bool
+        var use_worldly_plight: Bool
+        var use_abyssal_hunter: Bool
         var filename: String
         var plan_index: Int
         var fiammetta_recovery_enabled: Bool
         var fiammetta_targets: [String]
+    }
+
+    /// B13 每周执行日门控（GUI 侧跳过，不下发 Core）。
+    func isScheduled(on weekday: Int) -> Bool {
+        weeklyDays?.contains(weekday) ?? true
     }
 
     var params: Params {
@@ -127,7 +154,12 @@ struct InfrastConfiguration: MAATaskConfiguration {
             mode: mode, facility: facility, drones: drones, threshold: threshold,
             replenish: replenish, dorm_notstationed_enabled: dorm_notstationed_enabled,
             dorm_trust_enabled: dorm_trust_enabled, continue_training: continue_training,
-            reception_message_board: reception_message_board, filename: filename, plan_index: plan_index,
+            reception_message_board: reception_message_board,
+            reception_clue_exchange: reception_clue_exchange, reception_send_clue: reception_send_clue,
+            use_pinus_sylvestris: use_pinus_sylvestris,
+            use_perception_information: use_perception_information,
+            use_worldly_plight: use_worldly_plight, use_abyssal_hunter: use_abyssal_hunter,
+            filename: filename, plan_index: plan_index,
             fiammetta_recovery_enabled: enabled, fiammetta_targets: enabled ? targets : [])
     }
 
@@ -195,6 +227,10 @@ extension InfrastConfiguration.Facility: CustomStringConvertible, Identifiable {
             return String(localized: "加工站")
         case .Training:
             return String(localized: "训练室")
+        case .Recycle:
+            return String(localized: "回收站")
+        case .AssistantChange:
+            return String(localized: "副手换人")
         }
     }
 }
@@ -239,6 +275,16 @@ extension InfrastConfiguration {
         self.continue_training = try container.decodeIfPresent(Bool.self, forKey: .continue_training) ?? true
         self.reception_message_board =
             try container.decodeIfPresent(Bool.self, forKey: .reception_message_board) ?? true
+        self.reception_clue_exchange =
+            try container.decodeIfPresent(Bool.self, forKey: .reception_clue_exchange) ?? true
+        self.reception_send_clue = try container.decodeIfPresent(Bool.self, forKey: .reception_send_clue) ?? true
+        self.use_pinus_sylvestris =
+            try container.decodeIfPresent(Bool.self, forKey: .use_pinus_sylvestris) ?? false
+        self.use_perception_information =
+            try container.decodeIfPresent(Bool.self, forKey: .use_perception_information) ?? false
+        self.use_worldly_plight = try container.decodeIfPresent(Bool.self, forKey: .use_worldly_plight) ?? false
+        self.use_abyssal_hunter = try container.decodeIfPresent(Bool.self, forKey: .use_abyssal_hunter) ?? false
+        self.weeklyDays = try container.decodeIfPresent([Int].self, forKey: .weeklyDays)
         let preferences = try FiammettaPreferences(from: decoder)
         self.fiammetta_targets = Self.normalizedFiammettaTargets(
             preferences.targets ?? Self.defaultFiammettaTargets)

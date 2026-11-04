@@ -34,6 +34,7 @@ final class RecordingHandle {
     func appendTask(_ task: MAATask) async throws -> Int32 {
         switch task {
         case .fight(let config): return try await appendTask(type: .Fight, params: config.params.jsonString())
+        case .infrast: return try await appendTask(type: .Fight, params: "{}")
         case .other: return try await appendTask(type: .Fight, params: "{}")
         }
     }

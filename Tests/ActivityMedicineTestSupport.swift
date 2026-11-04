@@ -13,4 +13,11 @@ enum MAATaskType {
     case Fight
     var description: String { "Fight" }
 }
-enum MAATask { case fight(FightConfiguration), other }
+// P08.1 起 startTasks 抽取面携带基建周计划门控；桩满足编译（真实门控行为
+// 由模型层套件与 P08 交付面覆盖）。
+struct InfrastCfgStub {
+    var weeklyDays: [Int]? = nil
+    var subtitle: String = ""
+    func isScheduled(on weekday: Int) -> Bool { weeklyDays?.contains(weekday) ?? true }
+}
+enum MAATask { case fight(FightConfiguration), infrast(InfrastCfgStub), other }

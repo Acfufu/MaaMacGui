@@ -119,6 +119,11 @@ struct PreparationCleanupFailure: Error {}
 struct PreparationHookTimeout: Error {}
 struct PreparationHookFailure: Error {}
 struct RoguelikeCfgStub: Equatable { func validateBlackflowStart(available: Bool) throws {} }
+struct InfrastCfgStub: Equatable {
+    var weeklyDays: [Int]? = nil
+    var subtitle: String = ""
+    func isScheduled(on weekday: Int) -> Bool { weeklyDays?.contains(weekday) ?? true }
+}
 struct DropItemStub {}
 struct InventoryTarget: Equatable { var itemID: String = ""; var quantity: Int = 0 }
 struct InventoryTargetPlan { var generation = 0; var startInventory = 0; var requiredDrops = 0 }
@@ -196,6 +201,9 @@ struct DailyTask: Equatable {
         case mall(MallConfiguration)
         case fight(FightConfiguration)
         case roguelike(RoguelikeCfgStub)
+        // P08.1 起 startTasks 抽取面携带基建周计划门控；桩满足编译（真实
+        // 门控行为由模型层套件与 P08 交付面覆盖）。
+        case infrast(InfrastCfgStub)
         case fixture
     }
     var id = UUID()
