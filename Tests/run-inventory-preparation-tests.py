@@ -17,13 +17,13 @@ method=source[a:b+1].replace('private func','func',1)
 header='''import Foundation
 protocol MAATaskConfiguration: Codable, Hashable, Sendable {}
 extension MAATaskConfiguration { init() { self = try! JSONDecoder().decode(Self.self, from: Data("{}".utf8)) } }
-enum MAATaskType { case Fight; var description: String { "Fight" } }
+enum MAATaskType { case Fight, Infrast; var description: String { "Fight" } }
 struct Startup: Sendable, Equatable { var client_type = "CN"; var start_game_enabled = false }
 struct Closedown: Sendable, Equatable { var client_type = "CN" }
-// P08.1 起 startTasks 抽取面携带基建周计划门控；桩满足编译（真实门控行为
-// 由模型层套件与 P08 交付面覆盖）。
-struct InfrastCfgStub: Sendable, Equatable { var weeklyDays: [Int]? = nil; var subtitle: String = ""; func isScheduled(on weekday: Int) -> Bool { weeklyDays?.contains(weekday) ?? true } }
-enum MAATask: Sendable, Equatable { case fight(FightConfiguration), startup(Startup), closedown(Closedown), mall(MallConfiguration), roguelike(RoguelikeSeedCfgStub), infrast(InfrastCfgStub), other }
+// P08.2 起抽取面携带基建周计划门控与时间轮换；直接编译真 InfrastConfiguration
+// （单一事实源，见下方 swiftc 编译列表）。
+extension InfrastConfiguration: Sendable {}
+enum MAATask: Sendable, Equatable { case fight(FightConfiguration), startup(Startup), closedown(Closedown), mall(MallConfiguration), roguelike(RoguelikeSeedCfgStub), infrast(InfrastConfiguration), other }
 extension FightConfiguration: Sendable {}
 extension FightConfiguration.Params: Sendable {}
 extension FightConfiguration.Params { func jsonString() throws -> String {
@@ -205,5 +205,5 @@ main='''@main struct Main {
 '''
 with tempfile.TemporaryDirectory() as temporary:
     path=Path(temporary);(path/'Probe.swift').write_text(header+main)
-    subprocess.run(['swiftc','-parse-as-library',str(root/'MeoAsstMac/Model/InventoryTarget.swift'),str(root/'MeoAsstMac/Task Configurations/FightConfiguration.swift'),str(path/'Probe.swift'),'-o',str(path/'probe')],check=True)
+    subprocess.run(['swiftc','-parse-as-library',str(root/'MeoAsstMac/Model/InventoryTarget.swift'),str(root/'MeoAsstMac/Task Configurations/FightConfiguration.swift'),str(root/'MeoAsstMac/Task Configurations/InfrastConfiguration.swift'),str(root/'MeoAsstMac/Model/MAAInfrast.swift'),str(path/'Probe.swift'),'-o',str(path/'probe')],check=True)
     subprocess.run([str(path/'probe')],check=True)

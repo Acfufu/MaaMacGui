@@ -17,9 +17,4 @@ enum MAATask: Codable, Equatable {
     // An unrelated payload ensures preference recovery ignores other task types.
     case closedown(String)
 }
-struct MAAInfrast {
-    struct Plan { let name: String? }
-    let title: String? = nil
-    let plans: [Plan] = []
-    init(path: String) throws { throw CocoaError(.fileReadNoSuchFile) }
-}
+// P08.2 起编译真 MAAInfrast（时间轮换面依赖 period 解析；单一事实源）。

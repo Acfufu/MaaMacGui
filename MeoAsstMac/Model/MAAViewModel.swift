@@ -1358,16 +1358,29 @@ extension MAAViewModel {
                             inventoryFightIDs.insert(coreID)
                         }
                     }
-                } else {
-                    if case .infrast(let config) = task.task {
-                        // B13 每周执行日：与 F06 每周执行日同构（GUI 侧门控跳过并
-                        // 记录，对齐 upstream SkippedWeeklySchedule；周计划不进
-                        // Core 参数）。谓词与模型层 isScheduled(on:) 同源。
-                        if !config.isScheduled(on: clientChannel.calendar.weekday(for: Date.now)) {
-                            logInfo("周计划今日未勾选，已跳过「\(config.subtitle)」")
-                            continue
-                        }
+                } else if case .infrast(var dispatchConfig) = task.task {
+                    // B13 每周执行日：与 F06 每周执行日同构（GUI 侧门控跳过并
+                    // 记录，对齐 upstream SkippedWeeklySchedule；周计划不进
+                    // Core 参数）。谓词与模型层 isScheduled(on:) 同源。
+                    if !dispatchConfig.isScheduled(on: clientChannel.calendar.weekday(for: Date.now)) {
+                        logInfo("周计划今日未勾选，已跳过「\(dispatchConfig.subtitle)」")
+                        continue
                     }
+                    // B11 时间轮换：任一 plan 带 period 时按当前时刻选班（端点闭
+                    // 匹配，无匹配回退第一个）；nil 保持用户手选 plan_index。
+                    if dispatchConfig.mode == .custom,
+                        let plan = try? MAAInfrast(path: dispatchConfig.filename),
+                        let rotated = dispatchConfig.resolvedPlanIndex(at: Date.now, plan: plan) {
+                        let name = plan.plans.indices.contains(rotated)
+                            ? (plan.plans[rotated].name ?? "\(rotated)") : "\(rotated)"
+                        logInfo("时间轮换 (\(name))")
+                        dispatchConfig.plan_index = rotated
+                    }
+                    coreID = try await handle?.appendTask(.infrast(dispatchConfig),
+                                                      recruitTagNames: recruitTagNames,
+                                                      blackflowStartAvailable: supportsBlackflowStart,
+                                                      supportsRoguelikeSeedInput: touchMode != .MacPlayTools)
+                } else {
                     coreID = try await handle?.appendTask(task.task, recruitTagNames: recruitTagNames,
                                                       blackflowStartAvailable: supportsBlackflowStart,
                                                       supportsRoguelikeSeedInput: touchMode != .MacPlayTools)

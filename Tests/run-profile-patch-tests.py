@@ -19,7 +19,7 @@ protocol MAATaskConfiguration: Codable, Hashable, Sendable { associatedtype Para
 extension MAATaskConfiguration { init() { self = try! JSONDecoder().decode(Self.self, from: Data("{}".utf8)) } }
 enum MAATaskType { case Infrast, Mall, Fight; var description: String { "fixture" } }
 enum MAATask: Codable, Equatable { case infrast(InfrastConfiguration), mall(MallConfiguration), fight(FightConfiguration) }
-struct MAAInfrast { var title: String?; var plans: [Plan] = []; struct Plan { var name: String? }; init(path: String) throws {} }
+// P08.2 起编真 MAAInfrast（时间轮换面依赖 period 解析；单一事实源）。
 // P03.2: FightConfiguration.params(at:stageActivity:) needs the activity context;
 // the real one lives in MeoAsstMac/Model/StageActivity.swift (activity-medicine suite).
 struct StageActivityContext {
@@ -98,7 +98,7 @@ with tempfile.TemporaryDirectory(prefix='maa-profile-patch-tests-') as temporary
     (tmp/'HGCalendar.swift').write_text(hg)
     binary=tmp/'tests'
     subprocess.run(['xcrun','swiftc','-parse-as-library',str(tmp/'HGCalendar.swift'),str(tmp/'Support.swift'),
-        str(root/'MeoAsstMac/Task Configurations/InfrastConfiguration.swift'),str(tmp/'MallConfiguration.swift'),
+        str(root/'MeoAsstMac/Task Configurations/InfrastConfiguration.swift'),str(root/'MeoAsstMac/Model/MAAInfrast.swift'),str(tmp/'MallConfiguration.swift'),
         str(root/'MeoAsstMac/Task Configurations/FightConfiguration.swift'),
         str(root/'MeoAsstMac/Model/InventoryTarget.swift'),
         str(root/'MeoAsstMac/RunHooks/RunContext.swift'),str(root/'MeoAsstMac/RunHooks/DailyRunProfilePatch.swift'),

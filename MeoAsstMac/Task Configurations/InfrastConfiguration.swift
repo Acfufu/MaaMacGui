@@ -19,6 +19,9 @@ struct InfrastConfiguration: MAATaskConfiguration {
         case rotation = 20000
     }
 
+    // Case order aligns with WPF InfrastRoomType except Control/Power, which
+    // keep the Mac display order (no behavioral impact; divergence[15]
+    // closeout covers the Recycle placement that mattered).
     enum Facility: String, CaseIterable, Codable {
         case Mfg
         case Trade
@@ -26,10 +29,10 @@ struct InfrastConfiguration: MAATaskConfiguration {
         case Control
         case Reception
         case Office
+        case Recycle
         case Dorm
         case Processing
         case Training
-        case Recycle
         case AssistantChange
     }
 
@@ -147,6 +150,51 @@ struct InfrastConfiguration: MAATaskConfiguration {
         weeklyDays?.contains(weekday) ?? true
     }
 
+    /// B11 时间轮换选班（WPF RefreshCustomInfrastPlanList 同构）：任一 plan 带
+    /// period 时启用——端点闭匹配当前时刻所在段的 plan（`p[0] <= now <= p[1]`，
+    /// 与上游 TimeOnly 比较一致，跨午夜段（p0 > p1）上游同样恒不匹配，不特判）；
+    /// 无匹配回退第一个 plan；非 custom 或全无 period 返回 nil，保持用户手选。
+    func resolvedPlanIndex(at date: Date, plan: MAAInfrast?) -> Int? {
+        guard mode == .custom, let plan, !plan.plans.isEmpty else { return nil }
+        guard plan.plans.contains(where: { $0.period?.isEmpty == false }) else { return nil }
+        let now = Self.minutesSinceMidnight(date)
+        let matched = plan.plans.firstIndex { levels in
+            let windows: [[String]] = levels.period ?? []
+            return windows.contains { window in PeriodWindow(window: window)?.contains(now) == true }
+        }
+        return matched ?? plan.plans.startIndex
+    }
+
+    /// "HH:mm"（上游 period 格式）解析；非法段整体忽略。
+    private static func minutesSinceMidnight(_ date: Date) -> Int {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return (components.hour ?? 0) * 60 + (components.minute ?? 0)
+    }
+
+    private struct PeriodWindow {
+        let start: Int
+        let end: Int
+
+        init?(window: [String]) {
+            guard window.count == 2,
+                let start = Self.parse(window[0]), let end = Self.parse(window[1])
+            else { return nil }
+            self.start = start
+            self.end = end
+        }
+
+        /// 端点闭区间（WPF `p[0] <= now && now <= p[1]`）。
+        func contains(_ minutes: Int) -> Bool {
+            start <= minutes && minutes <= end
+        }
+
+        private static func parse(_ text: String) -> Int? {
+            let parts = text.split(separator: ":")
+            guard parts.count == 2, let hours = Int(parts[0]), let minutes = Int(parts[1]) else { return nil }
+            return hours * 60 + minutes
+        }
+    }
+
     var params: Params {
         let targets = Self.normalizedFiammettaTargets(fiammetta_targets)
         let enabled = mode == .default && fiammetta_recovery_enabled && !targets.isEmpty
@@ -163,8 +211,9 @@ struct InfrastConfiguration: MAATaskConfiguration {
             fiammetta_recovery_enabled: enabled, fiammetta_targets: enabled ? targets : [])
     }
 
-    // The v6.20.1 Core contract permits these six names and at most three targets.
-    // Keep empty/invalid selections empty: Core would otherwise expand them to defaults.
+    // B06：候选名单与 Core SupportedFiammettaTargets（InfrastDormTask.cpp:26-27）
+    // 12 名对齐；最多仍 3 名（MaxConfiguredTargets）。保持空/非法选择为空：
+    // Core 会把空名单展开成默认目标。
     enum FiammettaTarget: String, CaseIterable, Identifiable {
         case purestream = "清流"
         case closure = "可露希尔"
@@ -172,6 +221,12 @@ struct InfrastConfiguration: MAATaskConfiguration {
         case shamare = "巫恋"
         case tequila = "龙舌兰"
         case gladiia = "歌蕾蒂娅"
+        case saileach = "琴柳"
+        case goldenglow = "承曦格雷伊"
+        case windflit = "温蒂"
+        case waaiFu = "槐琥"
+        case pudding = "至简"
+        case labyrinth = "旅骨"
 
         var id: String { rawValue }
         var title: String {
@@ -182,6 +237,12 @@ struct InfrastConfiguration: MAATaskConfiguration {
             case .shamare: String(localized: "巫恋")
             case .tequila: String(localized: "龙舌兰")
             case .gladiia: String(localized: "歌蕾蒂娅")
+            case .saileach: String(localized: "琴柳")
+            case .goldenglow: String(localized: "承曦格雷伊")
+            case .windflit: String(localized: "温蒂")
+            case .waaiFu: String(localized: "槐琥")
+            case .pudding: String(localized: "至简")
+            case .labyrinth: String(localized: "旅骨")
             }
         }
     }

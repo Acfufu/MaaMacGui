@@ -21,6 +21,7 @@ Path(sys.argv[1]).write_text(
 PY
 xcrun swiftc Tests/InfrastFiammettaTestSupport.swift \
     'MeoAsstMac/Task Configurations/InfrastConfiguration.swift' \
+    MeoAsstMac/Model/MAAInfrast.swift \
     MeoAsstMac/Model/DailyTaskProfileStore.swift \
     Tests/Fixtures/PreFiammettaInfrastConfiguration.swift \
     "$test_build_dir/main.swift" -o "$test_build_dir/profile-store-tests"

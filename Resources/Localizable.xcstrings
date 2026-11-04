@@ -7500,12 +7500,60 @@
       }
     },
     "使用多显示器时，请将本窗口与《明日方舟》放置在同一台显示器上。\n基于当前显示器的设定，建议在PlayCover中，将图像设置调整为以下预设之一：" : {},
+    "使用人间烟火跨设施组合" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Worldly Plight cross-facility team"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "속세의 번뇌 연계 사용"
+          }
+        }
+      }
+    },
     "使用密文板" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "암호판 사용"
+          }
+        }
+      }
+    },
+    "使用感知信息跨设施组合" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Perception Information cross-facility team"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "감지 정보 연계 사용"
+          }
+        }
+      }
+    },
+    "使用深海猎人跨设施组合" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Abyssal Hunter cross-facility team"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "어비설 헌터 연계 사용"
           }
         }
       }
@@ -7528,6 +7576,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用种子开局"
+          }
+        }
+      }
+    },
+    "使用红松骑士团跨设施组合" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Pinus Sylvestris cross-facility team"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "피누스 실베스트리스 연계 사용"
           }
         }
       }
@@ -10807,6 +10871,29 @@
         }
       }
     },
+    "承曦格雷伊" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Greyy the Lightningbearer"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "그레이 더 라이트닝베어러"
+          }
+        }
+,
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "承曦格雷伊"
+          }
+        }
+      }
+    },
     "技能" : {
       "localizations" : {
         "en" : {
@@ -11143,6 +11230,29 @@
         }
       }
     },
+    "旅骨" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labyrinth"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라비린스"
+          }
+        }
+,
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "旅骨"
+          }
+        }
+      }
+    },
     "无下载链接，请检查CDK" : {
       "localizations" : {
         "ko" : {
@@ -11470,6 +11580,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "시간"
+          }
+        }
+      }
+    },
+    "时间轮换 (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotation time (%@)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로테이션 시간 (%@)"
           }
         }
       }
@@ -11905,6 +12031,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "획득한 붕괴 패러다임 감지"
+          }
+        }
+      }
+    },
+    "槐琥" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waai Fu"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "와이후"
+          }
+        }
+,
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "槐琥"
           }
         }
       }
@@ -12394,6 +12543,29 @@
         }
       }
     },
+    "温蒂" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weedy"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "위디"
+          }
+        }
+,
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "温蒂"
+          }
+        }
+      }
+    },
     "游侠" : {
       "localizations" : {
         "en" : {
@@ -12632,6 +12804,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "이성 회복제 1회만"
+          }
+        }
+      }
+    },
+    "琴柳" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saileach"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사일라흐"
+          }
+        }
+,
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "琴柳"
           }
         }
       }
@@ -14049,6 +14244,29 @@
       }
     },
     "色彩匹配" : {},
+    "至简" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimalist"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "미니멀리스트"
+          }
+        }
+,
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "至简"
+          }
+        }
+      }
+    },
     "菲亚梅塔心情恢复" : {
       "localizations" : {
         "en" : {
@@ -14766,6 +14984,38 @@
         }
       }
     },
+    "赠送线索" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Clues"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단서 전달"
+          }
+        }
+      }
+    },
+    "跨设施编组仅常规模式生效，其他模式保留勾选但不参与排班。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cross-facility teams only apply in the default mode; selections are kept but ignored elsewhere."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "크로스 시설 편성은 기본 모드에서만 적용되며 다른 모드에서는 선택이 유지되지만 교대에 반영되지 않습니다."
+          }
+        }
+      }
+    },
     "运行中的配置已被编辑，保留用户修改，未自动更新任务记录。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -14919,6 +15169,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "매일 무료 단일 뽑기 진행"
+          }
+        }
+      }
+    },
+    "进行线索交流" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conduct Clue Exchange"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단서 공유 진행"
           }
         }
       }

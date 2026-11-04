@@ -10,14 +10,9 @@ extension MAATaskConfiguration {
     init() { self = try! JSONDecoder().decode(Self.self, from: Data("{}".utf8)) }
 }
 enum MAATaskType {
-    case Fight
+    case Fight, Infrast
     var description: String { "Fight" }
 }
-// P08.1 起 startTasks 抽取面携带基建周计划门控；桩满足编译（真实门控行为
-// 由模型层套件与 P08 交付面覆盖）。
-struct InfrastCfgStub {
-    var weeklyDays: [Int]? = nil
-    var subtitle: String = ""
-    func isScheduled(on weekday: Int) -> Bool { weeklyDays?.contains(weekday) ?? true }
-}
-enum MAATask { case fight(FightConfiguration), infrast(InfrastCfgStub), other }
+// P08.2 起抽取面携带基建周计划门控与时间轮换；直接编译真 InfrastConfiguration
+// （单一事实源，见 run-medicine-log-tests.sh swiftc 列表）。
+enum MAATask { case fight(FightConfiguration), infrast(InfrastConfiguration), other }

@@ -9,6 +9,8 @@ import SwiftUI
 
 struct InfrastSettingsView: View {
     @Environment(\.defaultMinListRowHeight) private var rowHeight
+    // 周计划行标签按区服游戏日星期渲染（F06 同源）。
+    @EnvironmentObject private var viewModel: MAAViewModel
 
     @Binding var config: InfrastConfiguration
 
@@ -85,9 +87,63 @@ struct InfrastSettingsView: View {
         Toggle("不将已进驻的干员放入宿舍", isOn: $config.dorm_notstationed_enabled)
         Toggle("源石碎片自动补货", isOn: $config.replenish)
         Toggle("会客室信息板收取信用", isOn: $config.reception_message_board)
+        // B08 线索交流/赠送独立开关（Core 缺省双开，关闭才改变会客室行为）。
+        Toggle("进行线索交流", isOn: $config.reception_clue_exchange)
+        Toggle("赠送线索", isOn: $config.reception_send_clue)
         Toggle("训练完成后继续尝试专精当前技能", isOn: $config.continue_training)
         Divider()
+        // B07 跨设施编组：Core 仅常规模式消费（default_mode 门控），非常规
+        // 模式下勾选不产生效果，禁用并提示。
+        Toggle("使用红松骑士团跨设施组合", isOn: $config.use_pinus_sylvestris)
+            .disabled(config.mode != .default)
+        Toggle("使用感知信息跨设施组合", isOn: $config.use_perception_information)
+            .disabled(config.mode != .default)
+        Toggle("使用人间烟火跨设施组合", isOn: $config.use_worldly_plight)
+            .disabled(config.mode != .default)
+        Toggle("使用深海猎人跨设施组合", isOn: $config.use_abyssal_hunter)
+            .disabled(config.mode != .default)
+        Text("跨设施编组仅常规模式生效，其他模式保留勾选但不参与排班。")
+            .font(.caption).foregroundStyle(.secondary)
+        Divider()
+        // B13 每周执行日（F06/P06.2 同构：nil=每天，游戏日 04:00 重置）。
+        Toggle("启用周计划", isOn: weeklyScheduleEnabled)
+        if config.weeklyDays != nil {
+            ForEach(0...6, id: \.self) { day in
+                Toggle(
+                    viewModel.clientChannel.calendar.weekdaySymbol(at: day),
+                    isOn: weeklyDayBinding(day))
+            }
+            Text("按区服游戏日（每日 04:00 重置）判定，未勾选的星期自动跳过本任务。")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        Divider()
         fiammettaPreferences
+    }
+
+    /// 启用周计划=weeklyDays 非 nil；开启时按上游 WeeklySchedule 缺省全勾选，
+    /// 关闭即恢复每天执行（nil 不写键）。
+    private var weeklyScheduleEnabled: Binding<Bool> {
+        Binding {
+            config.weeklyDays != nil
+        } set: { on in
+            config.weeklyDays = on ? Array(0...6) : nil
+        }
+    }
+
+    /// 单日勾选：直接改写 weeklyDays 数组（保持升序稳定存储）；全取消时
+    /// 空表是「永不执行」的合法显式态，与 F06 防护一致不允许回到 nil。
+    private func weeklyDayBinding(_ day: Int) -> Binding<Bool> {
+        Binding {
+            config.weeklyDays?.contains(day) ?? false
+        } set: { on in
+            var days = config.weeklyDays ?? []
+            if on {
+                if !days.contains(day) { days.append(day) }
+            } else {
+                days.removeAll { $0 == day }
+            }
+            config.weeklyDays = days.sorted()
+        }
     }
 
     @ViewBuilder private var fiammettaPreferences: some View {
@@ -159,6 +215,13 @@ struct InfrastSettingsView: View {
 
             Picker("班次", selection: $config.plan_index) {
                 try? MAAInfrast(path: config.filename).planList
+            }
+            // B11 时间轮换：任一 plan 带 period 时下发前按当前时刻选班，
+            // 这里显示当前命中的班次（无匹配回退第一个，与下发逻辑同源）。
+            if let plan = try? MAAInfrast(path: config.filename),
+                let rotated = config.resolvedPlanIndex(at: Date.now, plan: plan) {
+                Text("时间轮换 (\(plan.plans.indices.contains(rotated) ? (plan.plans[rotated].name ?? "\(rotated)") : "\(rotated)"))")
+                    .font(.caption).foregroundStyle(.secondary)
             }
 
             HStack(spacing: 20) {
@@ -293,5 +356,6 @@ extension String {
 struct InfrastSettingsView_Previews: PreviewProvider {
     static var previews: some View {
         InfrastSettingsView(config: .constant(.init()))
+            .environmentObject(MAAViewModel())
     }
 }

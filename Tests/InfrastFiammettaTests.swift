@@ -105,6 +105,62 @@ check(expandedParams["facility"] as! [String] == ["Recycle", "AssistantChange"])
 let expandedRoundtrip = try PropertyListDecoder().decode(
     InfrastConfiguration.self, from: PropertyListEncoder().encode(expanded))
 check(expandedRoundtrip == expanded)
+
+// B06: the candidate grid follows Core's SupportedFiammettaTargets exactly
+// (12 names), while dispatch still caps at three targets.
+check(InfrastConfiguration.FiammettaTarget.allCases.count == 12)
+check(InfrastConfiguration.FiammettaTarget.allCases.map(\.rawValue).contains("琴柳"))
+check(InfrastConfiguration.normalizedFiammettaTargets(["清流", "琴柳", "旅骨", "可露希尔"]).count == 3)
+
+// B11 time rotation mirrors WPF RefreshCustomInfrastPlanList: endpoints are
+// inclusive, unmatched instants fall back to the first plan, non-custom and
+// period-free files keep the hand-picked index, and malformed or overnight
+// windows (p0 > p1) never match — same as the upstream TimeOnly comparison.
+func plan(_ periods: [[String]]...) -> MAAInfrast {
+    MAAInfrast(
+        title: nil, description: nil,
+        plans: periods.map { InfrastConfigurationTestsPlan($0) })
+}
+func InfrastConfigurationTestsPlan(_ period: [[String]]) -> MAAInfrast.Plan {
+    MAAInfrast.Plan(name: "P\(period.first?.first ?? "-")", description: nil, description_post: nil, period: period)
+}
+func at(_ hour: Int, _ minute: Int) -> Date {
+    var components = DateComponents()
+    components.year = 2026; components.month = 11; components.day = 5
+    components.hour = hour; components.minute = minute
+    return Calendar.current.date(from: components)!
+}
+var rotation = InfrastConfiguration()
+rotation.mode = .custom
+check(rotation.resolvedPlanIndex(at: at(9, 0), plan: nil) == nil)
+// 9:00 misses the only window; time rotation still engages and falls back
+// to the first plan (upstream `??= FirstOrDefault()`), not the hand-picked index.
+check(rotation.resolvedPlanIndex(at: at(9, 0), plan: plan([["10:00", "12:00"]])) == 0)
+var noPeriod = rotation
+noPeriod.filename = "plan.json"
+check(noPeriod.resolvedPlanIndex(at: at(9, 0), plan: plan([])) == nil)
+// [[]] carries one malformed window: rotation still engages (Count > 0, like
+// upstream) but the unparseable window never matches, so the fallback applies.
+check(noPeriod.resolvedPlanIndex(at: at(9, 0), plan: plan([[]])) == 0)
+// Inclusive endpoints on both sides.
+let twoWindows = plan([["10:00", "12:00"]], [["14:00", "16:00"]])
+check(rotation.resolvedPlanIndex(at: at(10, 0), plan: twoWindows) == 0)
+check(rotation.resolvedPlanIndex(at: at(12, 0), plan: twoWindows) == 0)
+check(rotation.resolvedPlanIndex(at: at(12, 1), plan: twoWindows) == 0)
+check(rotation.resolvedPlanIndex(at: at(14, 0), plan: twoWindows) == 1)
+check(rotation.resolvedPlanIndex(at: at(16, 0), plan: twoWindows) == 1)
+// One minute past the end misses the window and falls back to the first plan.
+check(rotation.resolvedPlanIndex(at: at(16, 1), plan: twoWindows) == 0)
+check(rotation.resolvedPlanIndex(at: at(9, 0), plan: twoWindows) == 0)
+// Malformed windows are skipped entirely; overnight (p0 > p1) never matches.
+let broken = plan([["bad", "times"]], [["14:00", "16:00"]])
+check(rotation.resolvedPlanIndex(at: at(15, 0), plan: broken) == 1)
+check(rotation.resolvedPlanIndex(at: at(9, 0), plan: broken) == 0)
+check(rotation.resolvedPlanIndex(at: at(23, 0), plan: plan([["22:00", "02:00"]])) == 0)
+// Non-custom modes never rotate, even with period-bearing plans.
+var nonCustom = InfrastConfiguration()
+nonCustom.mode = .default
+check(nonCustom.resolvedPlanIndex(at: at(11, 0), plan: twoWindows) == nil)
 if let sourcePath = CommandLine.arguments.dropFirst().first {
     let source = try String(contentsOfFile: sourcePath, encoding: .utf8)
     func coreNames(_ name: String) throws -> [String] {

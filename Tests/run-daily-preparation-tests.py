@@ -27,5 +27,5 @@ tasks=(source_root/'MeoAsstMac/Model/MAATask.swift').read_text()
 support+='\nextension Array where Element == DailyTask {\n'+declaration(tasks,r'^    subscript\(_ id: UUID\)')+'\n'+declaration(tasks,r'^    func firstIndex\(id: UUID\)')+'\n}\n'
 with tempfile.TemporaryDirectory(prefix='maa-daily-preparation-') as directory:
  path=Path(directory);(path/'Support.swift').write_text(support)
- subprocess.run(['xcrun','swiftc','-swift-version','5','-parse-as-library',str(path/'Support.swift'),str(source_root/'MeoAsstMac/RunHooks/RunContext.swift'),str(source_root/'MeoAsstMac/Model/MAAError.swift'),str(root/'Tests/DailyPreparationTests.swift'),'-o',str(path/'tests')],check=True)
+ subprocess.run(['xcrun','swiftc','-swift-version','5','-parse-as-library',str(path/'Support.swift'),str(source_root/'MeoAsstMac/RunHooks/RunContext.swift'),str(source_root/'MeoAsstMac/Model/MAAError.swift'),str(source_root/'MeoAsstMac/Task Configurations/InfrastConfiguration.swift'),str(source_root/'MeoAsstMac/Model/MAAInfrast.swift'),str(root/'Tests/DailyPreparationTests.swift'),'-o',str(path/'tests')],check=True)
  subprocess.run([str(path/'tests')],check=True,timeout=30)
