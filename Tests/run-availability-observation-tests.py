@@ -309,7 +309,10 @@ final class Flag: @unchecked Sendable {
    let sss = try JSONSerialization.jsonObject(with: Data(sssParent.startedParams[0].utf8)) as! [String: Any]
    precondition((sss["use_sanity_potion"] as? NSNumber)?.boolValue == false,"E3: single-file SSS also forces use_sanity_potion false")
   }
-  print("RunAvailabilityObservationTests: 40 production assertions passed")
+  // TEST-1-R3 low-1 erratum: actual count 37 = legacy 18 + new 19
+  // (D5:4/D1:3/D3:2/D4:1/D2:5/E1:1/E2:1/E3:2); the previous hardcoded 40
+  // had no consistent basis.
+  print("RunAvailabilityObservationTests: 37 production assertions passed")
  }
 }
 '''
