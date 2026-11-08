@@ -177,6 +177,8 @@
 		F11900000000000000000002 /* CopilotPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11900000000000000000001 /* CopilotPersistence.swift */; };
 		F12000000000000000000002 /* OperBoxAssistExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12000000000000000000001 /* OperBoxAssistExport.swift */; };
 		F12100000000000000000002 /* OperBoxHistoryPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12100000000000000000001 /* OperBoxHistoryPayload.swift */; };
+		F12200000000000000000002 /* CopilotFileOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12200000000000000000001 /* CopilotFileOperations.swift */; };
+		F12300000000000000000002 /* VideoRecognitionImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12300000000000000000001 /* VideoRecognitionImport.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -383,6 +385,8 @@
 		F11900000000000000000001 /* CopilotPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotPersistence.swift; sourceTree = "<group>"; };
 		F12000000000000000000001 /* OperBoxAssistExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperBoxAssistExport.swift; sourceTree = "<group>"; };
 		F12100000000000000000001 /* OperBoxHistoryPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperBoxHistoryPayload.swift; sourceTree = "<group>"; };
+		F12200000000000000000001 /* CopilotFileOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotFileOperations.swift; sourceTree = "<group>"; };
+		F12300000000000000000001 /* VideoRecognitionImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecognitionImport.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -479,6 +483,7 @@
 				8341195429EC55C600044F45 /* CopilotConfiguration.swift */,
 				F11900000000000000000001 /* CopilotPersistence.swift */,
 				F12000000000000000000001 /* OperBoxAssistExport.swift */,
+				F12300000000000000000001 /* VideoRecognitionImport.swift */,
 				832985AF29EEF483009F7ED5 /* ReclamationConfiguration.swift */,
 				83782A2A2CFFAF2900A32BDD /* LegacyConfigurations.swift */,
 			);
@@ -661,6 +666,7 @@
 				F11000000000000000000001 /* DepotHistoryStore.swift */,
 				F11200000000000000000001 /* OperBoxHistoryStore.swift */,
 				F12100000000000000000001 /* OperBoxHistoryPayload.swift */,
+				F12200000000000000000001 /* CopilotFileOperations.swift */,
 				F11400000000000000000001 /* YituliuOperBoxService.swift */,
 				F11500000000000000000001 /* DataExport.swift */,
 				F11700000000000000000001 /* DepotMaintainPlanner.swift */,
@@ -924,6 +930,8 @@
 				F11000000000000000000002 /* DepotHistoryStore.swift in Sources */,
 				F11200000000000000000002 /* OperBoxHistoryStore.swift in Sources */,
 				F12100000000000000000002 /* OperBoxHistoryPayload.swift in Sources */,
+				F12200000000000000000002 /* CopilotFileOperations.swift in Sources */,
+				F12300000000000000000002 /* VideoRecognitionImport.swift in Sources */,
 				F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */,
 				F11500000000000000000002 /* DataExport.swift in Sources */,
 				F11600000000000000000002 /* DepotMaintainConfiguration.swift in Sources */,

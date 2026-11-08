@@ -398,6 +398,18 @@ extension MAAViewModel {
         if message.code == .TaskChainError || message.code == .TaskChainStopped {
             invalidateInventory()
         }
+        if info.taskchain == "VideoRecognition" {
+            // C13：取消/失败路径 Core 不清残留，GUI 侧统一丢弃缓存产物。
+            switch message.code {
+            case .TaskChainError:
+                logError("视频识别失败：无法完成识别，请检查视频文件是否受支持。")
+                VideoRecognitionImport.discardLeftoverCacheFiles(userDirectory: Self.userDirectory)
+            case .TaskChainStopped:
+                VideoRecognitionImport.discardLeftoverCacheFiles(userDirectory: Self.userDirectory)
+            default:
+                break
+            }
+        }
         if info.taskchain == "Depot", info.taskid == inventoryDepotTaskID {
             if message.code == .TaskChainCompleted, let depot = pendingInventoryDepot,
                let scope = inventoryDepotScope, scope == inventoryScope {
@@ -1685,13 +1697,15 @@ extension MAAViewModel {
             guard let filename: String = try? info.details["filename"] else {
                 return
             }
-            do {
-                let url = URL(filePath: filename)
-                let dst = try FileManager.default.moveCopilotToExternalDirectory(at: url)
+            // C13：产物先按作业格式回读校验再导入（无效产物删除，不误导为可执行）。
+            switch VideoRecognitionImport.importOutput(filename: filename) {
+            case .imported(let dst, let name):
                 logStore?.setLastImportedCopilot(dst)
-                logInfo("已添加：\(dst.deletingPathExtension().lastPathComponent)")
-            } catch {
-                logError("无法添加视频作业：\(error.localizedDescription)")
+                logInfo("已添加：\(name)")
+            case .discardedInvalid:
+                logError("识别产物不是有效的作业文件，已丢弃。")
+            case .failed(let reason):
+                logError("无法添加视频作业：\(reason)")
             }
 
         default:

@@ -357,27 +357,6 @@ struct CopilotContent_Previews: PreviewProvider {
     }
 }
 
-// MARK: - File Paths
-
-extension URL {
-    static let bundledCopilotDirectory = Bundle.main.resourceURL!
-        .appending(path: "resource/")
-        .appending(path: "copilot/")
-
-    static let externalCopilotDirectory = FileManager.default
-        .urls(for: .documentDirectory, in: .userDomainMask)
-        .first!
-        .appending(path: "copilot/")
-}
-
-// MARK: - State Wrappers
-
-extension URL {
-    fileprivate var isManagedCopilot: Bool {
-        path.starts(with: URL.externalCopilotDirectory.path)
-    }
-}
-
 extension CopilotContext {
     var isReady: Bool {
         if category == .list {
@@ -426,27 +405,5 @@ extension CopilotContent.Item {
             }
         }
         return nil
-    }
-}
-
-// MARK: - Convenience Methods
-
-extension FileManager {
-    func copyCopilotToExternalDirectory(at url: URL) throws -> URL {
-        let dest = try externalCopilotURL(for: url)
-        try FileManager.default.copyItemOverwriting(at: url, to: dest)
-        return dest
-    }
-
-    func moveCopilotToExternalDirectory(at url: URL) throws -> URL {
-        let dest = try externalCopilotURL(for: url)
-        try FileManager.default.moveItemOverwriting(at: url, to: dest)
-        return dest
-    }
-
-    private func externalCopilotURL(for url: URL) throws -> URL {
-        try createDirectory(at: .externalCopilotDirectory, withIntermediateDirectories: true)
-        let name = url.lastPathComponent
-        return URL.externalCopilotDirectory.appending(path: name)
     }
 }

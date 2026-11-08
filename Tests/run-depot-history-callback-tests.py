@@ -8,6 +8,13 @@ a='        if message.code == .TaskChainError || message.code == .TaskChainStopp
 b='        if message.code == .TaskChainStart, info.taskchain'
 assert source.count(a)==1 and source.count(b)==1
 branch=source[source.index(a):source.index(b)]
+# P15 边界外剥离：VideoRecognition 清理块引用本套件不编译的
+# VideoRecognitionImport——存在性 fail-loudly 后从探针剥离。
+video_anchor='if info.taskchain == "VideoRecognition" {'
+assert video_anchor in branch,'P15 video cleanup block missing from MaaMessage.swift'
+v_start=branch.index('        '+video_anchor)
+v_end=branch.index('\n        }\n',v_start)+len('\n        }\n')
+branch=branch[:v_start]+branch[v_end:]
 extra_start=source.index('    private func processSubTaskExtraInfo(')
 a_extra=source.index('        case "Depot":',extra_start)
 b_extra=source.index('        default:',a_extra)

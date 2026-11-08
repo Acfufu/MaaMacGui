@@ -519,6 +519,50 @@
         }
       }
     },
+    "视频识别失败：无法完成识别，请检查视频文件是否受支持。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video recognition failed: the video file may not be supported."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비디오 인식 실패: 비디오 파일이 지원되는지 확인해 주세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "视频识别失败：无法完成识别，请检查视频文件是否受支持。"
+          }
+        }
+      }
+    },
+    "识别产物不是有效的作业文件，已丢弃。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recognized output is not a valid copilot file and has been discarded."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인식 결과물은 유효한 작업 파일이 아니므로 폐기했습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "识别产物不是有效的作业文件，已丢弃。"
+          }
+        }
+      }
+    },
     "部分班次未设置时间段，自动选择时无匹配将使用第一个班次。" : {
       "localizations" : {
         "en" : {

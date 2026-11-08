@@ -1065,7 +1065,7 @@ extension MAAViewModel {
         }
     }
 
-    private static var userDirectory: URL {
+    static var userDirectory: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
     }
 
