@@ -19,6 +19,8 @@ anchor() {
 anchor "per-row delete writes config.plans" 'config.plans.remove(at: index)'
 anchor "manual stage toggle writes config.isStageManually" 'Toggle("手动输入关卡名", isOn: $config.isStageManually)'
 anchor "manual TextField reachable via toggle" 'config.isStageManually || isStoredOutsideCatalog'
+anchor "per-row move-up writes config.plans (P12-[w])" 'config.plans.swapAt(index, index - 1)'
+anchor "per-row move-down writes config.plans (P12-[w])" 'config.plans.swapAt(index, index + 1)'
 
 # P12.1：规划核心引用 FightConfiguration（合成下发参数）与活动窗口模型，
 # 编译面与 run-stage-plan-tests 同族（Core/Startup 模型切片补齐依赖）。

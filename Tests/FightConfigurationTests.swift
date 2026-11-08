@@ -244,6 +244,48 @@ struct FightConfigurationTests {
             failures.append("weeklyDays sanitize decode threw: \(error)")
         }
 
+        // P17-[e]（快照 82 清单②裁定：随 WPF 对齐）：OTA 条目版本门——WPF
+        // StageManager.cs:560-582 语义：需求不可解析→警示原文；当前可解析且
+        // 低于需求→警示；当前不可解析→不警示（curVerParsed 门）；Tip 非硬门禁。
+        do {
+            let parseCases: [(String, (Int, Int, Int)?)] = [
+                ("1.2", (1, 2, 0)), ("1.2.3", (1, 2, 3)), ("v4.5.6", (4, 5, 6)),
+                ("V0.1", (0, 1, 0)), ("1", nil), ("1.2.3.4", nil), ("a.b", nil),
+                ("1..3", nil), ("", nil), ("v", nil),
+            ]
+            for (input, expected) in parseCases {
+                let got = StageActivityVersionGate.parseVersion(input).map { ($0.major, $0.minor, $0.patch) }
+                let matches: Bool
+                switch (got, expected) {
+                case (nil, nil): matches = true
+                case (let g?, let e?): matches = g == e
+                default: matches = false
+                }
+                if !matches {
+                    failures.append("P17-[e] parse \(input.debugDescription): got \(String(describing: got)), expected \(String(describing: expected))")
+                }
+            }
+            let tipCases: [(String?, String, Bool, String)] = [
+                ("1.2.4", "1.2.3", true, "current below required tips"),
+                ("1.2.3", "1.2.4", false, "current above required no tip"),
+                ("1.2.3", "1.2.3", false, "equal version no tip"),
+                ("v1.2", "1.1.9", true, "lower-v prefix + optional patch parses"),
+                ("not.a.version", "9.9.9", true, "unparseable required tips with raw text"),
+                ("1.2.3", "garbage", false, "unparseable current no tip (curVerParsed gate)"),
+                ("", "1.0.0", false, "empty required no tip"),
+                (nil, "1.0.0", false, "nil required no tip"),
+            ]
+            for (required, current, expectTip, label) in tipCases {
+                let tip = StageActivityVersionGate.lowVersionTip(minimumRequired: required, currentVersion: current)
+                if (tip != nil) != expectTip {
+                    failures.append("P17-[e] tip \(label): got \(String(describing: tip))")
+                }
+                if expectTip, let tip, !tip.contains(required ?? "") {
+                    failures.append("P17-[e] tip text must carry raw required version: \(tip)")
+                }
+            }
+        }
+
         for failure in failures { print("FAIL: \(failure)") }
         guard failures.isEmpty else { exit(1) }
         print("PASS: §5-19 weeklyDays decode sanitizes to 0...6 (junk dropped, valid kept, absent nil, empty set kept, round trip stable)")

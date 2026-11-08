@@ -16,6 +16,13 @@ struct MiniGameView: View {
     @AppStorage("SecretFrontEvent") private var secretFrontEvent = SecretFrontConfiguration.Event.unspecified
     @AppStorage("AutoRaisePotentialUseNormalToken") private var autoRaiseUseNormalToken = false
     @AppStorage("EventShopBlacklistData") private var eventShopBlacklistData = Data()
+    // P17-[d]（快照 82 清单②裁定：随 WPF 对齐）：四类预设开关+Other 门控，
+    // 键名随 WPF MiniGame.cs:32-42 配置名。缺省全 false（WPF 同）。
+    @AppStorage("EventShopBlackListDataSupplementInstrument") private var eventShopBlackListDataSupplementInstrument = false
+    @AppStorage("EventShopBlackListDataSupplementStick") private var eventShopBlackListDataSupplementStick = false
+    @AppStorage("EventShopBlackListLmd") private var eventShopBlackListLmd = false
+    @AppStorage("EventShopBlackListFurniturePart") private var eventShopBlackListFurniturePart = false
+    @AppStorage("EventShopBlackListOther") private var eventShopBlackListOther = false
     @State private var startError: String?
 
     private var isSecretFront: Bool { selectedGame.taskName == MiniGameOption.secretFront.taskName }
@@ -41,7 +48,11 @@ struct MiniGameView: View {
                     Section("当期活动") {
                         ForEach(otaMiniGames, id: \.Value) { game in
                             if game.isValid(at: context.date) {
-                                Text(game.displayName).tag(game.tag)
+                                // P17-[e]：版本门条目行尾 ⚠ 标记（Tip 正文见
+                                // 选择器下方警示行——WPF entry.Tip 同语义）。
+                                let entry = game.tag
+                                Text(entry.versionTip == nil
+                                     ? game.displayName : game.displayName + " ⚠️").tag(entry)
                             }
                         }
                     }
@@ -57,6 +68,15 @@ struct MiniGameView: View {
                         selectedGame = MiniGameOption.greenTicketStore.tag
                     }
                 }
+            }
+
+            // P17-[e]：选中 OTA 条目的版本门警示（WPF entry.Tip 语义——展示
+            // 提示、不拦截启动）。
+            if let versionTip = selectedGame.versionTip {
+                Text(versionTip)
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             if isSecretFront {
@@ -85,7 +105,22 @@ struct MiniGameView: View {
             }
 
             if isSideStoryStore {
-                // T12：活动商店商品黑名单（空名单=按默认流程购买）。
+                // P17-[d]：四类预设开关（WPF MiniGame.cs:32-42 配置名同源；
+                // GUI 标签取 WPF zh-cn.xaml 五语键逐字）。预设关键词经
+                // MiniGameLaunch.eventShopBlacklist 按**游戏客户端语言**映射
+                // （非 GUI 语言，WPF StartEventShop :3639-3646 同语义）。
+                Toggle("数据增补仪", isOn: $eventShopBlackListDataSupplementInstrument)
+                    .disabled(viewModel.status != .idle)
+                Toggle("数据增补条", isOn: $eventShopBlackListDataSupplementStick)
+                    .disabled(viewModel.status != .idle)
+                Toggle("龙门币", isOn: $eventShopBlackListLmd)
+                    .disabled(viewModel.status != .idle)
+                Toggle("家具零件", isOn: $eventShopBlackListFurniturePart)
+                    .disabled(viewModel.status != .idle)
+                Toggle("其他自定义商品", isOn: $eventShopBlackListOther)
+                    .disabled(viewModel.status != .idle)
+                // T12：活动商店商品黑名单（空名单=按默认流程购买；仅 Other
+                // 开启时进入下发组合，WPF :3635-3638 同门控）。
                 EditableTextList(title: "商品黑名单", texts: eventShopBlacklist)
             }
 
@@ -166,10 +201,19 @@ struct MiniGameView: View {
                         name: selectedGame.taskName,
                         params: MiniGameLaunch.autoRaisePotential(useNormalToken: autoRaiseUseNormalToken))
                 } else if isSideStoryStore {
-                    // T12：params.event_shop.blacklist；空名单不传（Core 走默认流程）。
+                    // T12/P17-[d]：params.event_shop.blacklist——Other 门控自定义
+                    // （Distinct 保序）+四类预设按客户端语言映射追加（WPF
+                    // StartEventShop :3635-3656 同构）；空名单不传（Core 走默认流程）。
                     try await viewModel.miniGame(
                         name: selectedGame.taskName,
-                        params: MiniGameLaunch.eventShop(blacklist: eventShopBlacklist.wrappedValue))
+                        params: MiniGameLaunch.eventShop(blacklist: MiniGameLaunch.eventShopBlacklist(
+                            custom: eventShopBlacklist.wrappedValue,
+                            otherEnabled: eventShopBlackListOther,
+                            instrument: eventShopBlackListDataSupplementInstrument,
+                            stick: eventShopBlackListDataSupplementStick,
+                            lmd: eventShopBlackListLmd,
+                            furniturePart: eventShopBlackListFurniturePart,
+                            channelRawValue: viewModel.clientChannel.rawValue)))
                 } else if selectedGame.taskName == MiniGameOption.pixelPaint.taskName {
                     // P17-[c]（快照 82 清单②裁定：随 WPF 对齐，2026-11-09）：
                     // 空图/零分组拒启+警示（WPF ToolboxViewModel
@@ -303,6 +347,8 @@ private struct MiniGameTag: Hashable {
     let taskName: String
     let activation: Date?
     let expiry: Date?
+    /// P17-[e]：OTA 条目版本门 Tip（nil=无需警示；常驻入口恒 nil）。
+    var versionTip: String? = nil
 
     func isValid(at date: Date = .now) -> Bool {
         guard let activation, let expiry else {
@@ -338,9 +384,15 @@ extension MAAStageActivity.MiniGame {
         } else {
             tip = defaultTip
         }
+        // P17-[e]：MinimumRequired 版本门（WPF StageManager.cs:560-582——Tip 非
+        // 硬门禁；WPF isDebugVersion 豁免在 Mac 无渠道概念恒生效）。
+        let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
+            as? String ?? ""
         return .init(
             instructions: tip, taskName: Value,
-            activation: startTime, expiry: expireTime)
+            activation: startTime, expiry: expireTime,
+            versionTip: StageActivityVersionGate.lowVersionTip(
+                minimumRequired: MinimumRequired, currentVersion: currentVersion))
     }
 
     func isValid(at date: Date = .now) -> Bool {

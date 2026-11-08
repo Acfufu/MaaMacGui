@@ -81,6 +81,56 @@ struct MiniGameLaunchTests {
             failures.append("P17-[a] clear_store decode block threw: \(error)")
         }
 
+        // MARK: - P17-[d]（快照 82 清单②裁定：随 WPF 对齐）四类预设关键词
+        do {
+            // 五语表逐字（WPF ToolboxViewModel.cs:3639-3646）。
+            let expected: [(MiniGameLaunch.EventShopKeywordLanguage, String, String, String, String)] = [
+                (.zhHans, "数据增补仪", "数据增补条", "龙门币", "家具"),
+                (.zhHant, "數據增補儀", "數據增補條", "龍門幣", "傢俱"),
+                (.en, "Data Supplement Instrument", "Data Supplement Stick", "LMD", "Furniture Part"),
+                (.jp, "データ補完マシン", "データ補完チップ", "龍門幣", "家具"),
+                (.kr, "데이터 리더기", "데이터 메모리", "용문폐", "가구 부품"),
+            ]
+            for (lang, instrument, stick, lmd, furniture) in expected {
+                let got = MiniGameLaunch.eventShopPresetKeywords(language: lang)
+                check(got.instrument == instrument && got.stick == stick && got.lmd == lmd
+                        && got.furniturePart == furniture,
+                      "P17-[d] preset keywords verbatim for \(lang)")
+            }
+            // 渠道归桶：EN/JP/KR 直映、txwy=繁中、Official/Bilibili/未知=简中
+            //（WPF default 分支同）。
+            let buckets: [(String, MiniGameLaunch.EventShopKeywordLanguage)] = [
+                ("Official", .zhHans), ("Bilibili", .zhHans), ("YoStarEN", .en),
+                ("YoStarJP", .jp), ("YoStarKR", .kr), ("txwy", .zhHant),
+                ("UnknownChannel", .zhHans),
+            ]
+            for (raw, lang) in buckets {
+                check(MiniGameLaunch.eventShopKeywordLanguage(channelRawValue: raw) == lang,
+                      "P17-[d] channel bucket \(raw)")
+            }
+            // 组合语义（WPF :3635-3656 同构）：Other 门控、trim+剔空+Distinct
+            // 保序、预设按固定序追加、自定义∩预设重复不去重。
+            let composed = MiniGameLaunch.eventShopBlacklist(
+                custom: ["  龙门币 ", "", "技能书", "龙门币"], otherEnabled: true,
+                instrument: true, stick: false, lmd: true, furniturePart: false,
+                channelRawValue: "Official")
+            check(composed == ["龙门币", "技能书", "数据增补仪", "龙门币"],
+                  "P17-[d] composition: Other gate + trim/distinct/preserve order + presets appended; custom∩preset dup kept (WPF parity)")
+            let otherOff = MiniGameLaunch.eventShopBlacklist(
+                custom: ["技能书"], otherEnabled: false,
+                instrument: false, stick: true, lmd: false, furniturePart: true,
+                channelRawValue: "YoStarEN")
+            check(otherOff == ["Data Supplement Stick", "Furniture Part"],
+                  "P17-[d] Other off drops custom; EN channel maps client-language keywords")
+            let allEmpty = MiniGameLaunch.eventShopBlacklist(
+                custom: [], otherEnabled: false,
+                instrument: false, stick: false, lmd: false, furniturePart: false,
+                channelRawValue: "Official")
+            check(allEmpty.isEmpty, "P17-[d] all-off composition stays empty (params omitted upstream)")
+        } catch {
+            failures.append("P17-[d] block threw: \(error)")
+        }
+
         if failures.isEmpty {
             print("ALL \(checkIndex) CHECKS PASSED")
         } else {

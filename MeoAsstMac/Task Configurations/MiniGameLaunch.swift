@@ -27,4 +27,71 @@ enum MiniGameLaunch {
         guard !names.isEmpty else { return nil }
         return ["event_shop": ["blacklist": names]]
     }
+
+    // MARK: - P17-[d]（快照 82 清单②裁定：随 WPF 对齐，2026-11-09）
+
+    /// 预设关键词的客户端语言桶：WPF `StartEventShop`（ToolboxViewModel.cs
+    /// :3639-3646）按 ClientType 分派——「匹配语言由游戏客户端而非 GUI 语言
+    /// 决定」。Mac 以 `MAAClientChannel.rawValue` 归并五桶：YoStarEN/JP/KR
+    /// 直映、txwy=繁中、Official/Bilibili 及未知值回退简中（WPF default 分支同）。
+    enum EventShopKeywordLanguage {
+        case zhHans, zhHant, en, jp, kr
+    }
+
+    static func eventShopKeywordLanguage(channelRawValue: String) -> EventShopKeywordLanguage {
+        switch channelRawValue {
+        case "YoStarEN": .en
+        case "YoStarJP": .jp
+        case "YoStarKR": .kr
+        case "txwy": .zhHant
+        default: .zhHans
+        }
+    }
+
+    /// 四类预设关键词（WPF :3639-3646 五语表逐字）：数据增补仪/数据增补条/
+    /// 龙门币/家具零件。直接提交关键词，不经物品 ID 补全名（WPF 注释同）。
+    static func eventShopPresetKeywords(
+        language: EventShopKeywordLanguage
+    ) -> (instrument: String, stick: String, lmd: String, furniturePart: String) {
+        switch language {
+        case .en:
+            return ("Data Supplement Instrument", "Data Supplement Stick", "LMD", "Furniture Part")
+        case .jp:
+            return ("データ補完マシン", "データ補完チップ", "龍門幣", "家具")
+        case .kr:
+            return ("데이터 리더기", "데이터 메모리", "용문폐", "가구 부품")
+        case .zhHant:
+            return ("數據增補儀", "數據增補條", "龍門幣", "傢俱")
+        case .zhHans:
+            return ("数据增补仪", "数据增补条", "龙门币", "家具")
+        }
+    }
+
+    /// 组合最终黑名单（WPF :3635-3656 同构）：Other 开关门控自定义列表
+    /// （trim+剔空+Distinct 保序去重）；四类预设按开关追加于自定义之后、按
+    /// instrument→stick→lmd→furniturePart 固定序。预设间天然唯一；自定义与
+    /// 预设的重复**不去重**（WPF Distinct 仅作用于 Other 拆分列表，同构）。
+    static func eventShopBlacklist(
+        custom: [String], otherEnabled: Bool,
+        instrument: Bool, stick: Bool, lmd: Bool, furniturePart: Bool,
+        channelRawValue: String
+    ) -> [String] {
+        var list: [String] = []
+        if otherEnabled {
+            var seen = Set<String>()
+            for raw in custom {
+                let name = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !name.isEmpty, seen.insert(name).inserted {
+                    list.append(name)
+                }
+            }
+        }
+        let keywords = eventShopPresetKeywords(
+            language: eventShopKeywordLanguage(channelRawValue: channelRawValue))
+        if instrument { list.append(keywords.instrument) }
+        if stick { list.append(keywords.stick) }
+        if lmd { list.append(keywords.lmd) }
+        if furniturePart { list.append(keywords.furniturePart) }
+        return list
+    }
 }

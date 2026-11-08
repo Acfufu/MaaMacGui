@@ -195,6 +195,28 @@ struct DepotMaintainSettingsView: View {
                 Text(verbatim: planTitle(index))
                     .font(.subheadline)
                 Spacer()
+                // P12-[w]（快照 82 清单②裁定：随 WPF 对齐，2026-11-09）：行内
+                // 上/下移按钮——WPF dd:DragDrop 拖拽重排（xaml:99-103）的可达
+                // 重排入口；macOS Form 的 List 拖拽 onMove 行为随平台版本不稳
+                // （P11.4 安慰剂先例），取确定性按钮形态，I05「顺序」腿真实可达。
+                Button {
+                    guard index > 0, index < config.plans.count else { return }
+                    config.plans.swapAt(index, index - 1)
+                } label: {
+                    Image(systemName: "chevron.up")
+                }
+                .buttonStyle(.borderless)
+                .disabled(index <= 0 || index >= config.plans.count)
+                .accessibilityLabel(Text("上移"))
+                Button {
+                    guard index >= 0, index < config.plans.count - 1 else { return }
+                    config.plans.swapAt(index, index + 1)
+                } label: {
+                    Image(systemName: "chevron.down")
+                }
+                .buttonStyle(.borderless)
+                .disabled(index < 0 || index >= config.plans.count - 1)
+                .accessibilityLabel(Text("下移"))
                 // P12-8：行内删除按钮（WPF DepotMaintainTaskUserControl.xaml:159-176
                 // DeleteTaskGeometry 行内按钮同位）——原 .onDelete 在 macOS List/Form
                 // 无触发 UI，删腿不可达（P12-2-R3 高-1）。borderless 防整行误触。

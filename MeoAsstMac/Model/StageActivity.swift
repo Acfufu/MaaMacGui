@@ -109,3 +109,44 @@ extension MAAStageActivity {
 extension MAAClientChannel {
     var stageActivityKey: String { self == .Bilibili ? MAAClientChannel.Official.rawValue : rawValue }
 }
+
+/// P17-[e]（快照 82 清单②裁定：随 WPF 对齐，2026-11-09）：OTA 小游戏条目的
+/// 版本门 Tip。`MiniGame.MinimumRequired` 自 P17.1 起解码未消费（Maa.swift
+/// 解码面在），WPF `StageManager.cs:560-582` 的消费形态为**条目 Tip 警示、
+/// 非硬门禁**：MinimumRequired 不可解析 → 直接以原文警示；当前版本可解析且
+/// 低于需求 → 警示；当前版本不可解析 → 不警示（WPF `curVerParsed` 门同）。
+/// WPF `isDebugVersion` 豁免在 Mac 无对应渠道概念，恒生效。
+enum StageActivityVersionGate {
+    /// 解析 "v?X.Y.Z?"（WPF SemVersionStyles.AllowLowerV | OptionalPatch）：
+    /// 可选 v/V 前缀、patch 段可选（缺省 0）。不可解析返回 nil。
+    static func parseVersion(_ text: String) -> (major: Int, minor: Int, patch: Int)? {
+        var body = text
+        if let first = body.first, first == "v" || first == "V" {
+            body.removeFirst()
+        }
+        let parts = body.split(separator: ".", omittingEmptySubsequences: false)
+        guard (2...3).contains(parts.count) else { return nil }
+        var numbers: [Int] = []
+        for part in parts {
+            guard !part.isEmpty, let n = Int(part), n >= 0 else { return nil }
+            numbers.append(n)
+        }
+        let patch = numbers.count == 3 ? numbers[2] : 0
+        return (numbers[0], numbers[1], patch)
+    }
+
+    /// 版本门判定：返回 Tip 文案（「版本过低\n最低需求: <ver>」，WPF
+    /// :571-581 组装同构）或 nil（无需警示）。
+    static func lowVersionTip(minimumRequired: String?, currentVersion: String) -> String? {
+        guard let minimumRequired, !minimumRequired.isEmpty else { return nil }
+        let required = String(localized: "最低需求:")
+        guard let minReq = parseVersion(minimumRequired) else {
+            // WPF :569-573：需求版本不可解析同样警示（附原文）。
+            return String(localized: "版本过低") + "\n" + required + " " + minimumRequired
+        }
+        guard let current = parseVersion(currentVersion) else { return nil }
+        let unsupported = (current.major, current.minor, current.patch) < (minReq.major, minReq.minor, minReq.patch)
+        guard unsupported else { return nil }
+        return String(localized: "版本过低") + "\n" + required + " " + minimumRequired
+    }
+}
