@@ -72,6 +72,7 @@ enum CopilotCompiler {
 @MainActor final class MAAViewModel: ObservableObject {
  enum Status { case idle, busy, pending }
  @Published var status = Status.idle
+ @Published var roguelikeWaitingForCombat = false
  var isTestingHook = false
  var blackflowStartAvailable = false
  @Published var isStartStopInFlight = false
@@ -115,6 +116,9 @@ final class Flag: @unchecked Sendable {
   parent.isStartStopInFlight=true
   precondition(parent.menuStopDisabled,"stop menu predicate disables stop while the operation flag is set")
   precondition(!parent.canStopTasks,"stop boundary predicate refuses while the operation flag is set")
+  parent.roguelikeWaitingForCombat=true
+  precondition(parent.canStopTasks && !parent.menuStopDisabled, "combat wait keeps button and menu stop reachable under admission lock")
+  parent.roguelikeWaitingForCombat=false
   parent.isStartStopInFlight=false
   let flag=Flag()
   withObservationTracking { _=bridge.canStartTasks } onChange: { flag.set() }
@@ -154,7 +158,7 @@ final class Flag: @unchecked Sendable {
   copilotGate.release()
   try! await copilotTask.value
   precondition(copilotBridge.copilotStartToken != nil,"successful Copilot start emits a token")
-  print("RunAvailabilityObservationTests: 17 production assertions passed")
+  print("RunAvailabilityObservationTests: 18 production assertions passed")
  }
 }
 '''

@@ -1219,9 +1219,7 @@ extension MAAViewModel {
         case "StageInfo":
             // G18：肉鸽战斗节点开始，进入战斗态；限定本轮下发了肉鸽任务，
             // 避免 Copilot 等其他战斗回调误触发等待语义。
-            if activeRunHasRoguelike {
-                roguelikeInCombat = true
-            }
+            updateRoguelikeCombat(taskchain: info.taskchain, taskID: info.taskid, inCombat: true)
             guard let name: String = try? info.details["name"] else {
                 return
             }
@@ -1396,7 +1394,7 @@ extension MAAViewModel {
 
         case "RoguelikeCombatEnd":
             // G18：肉鸽战斗结束（无论成败），清除战斗态并放行等待中的停止请求。
-            roguelikeInCombat = false
+            updateRoguelikeCombat(taskchain: info.taskchain, taskID: info.taskid, inCombat: false)
 
         case "RoguelikeEvent":
             guard let name: String = try? info.details["name"] else {
@@ -1771,6 +1769,13 @@ extension MAAViewModel {
     private func writeLog(color: MAALog.LogColor, _ content: String) {
         let entry = MAALog(date: Date(), content: content, color: color)
         logStore?.appendLog(entry)
+    }
+
+    /// Reject late/foreign battle events before they can alter the stop boundary.
+    func updateRoguelikeCombat(taskchain: String, taskID: Int32?, inCombat: Bool) {
+        guard activeRunHasRoguelike, taskchain == "Roguelike",
+              let task = dailyTask(coreID: taskID), case .roguelike = task else { return }
+        roguelikeInCombat = inCombat
     }
 
     func dailyTask(coreID: Int32?) -> MAATask? {

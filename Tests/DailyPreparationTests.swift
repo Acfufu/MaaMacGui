@@ -3,6 +3,17 @@ import Foundation
  @MainActor static func main() async {
   var count=0
   func check(_ value: Bool,_ message: String) { precondition(value,message);count+=1 }
+  if CommandLine.arguments.contains("--accelerated-combat-timeout") {
+   let model=MAAViewModel(); let core=model.handle!
+   try! await model.miniGame(name:"Fixture")
+   model.activeRunHasRoguelike=true; model.roguelikeInCombat=true
+   model.roguelikeDelayAbortUntilCombatComplete=true
+   try! await model.stop()
+   check(core.stopCount == 1 && model.infos.contains("等待战斗结束超时，现在停止。"), "accelerated production deadline stops once on timeout")
+   check(!model.roguelikeWaitingForCombat && model.canStopTasks, "timeout releases stop admission")
+   print("PASS: \(count) accelerated combat-timeout checks (600s production literal asserted by runner)")
+   return
+  }
   for failStop in [false,true] {
    let model=MAAViewModel();let core=model.handle!
    model.tasks=[.init(task:.fixture),.init(task:.fixture)];core.failAppendAt=2;core.failStop=failStop
@@ -185,6 +196,7 @@ import Foundation
   let g18Stop=Task { try? await g18.stop() }
   try! await Task.sleep(for:.milliseconds(1200))
   check(g18Core.stopCount == 0 && g18.roguelikeWaitingForCombat && g18.infos.contains("肉鸽战斗中：等待当前战斗结束后再停止（最长 10 分钟）。再次点击停止可立即停止。"), "delayed abort holds the stop until combat completes instead of touching Core")
+  check(g18.canStopTasks, "button and hotkey remain enabled while waiting")
   try? await g18.stop()
   check(g18.infos.contains("已请求立即停止，不再等待当前战斗结束。"), "second stop request aborts the combat wait")
   for _ in 0..<50 { if g18Core.stopCount == 1 { break }; try! await Task.sleep(for:.milliseconds(100)) }
@@ -201,6 +213,43 @@ import Foundation
   for _ in 0..<50 { if g18waitCore.stopCount == 1 { break }; try! await Task.sleep(for:.milliseconds(100)) }
   check(g18waitCore.stopCount == 1 && g18wait.status == .idle && !g18wait.roguelikeWaitingForCombat, "combat completion releases the pending stop")
   check(await waitStop.value != nil, "combat-release wait flow returns normally")
+  // Exercise current task ownership independently of message decoding.
+  let events=MAAViewModel()
+  let current=DailyTask(task:.roguelike(.init()))
+  events.tasks=[current]; events.taskIDMap=[42:current.id]; events.activeRunHasRoguelike=true
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:41,inCombat:true)
+  events.updateRoguelikeCombat(taskchain:"Copilot",taskID:42,inCombat:true)
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:nil,inCombat:true)
+  check(!events.roguelikeInCombat, "foreign, missing and old task IDs cannot enter combat")
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:42,inCombat:true)
+  check(events.roguelikeInCombat, "current roguelike task enters combat")
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:41,inCombat:false)
+  check(events.roguelikeInCombat, "late combat end cannot release a current battle")
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:42,inCombat:false)
+  check(!events.roguelikeInCombat, "current combat end clears state")
+  events.activeRunHasRoguelike=false
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:42,inCombat:true)
+  check(!events.roguelikeInCombat, "completed run rejects late combat start")
+  for mode in ["cancel", "natural", "nonroguelike", "exit"] {
+   let model=MAAViewModel(); let core=model.handle!
+   model.tasks=[DailyTask(task:.fixture)]
+   check(await model.startDailyTasks() == .started, "boundary fixture starts")
+   model.activeRunHasRoguelike = mode != "nonroguelike"
+   model.roguelikeInCombat=true; model.roguelikeDelayAbortUntilCombatComplete=true
+   if mode == "exit" {
+    await model.prepareForTermination(timeout:1)
+    check(core.stopCount == 1 && !model.roguelikeWaitingForCombat && model.dailyRunCoordinator.active == nil, "exit bypasses combat wait and finishes daily cleanup")
+   } else {
+    let work=Task { try? await model.stop() }
+    try! await Task.sleep(for:.milliseconds(50))
+    if mode == "cancel" { work.cancel() }
+    if mode == "natural" { core.isRunning=false; model.resetStatus() }
+    check(await work.value != nil, "stop boundary returns")
+    check(core.stopCount == 1 && !model.roguelikeWaitingForCombat && !model.activeRunHasRoguelike && !model.roguelikeInCombat, "stop clears combat scope exactly once")
+    check(!model.infos.contains("等待战斗结束超时，现在停止。"), "cancel, natural and foreign paths never claim timeout")
+    if mode == "cancel" { check(model.infos.contains("停止等待已取消，现在停止。"), "cancel has accurate stop message") }
+   }
+  }
   let g18off=MAAViewModel(); let g18offCore=g18off.handle!
   try! await g18off.miniGame(name:"Fixture")
   g18off.activeRunHasRoguelike=true; g18off.roguelikeInCombat=true

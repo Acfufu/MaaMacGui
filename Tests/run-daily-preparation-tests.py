@@ -17,13 +17,13 @@ for pattern in [r'^    private var dailyCompletionTask: .*$', r'^    private var
  r'^    @Published var roguelikeInCombat = .*$', r'^    @Published var roguelikeWaitingForCombat = .*$',
  r'^    private var roguelikeCombatWaitAborted = .*$']:
  parts.append(re.search(pattern,model,re.M)[0])
-for name in ['canStartTasks','beginTaskOperation','handleEarlyReturn','startCoreTasks','startDailyTasks','startTasks','stop','finishDailyRunIfStopped','reconcileDailyRunStatus','discardPreparedDailyTasks','resetStatus','waitForDailyRunCompletion','forceRecoveryEligibility','requestStopRun','requestDailyRun','miniGame']:
+for name in ['canStartTasks','canStopTasks','beginTaskOperation','handleEarlyReturn','startCoreTasks','startDailyTasks','startTasks','stop','finishDailyRunIfStopped','reconcileDailyRunStatus','discardPreparedDailyTasks','resetStatus','waitForDailyRunCompletion','forceRecoveryEligibility','requestStopRun','requestDailyRun','miniGame','prepareForTermination']:
  pattern=rf'^    (?:private )?(?:func|var) {name}\b'
  if re.search(pattern,model,re.M):parts.append(declaration(model,pattern))
 # P04 入口边界成员是本套件的断言对象,缺失即红,不允许静默跳过。
 for name in ['requestStopRun','requestDailyRun','miniGame']:
  assert re.search(rf'^    (?:private )?(?:func|var) {name}\b',model,re.M), f'P04 entry boundary member {name} missing from MAAViewModel.swift'
-for name in ['dailyTask','taskID']:parts.append(declaration(message,rf'^    (?:private )?func {name}\('))
+for name in ['dailyTask','taskID','updateRoguelikeCombat']:parts.append(declaration(message,rf'^    (?:private )?func {name}\('))
 support=(root/'Tests/DailyPreparationTestSupport.swift').read_text().replace('// PRODUCTION_MODEL_MEMBERS','\n'.join(parts)).replace('// PRODUCTION_CORE_RUNNING_GUARD',declaration(model,r'^        guard await handle\?\.running == false else'))
 tasks=(source_root/'MeoAsstMac/Model/MAATask.swift').read_text()
 support+='\nextension Array where Element == DailyTask {\n'+declaration(tasks,r'^    subscript\(_ id: UUID\)')+'\n'+declaration(tasks,r'^    func firstIndex\(id: UUID\)')+'\n}\n'
@@ -31,3 +31,8 @@ with tempfile.TemporaryDirectory(prefix='maa-daily-preparation-') as directory:
  path=Path(directory);(path/'Support.swift').write_text(support)
  subprocess.run(['xcrun','swiftc','-swift-version','5','-parse-as-library',str(path/'Support.swift'),str(source_root/'MeoAsstMac/RunHooks/RunContext.swift'),str(source_root/'MeoAsstMac/Model/MAAError.swift'),str(source_root/'MeoAsstMac/Task Configurations/InfrastConfiguration.swift'),str(source_root/'MeoAsstMac/Model/MAAInfrast.swift'),str(root/'Tests/DailyPreparationTests.swift'),'-o',str(path/'tests')],check=True)
  subprocess.run([str(path/'tests')],check=True,timeout=30)
+ deadline = 'ContinuousClock.now.advanced(by: .seconds(600))'
+ assert support.count(deadline) == 1, 'production combat timeout extraction drifted'
+ (path/'Support.swift').write_text(support.replace(deadline, 'ContinuousClock.now.advanced(by: .milliseconds(50))'))
+ subprocess.run(['xcrun','swiftc','-swift-version','5','-parse-as-library',str(path/'Support.swift'),str(source_root/'MeoAsstMac/RunHooks/RunContext.swift'),str(source_root/'MeoAsstMac/Model/MAAError.swift'),str(source_root/'MeoAsstMac/Task Configurations/InfrastConfiguration.swift'),str(source_root/'MeoAsstMac/Model/MAAInfrast.swift'),str(root/'Tests/DailyPreparationTests.swift'),'-o',str(path/'timeout-tests')],check=True)
+ subprocess.run([str(path/'timeout-tests'),'--accelerated-combat-timeout'],check=True,timeout=5)

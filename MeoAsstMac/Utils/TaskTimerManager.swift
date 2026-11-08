@@ -14,7 +14,7 @@ import Foundation
     private var triggerGrace: TimeInterval = 60
     private var sleepDisabled = false
     var sleepAssertionID: IOPMAssertionID = 0
-    private var store = ScheduleOccurrenceStore(directory: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!.appendingPathComponent("Schedule"))
+    private var store: ScheduleOccurrenceStore
 
     private struct ScheduleSnapshot {
         let daily: DailyRunSnapshot
@@ -70,7 +70,10 @@ import Foundation
         })
     }
 
-    private init() {}
+    init(directory: URL? = nil) {
+        store = ScheduleOccurrenceStore(directory: directory ?? FileManager.default.urls(
+            for: .applicationSupportDirectory, in: .userDomainMask).first!.appendingPathComponent("Schedule"))
+    }
 
     func configureSharedDirectory(_ directory: URL) throws {
         guard viewModel == nil else { throw BackgroundScheduleError.helperUnavailable }

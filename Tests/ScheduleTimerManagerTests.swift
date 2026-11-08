@@ -65,7 +65,7 @@ extension Notification.Name {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("maa-timer-manager-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directory) }
-        let manager = TaskTimerManager.shared
+        let manager = TaskTimerManager(directory: directory.appendingPathComponent("legacy"))
         try manager.configureSharedDirectory(directory)
         manager.setBackgroundSchedulingEnabled(true) // grace 300:过去几分钟内的到期计划保持可领取
         let calendar = Calendar.current

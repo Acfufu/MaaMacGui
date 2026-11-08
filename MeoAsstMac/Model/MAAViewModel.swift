@@ -430,7 +430,7 @@ extension MAAViewModel {
         status = .busy
     }
 
-    func stop(cancelScheduledStart: Bool = true, logsConflict: Bool = true, userRequested: Bool = true) async throws {
+    func stop(cancelScheduledStart: Bool = true, logsConflict: Bool = true, userRequested: Bool = true, waitForRoguelikeCombat: Bool = true) async throws {
         if cancelScheduledStart {
             NotificationCenter.default.post(name: .MAACancelPendingScheduledStart, object: nil)
         }
@@ -495,19 +495,20 @@ extension MAAViewModel {
         let discardQuarantinedCore = abandonedRun && forceRecoveryCleanupPending
         // G18：肉鸽战斗中延迟停止——等待当前战斗结束（RoguelikeCombatEnd）后再停止，
         // 最长 10 分钟；等待期间 MainActor 挂起，消息循环持续更新战斗态。
-        // 再次请求停止经 roguelikeCombatWaitAborted 立即跳出；应用退出/进程终止
-        // 不经过此协程，不存在无限等待。
-        if roguelikeDelayAbortUntilCombatComplete, activeRunHasRoguelike,
+        // 再次请求停止立即跳出；退出路径显式绕过等待，继续运行收尾。
+        if waitForRoguelikeCombat, roguelikeDelayAbortUntilCombatComplete, activeRunHasRoguelike,
            roguelikeInCombat, await handle?.running == true {
             roguelikeWaitingForCombat = true
             logInfo("肉鸽战斗中：等待当前战斗结束后再停止（最长 10 分钟）。再次点击停止可立即停止。")
-            let deadline = Date.now.addingTimeInterval(600)
-            while Date.now < deadline, roguelikeInCombat, !roguelikeCombatWaitAborted, !Task.isCancelled,
+            let deadline = ContinuousClock.now.advanced(by: .seconds(600))
+            while ContinuousClock.now < deadline, roguelikeInCombat, !roguelikeCombatWaitAborted, !Task.isCancelled,
                   await handle?.running == true {
                 try? await Task.sleep(for: .seconds(1))
             }
             roguelikeWaitingForCombat = false
-            if roguelikeCombatWaitAborted {
+            if Task.isCancelled {
+                logInfo("停止等待已取消，现在停止。")
+            } else if roguelikeCombatWaitAborted {
                 logInfo("已按请求立即停止。")
             } else if roguelikeInCombat, await handle?.running == true {
                 logInfo("等待战斗结束超时，现在停止。")
@@ -522,6 +523,8 @@ extension MAAViewModel {
             guard discardQuarantinedCore else { throw error }
             // 丢弃隔离 Core 时,停止失败由句柄释放(AsstDestroy)兜底。
         }
+        activeRunHasRoguelike = false
+        roguelikeInCombat = false
         if userRequested, cancelScheduledStart, achievementWasRunning {
             AchievementStore.shared.record(.init(runID: achievementRunID, metric: .manualStop, operation: .maximum))
         }
@@ -770,7 +773,7 @@ extension MAAViewModel {
             if let task = activeHookTask { _ = try? await task.value }
         }
         guard dailyRunCoordinator.active != nil else { return }
-        Task { try? await self.stop() }
+        Task { try? await self.stop(waitForRoguelikeCombat: false) }
         while dailyRunCoordinator.active != nil, Date.now < deadline {
             try? await Task.sleep(for: .milliseconds(50))
         }
@@ -1668,11 +1671,11 @@ extension MAAViewModel {
     var lastRunOutcome: DailyRunOutcome? { dailyRunCoordinator.lastTerminal?.outcome }
 
     /// 停止入口可用性：与停止键（TaskButtons）同源。启动/停止互斥期与后置
-    /// 清理期都不可停止——互斥期 stop 会被拒绝，后置清理期 stop 只会报错。
+    /// 清理期不可停止；肉鸽等待期仍可再次请求立即停止。
     /// 强制恢复中止窗口该谓词同为 false（按钮禁用），但 stop() 程序化路径
     /// 不经此谓词，保留中止恢复途径。
     var canStopTasks: Bool {
-        !isStartStopInFlight && dailyRunCoordinator.active?.status != .postHook
+        (!isStartStopInFlight || roguelikeWaitingForCombat) && dailyRunCoordinator.active?.status != .postHook
     }
 
     /// 请求启动一次日常运行：准入冲突（已有运行/占用中）返回 nil，冲突由

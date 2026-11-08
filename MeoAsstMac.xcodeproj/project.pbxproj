@@ -1144,10 +1144,10 @@
 		};
 		832D14953042F6C40000C09B /* XCRemoteSwiftPackageReference "JBird" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/hguandl/JBird.git";
+			repositoryURL = "https://github.com/vsanthanam/JBird.git";
 			requirement = {
-				branch = "xcode-26";
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
 			};
 		};
 		8347B5A92CDF89CC00AEB627 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
