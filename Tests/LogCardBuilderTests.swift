@@ -58,15 +58,12 @@ import Foundation
         // --- TrimOldThumbnails（WPF 同构：超上限删最旧）
         var thumbs: [UUID: NSImage] = [:]
         let keys = (0..<LogCardBuilder.maxThumbnails + 5).map { _ in UUID() }
-        for key in keys {
-            thumbs[key] = NSImage(size: NSSize(width: 1, height: 1))
-        }
-        let trimmed = LogCardBuilder.trimThumbnails(thumbs)
-        check(trimmed.count == LogCardBuilder.maxThumbnails, "trim enforces cap")
-        // 排序口径与实现一致（uuidString 序）；被移除的恰为排序最前 5 个。
-        let sortedKeys = keys.sorted { $0.uuidString < $1.uuidString }
-        check(sortedKeys.prefix(5).allSatisfy { trimmed[$0] == nil }, "oldest removed first")
-        check(sortedKeys.suffix(LogCardBuilder.maxThumbnails).allSatisfy { trimmed[$0] != nil }, "newest retained")
+        // 低1（P29-2-R3）：trim 改按挂载时序（原 uuidString 序=随机淘汰，探针
+        // 实证时间最旧者反被保留）；keys[0..<5] 即最早挂载的 5 个。
+        let stale = LogCardBuilder.staleThumbnailIDs(insertionOrder: keys)
+        check(stale.count == 5, "trim yields cap overflow count")
+        check(Set(keys.prefix(5)) == Set(stale), "oldest-mounted removed first (insertion order)")
+        check(Set(keys.suffix(LogCardBuilder.maxThumbnails)).isDisjoint(with: stale), "newest mounted retained")
 
         // --- 缩略图缩放（640×360，WPF LogThumbnail 尺寸同值）
         let big = NSImage(size: NSSize(width: 2560, height: 1440))
@@ -75,6 +72,8 @@ import Foundation
               && Int(scaled.size.height) == LogCardBuilder.thumbnailHeight, "scaled to card size")
 
         // --- D08: 任务移动逻辑（moveTask(id:by:) 边界保护；WPF MoveTask 一行同构）
+        // 中2（P29-2-R3）：moved(id:by:) 已接生产路径（TasksContent.moveSelected
+        // 改经本函数）——6 条断言覆盖生产可达路径。
         // D08: moved(id:by:) 纯函数（配置队列同步由 tasks 写回机制承担）
         var rows: [DailyTask] = []
         for _ in 0..<4 {

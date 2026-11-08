@@ -64,15 +64,13 @@ enum LogCardBuilder {
         }
     }
 
-    /// WPF TrimOldThumbnails 同构：超上限时移除最旧缩略图。
-    static func trimThumbnails(_ thumbnails: [UUID: NSImage]) -> [UUID: NSImage] {
-        guard thumbnails.count > maxThumbnails else { return thumbnails }
-        let ordered = thumbnails.sorted { $0.key.uuidString < $1.key.uuidString }
-        var result = thumbnails
-        for (key, _) in ordered.prefix(thumbnails.count - maxThumbnails) {
-            result.removeValue(forKey: key)
-        }
-        return result
+    /// WPF TrimOldThumbnails 同构（低1/P29-2-R3）：超上限按**挂载时序**移除最旧。
+    /// 原实现按 uuidString 排序删除——UUID v4 随机序与挂载时序零相关，探针实证
+    /// 时间最旧者反被保留（WPF TrimOldThumbnails 按卡片集合序删时间最旧，
+    /// TaskQueueViewModel.cs:459-473）；order 由 MAAViewModel 挂载面维护。
+    static func staleThumbnailIDs(insertionOrder: [UUID], limit: Int = maxThumbnails) -> [UUID] {
+        guard insertionOrder.count > limit else { return [] }
+        return Array(insertionOrder.prefix(insertionOrder.count - limit))
     }
 
     /// WPF CreateBgrBitmapSourceScaled 同构：截图缩至 640×360 卡片缩略图。

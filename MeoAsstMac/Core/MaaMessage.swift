@@ -390,6 +390,9 @@ extension MAAViewModel {
         if message.code == .TaskChainStopped {
             invalidateInventory()
             resetStatus()
+            // U11 标注映射差异（中1/P29-2-R3，台账 P29-[g]）：WPF Stopped =
+            // splitMode: Both 独立卡（TaskQueueViewModel.cs:2932）——Mac 用 .after
+            //（收上一卡），无 Both 档。
             logTrace(.stopped, cardSplit: .after)
         }
 
@@ -494,7 +497,9 @@ extension MAAViewModel {
             } else {
                 logError(.taskError(name: taskchainName), cardSplit: .after)
             }
-            // U11: 错误卡挂载缩略图（WPF 错误卡截图同位）。
+            // U11: 错误卡挂载缩略图（WPF 错误路径 fetchLatestImage:true 强制新截
+            // +无 splitMode——Mac .after+缓存帧，差异入台账 P29-[g]/[j]；
+            // AsstProxy.cs:1455-1456）。
             Task { await self.attachLogThumbnail() }
             if isCopilot {
                 logError(.combatError)
@@ -504,7 +509,9 @@ extension MAAViewModel {
             // macOS task items do not currently support custom display names.
             // TODO: (ViewState) Switch the overlay log source for Copilot and daily tasks.
             updateDailyTaskStatus(.running, coreID: info.taskid)
-            // U11: 任务链开始=新卡片（WPF LogCardSplitMode.Before 同位）。
+            // U11: 任务链开始=新卡片（WPF 为 AddLogSection divider 卡，
+            // AsstProxy.cs:1483——Mac .before 近位、divider 档生产零使用，
+            // 差异入台账 P29-[g]）。
             logTrace(.startTask(name: taskchainName), cardSplit: .before)
 
         case .TaskChainCompleted:
@@ -546,7 +553,9 @@ extension MAAViewModel {
             } else {
                 logTrace(.completeTask(name: taskchainName), cardSplit: .after)
             }
-            // U11: 完成卡挂载缩略图（WPF updateCardImage 同位）。
+            // U11: 完成卡挂载缩略图（中1/P29-2-R3 勘误：WPF 链完成不挂图、无
+            // splitMode——AsstProxy.cs:1525/1534 仅 AddLog；updateCardImage 触发面
+            // 在子任务里程碑，Mac 未接——台账 P29-[g]）。
             Task { await self.attachLogThumbnail() }
             // P23/E01：独立作业完成反馈（WPF runOwner==Copilot 的 TaskComplete 同位）。
             if isCopilot {

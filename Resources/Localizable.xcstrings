@@ -14268,6 +14268,86 @@
         }
       }
     },
+    "上移任务（拖动替代入口）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move task up (drag alternative)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 위로 이동(드래그 대체)"
+          }
+        }
+      }
+    },
+    "下移任务（拖动替代入口）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move task down (drag alternative)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 아래로 이동(드래그 대체)"
+          }
+        }
+      }
+    },
+    "卡片" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cards"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카드"
+          }
+        }
+      }
+    },
+    "切换卡片/表格日志视图" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle card/table log view"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카드/표 로그 보기 전환"
+          }
+        }
+      }
+    },
+    "任务截图" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task screenshot"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 스크린샷"
+          }
+        }
+      }
+    },
     "启用全局热键" : {
       "localizations" : {
         "zh-Hans" : {

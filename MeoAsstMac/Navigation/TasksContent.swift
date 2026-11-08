@@ -136,7 +136,9 @@ struct TasksContent: View {
         viewModel.tasks.move(fromOffsets: from, toOffset: to)
     }
 
-    // MARK: - D08 拖动替代入口（WPF MoveUpTask/MoveDownTask 同位：逐行移动）
+    // MARK: - D08 拖动替代入口（WPF MoveTaskUp/MoveTaskDown 行右键菜单同位，
+    // TaskQueueViewModel.cs:2109/2119——Mac 入口在工具栏且无 Idle 门控（运行中
+    // 重排无害：配置写回不影响在跑链），差异入台账 P29-[k]，低3/P29-2-R3）
 
     private var selectedIndex: Int? {
         selection.flatMap { viewModel.tasks.firstIndex(id: $0) }
@@ -161,13 +163,13 @@ struct TasksContent: View {
     }
 
     /// 按 id 移动一行并保持选中跟随（WPF MoveTask 一行同构；配置队列同步由
-    /// tasks 写回机制承担）。
+    /// tasks 写回机制承担）。中2（P29-2-R3）：生产路径改经 moved(id:by:) 纯
+    /// 函数——原处复写偏移算术使 6 条 D08 断言覆盖死代码（被测≠被交付）；
+    /// 选中跟随 = 移动的即所选任务，id 不变。
     private func moveSelected(by delta: Int) {
-        guard let index = selectedIndex else { return }
-        let target = index + delta
-        guard viewModel.tasks.indices.contains(target) else { return }
-        viewModel.tasks.move(fromOffsets: IndexSet(integer: index), toOffset: target > index ? target + 1 : target)
-        selection = viewModel.tasks[target].id
+        guard let id = selection, let moved = viewModel.tasks.moved(id: id, by: delta) else { return }
+        viewModel.tasks = moved
+        selection = id
     }
 
     private func selectLastTask(_ shouldSelect: Bool) {

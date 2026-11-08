@@ -516,8 +516,11 @@ import SwiftUI
 
     // MARK: - Log Cards (P29/U11)
 
-    /// 卡尾缩略图（日志 id → 640×360）；上限 100（WPF TrimOldThumbnails 同构）。
+    /// 卡尾缩略图（日志 id → 640×360）；上限 100（WPF TrimOldThumbnails 同构，
+    /// 按挂载时序淘汰最旧——低1/P29-2-R3，原 uuidString 序为随机淘汰）。
     @Published private(set) var logThumbnails: [UUID: NSImage] = [:]
+    /// 挂载时序（trim 的「最旧」判据；logThumbnails[id] 挂载防重保证唯一）。
+    private var thumbnailOrder: [UUID] = []
     private var logThumbnailInFlight = false
 
     /// 任务链完成/错误时截图挂到最新日志卡尾；连接不可用或截图失败静默跳过
@@ -533,7 +536,14 @@ import SwiftUI
         let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
         let thumbnail = LogCardBuilder.thumbnail(from: image)
         logThumbnails[logID] = thumbnail
-        logThumbnails = LogCardBuilder.trimThumbnails(logThumbnails)
+        thumbnailOrder.append(logID)
+        let stale = LogCardBuilder.staleThumbnailIDs(insertionOrder: thumbnailOrder)
+        for id in stale {
+            logThumbnails.removeValue(forKey: id)
+        }
+        if !stale.isEmpty {
+            thumbnailOrder.removeFirst(stale.count)
+        }
     }
 
     // MARK: - Remote Control (P26/E07+E08)
@@ -777,6 +787,10 @@ extension MAAViewModel {
 
         secretFrontRun = SecretFrontRun()
         logStore?.clearLogs(upTo: sessionBaseline)
+        // 低2③（P29-2-R3）：清日志同步失效缩略图（WPF ClearLog 整体清空卡与
+        // 缩略图同构——原无卡引用滞留至多 100 张 ≈88 MiB 量级）。
+        logThumbnails.removeAll()
+        thumbnailOrder.removeAll()
         taskIDMap.removeAll()
         userDataUpdateRun.reset()
         fightTaskParams.removeAll()
