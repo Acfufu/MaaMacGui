@@ -9770,6 +9770,278 @@
         }
       }
     },
+    "%@：%@ 库存不足（当前 %lld/目标 %lld），需补 %lld 个" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %@ is below the stock target (current %lld/target %lld); %lld more needed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %@이(가) 재고 목표에 미달(현재 %lld/목표 %lld), %lld개 추가 필요"
+          }
+        }
+      }
+    },
+    "%@：%@ 库存已充足（%lld/%lld），已跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %@ already meets the stock target (%lld/%lld); skipped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %@은(는) 이미 재고 목표 충족(%lld/%lld), 건너뜀"
+          }
+        }
+      }
+    },
+    "%@：未选择材料，已跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: no material selected; skipped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: 재료 미선택, 건너뜀"
+          }
+        }
+      }
+    },
+    "%@：目标数量为 0，已跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: target count is 0; skipped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: 목표 수량이 0, 건너뜀"
+          }
+        }
+      }
+    },
+    "%@：未选择关卡，已跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: no stage selected; skipped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: 스테이지 미선택, 건너뜀"
+          }
+        }
+      }
+    },
+    "%@：关卡「%@」今日不可执行，已跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: stage \"%@\" is not available today; skipped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: 스테이지 \"%@\"은(는) 오늘 실행 불가, 건너뜀"
+          }
+        }
+      }
+    },
+    "%@：库存数据为空，已停止该计划等待重新识别" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: inventory data is empty; the plan was paused pending re-recognition"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: 재고 데이터가 비어 있어 해당 계획을 중단하고 재인식을 기다립니다"
+          }
+        }
+      }
+    },
+    "%@%@ 库存已充足（%lld/%lld），已跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@%@ already meets the stock target (%lld/%lld); skipped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@%@은(는) 이미 재고 목표 충족(%lld/%lld), 건너뜀"
+          }
+        }
+      }
+    },
+    "%@%@ 按最新库存重算缺口（当前 %lld/目标 %lld），需补 %lld 个" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@%@ recomputed the gap against the latest inventory (current %lld/target %lld); %lld more needed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@%@ 최신 재고 기준으로 부족분을 재계산(현재 %lld/목표 %lld), %lld개 추가 필요"
+          }
+        }
+      }
+    },
+    "%@：战斗参数重算下发未生效" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: recalculated battle parameters failed to apply"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: 재계산된 전투 파라미터 적용 실패"
+          }
+        }
+      }
+    },
+    "「%@」未达库存目标（%lld/%lld）即正常结束，临期药窗口已记录为耗尽" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" ended normally below the stock target (%lld/%lld); the expiring-medicine window was recorded as exhausted"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\"이(가) 재고 목표(%lld/%lld)에 미달한 채 정상 종료했습니다. 임박 물약 창구는 소진 기록되었습니다"
+          }
+        }
+      }
+    },
+    "计划%lld：%@ 识别后库存不足（当前 %lld/目标 %lld），预检时库存缓存陈旧已按充足跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan %lld: %@ is still short after recognition (current %lld/target %lld); the preflight inventory cache was stale, so it was skipped as sufficient"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획 %lld: %@ 인식 후에도 재고 부족(현재 %lld/목표 %lld). 사전 점검 시 재고 캐시가 오래되어 충분한 것으로 건너뛰었습니다"
+          }
+        }
+      }
+    },
+    "计划%lld：战斗任务下发失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan %lld: failed to dispatch the fight task"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획 %lld: 전투 작업 전달 실패"
+          }
+        }
+      }
+    },
+    "活动进行中，库存保持已跳过。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depot maintain was skipped because an event is running."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트 진행 중이므로 재고 유지를 건너뛰었습니다."
+          }
+        }
+      }
+    },
+    "资源全开放期间，库存保持已跳过。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depot maintain was skipped during the fully open resource period."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자원 전면 개방 기간이므로 재고 유지를 건너뛰었습니다."
+          }
+        }
+      }
+    },
+    "库存保持未配置计划且未启用执行前识别，已跳过。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depot maintain has no plans and pre-run recognition is not enabled; skipped."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재고 유지에 계획이 없고 사전 인식이 비활성화되어 건너뛰었습니다."
+          }
+        }
+      }
+    },
+    "库存保持：执行前仓库识别任务下发失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depot maintain: failed to dispatch the pre-run inventory recognition task"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재고 유지: 실행 전 창고 인식 작업 전달 실패"
+          }
+        }
+      }
+    },
     "未配置计划" : {
       "localizations" : {
         "en" : {
@@ -10086,6 +10358,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "아직 구성된 계획이 없습니다. 각 계획은 스테이지와 목표 재료를 지정하며, 목표 수량에 도달하면 중단합니다."
+          }
+        }
+      }
+    },
+    "按列表顺序逐条评估；缺口在每次运行时按最新库存重算。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plans are evaluated in list order; gaps are recomputed against the latest inventory on each run."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목록 순서대로 하나씩 평가하며, 부족분은 매 실행 시 최신 재고 기준으로 재계산합니다."
           }
         }
       }

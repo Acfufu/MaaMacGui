@@ -2271,7 +2271,15 @@ extension MAAViewModel {
     func switchProfile(_ profileID: String) {
         guard profileID != dailyTaskProfile else { return }
         guard canStartTasks, dailyRunTasks == nil else {
-            logError("任务正在运行，请先停止后再切换档案。")
+            // ⑧（快照 82 清单③）：按失败条件区分文案——收口/启停在飞
+            // （isStartStopInFlight）不是「任务正在运行」，此时无可停止对象，
+            // 「请先停止」指引失实（快照 4 登记）；两串均为既有键（xcstrings 在场），
+            // 与 beginTaskOperation 两条拒绝文案同款。
+            if isStartStopInFlight {
+                logError("当前正在启动或停止任务，请稍后重试。")
+            } else {
+                logError("任务正在运行，请先停止后再切换档案。")
+            }
             return
         }
         do {

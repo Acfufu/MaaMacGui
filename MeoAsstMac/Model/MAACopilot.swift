@@ -150,3 +150,16 @@ extension CopilotSetData {
         return directory
     }
 }
+
+extension URL {
+    /// 作业文件名主干（去扩展名）——展示名与纯数字作业站 id 判定的单点提取。
+    /// ⑦（健壮性 backlog，快照 82 清单③）：收敛三处拷贝——
+    /// CopilotConfiguration.currentRateableCopilotID（C12 评价入口 id 解析）/
+    /// VideoRecognitionImport.importOutput（C13 导入产物展示名）/
+    /// CopilotContent.Item.name（作业树条目名）。MAACopilot.swift 落位使三个
+    /// copilot 套件（compile/persistence/video-recognition）的 verbatim 提取面
+    /// 均含本助手，无需 strip 同步。
+    var copilotFileStem: String {
+        deletingPathExtension().lastPathComponent
+    }
+}

@@ -51,7 +51,7 @@ enum VideoRecognitionImport {
         }
         do {
             let destination = try FileManager.default.moveCopilotToExternalDirectory(at: url)
-            return .imported(destination, name: destination.deletingPathExtension().lastPathComponent)
+            return .imported(destination, name: destination.copilotFileStem)
         } catch {
             return .failed(error.localizedDescription)
         }

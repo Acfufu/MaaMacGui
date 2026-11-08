@@ -23,7 +23,7 @@ struct CopilotContent: View {
         var children: [Item]?
 
         var name: String {
-            url.deletingPathExtension().lastPathComponent
+            url.copilotFileStem
         }
     }
 

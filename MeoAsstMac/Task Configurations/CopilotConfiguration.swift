@@ -473,7 +473,7 @@ enum CopilotDispatchPolicy {
         else {
             return nil
         }
-        let stem = url.deletingPathExtension().lastPathComponent
+        let stem = url.copilotFileStem
         guard !stem.isEmpty, stem.allSatisfy({ $0.isASCII && $0.isNumber }), let id = Int(stem) else {
             return nil
         }
