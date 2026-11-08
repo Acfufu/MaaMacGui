@@ -104,17 +104,19 @@ struct RemoteControlReport: Equatable {
     private var pollTask: Task<Void, Never>?
     private var sequentialDrainTask: Task<Void, Never>?
     private var instantDrainTask: Task<Void, Never>?
+    private var pollFailureLogged = false
+    private var reportFailureLogged = false
 
     private let defaults: UserDefaults
     private let sendJSON: @Sendable (URLRequest) async -> (Int, Data)?
 
     struct Hooks {
-        var startFull: (@Sendable () async -> Void)?
+        var startFull: (@Sendable () async -> Bool)?        // 忙/启动失败→false（评审中2 失败通道）
         var startSubset: (@Sendable (String) async -> Bool)?
-        var gacha: (@Sendable (Bool) async -> Void)?
+        var gacha: (@Sendable (Bool) async -> Bool)?        // 忙（taskAlreadyRunning）→false
         var captureImage: (@Sendable (Bool) async -> String)?
         var setConnectAddress: (@Sendable (String) async -> Void)?
-        var setStage1: (@Sendable (String) async -> Void)?
+        var setStage1: (@Sendable (String) async -> Bool)?  // 无启用战斗任务→false
         var stop: (@Sendable () async -> Void)?
         var log: (@Sendable (String) async -> Void)?
     }
@@ -156,9 +158,10 @@ struct RemoteControlReport: Equatable {
         set { defaults.set(newValue, forKey: Self.keys.pollIntervalMs) }
     }
 
-    /// WPF RegenerateDeviceIdentity 同构（GUID N 格式）。
+    /// WPF RegenerateDeviceIdentity 同构（GUID N 格式，小写——ToString("N") 小写 hex，
+    /// 评审低2：同形不同值域会被服务端视为不同形态）。
     func regenerateDeviceIdentity() {
-        deviceIdentity = UUID().uuidString.replacingOccurrences(of: "-", with: "")
+        deviceIdentity = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
         objectWillChange.send()
     }
 
@@ -168,13 +171,27 @@ struct RemoteControlReport: Equatable {
     }
 
     /// 设置视图的通用写入（UserDefaults 背书属性经此驱动 objectWillChange）。
+    /// 端点键变更即时启停轮询——WPF RemoteControlGetTaskEndpointUri setter 显式调用
+    /// InitializePollJobTask()（RemoteControlUserControlModel.cs:26-31）：首次配置/清空
+    /// 后再配置，本会话轮询必须能启动，而非等重启（评审高3）。
     func setValue(_ value: String, forKey key: String) {
         defaults.set(value, forKey: key)
         objectWillChange.send()
+        if key == Self.keys.getTaskEndpoint {
+            if RemoteControlProtocol.isEndpointValid(value) {
+                startPolling()
+            } else if isPolling {
+                stopPolling()
+            }
+        }
     }
 
     // MARK: - 轮询循环
 
+    /// WPF 三条并发循环同构（RemoteControlService.cs:89-151）：poll 入队、sequential
+    /// 消费（长任务上阻塞整场运行、currentSequentialTaskID 全程保持）、instant 消费
+    /// （并发——HeartBeat 在 sequential 执行期间读到真实 id、StopTask 在 PollIntervalMs
+    /// 内可达；评审高1/高2：单循环塌缩曾使心跳载荷恒空、急停在子集运行期不可达）。
     func startPolling() {
         guard !isPolling else { return }
         guard RemoteControlProtocol.isEndpointValid(getTaskEndpoint) else { return }
@@ -190,7 +207,25 @@ struct RemoteControlReport: Equatable {
                     return
                 }
                 await self.pollOnce()
+            }
+        }
+        sequentialDrainTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                if self.sequentialQueue.isEmpty {
+                    try? await Task.sleep(for: .milliseconds(50))
+                    continue
+                }
                 await self.drainSequentialOnce()
+            }
+        }
+        instantDrainTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                if self.instantQueue.isEmpty {
+                    try? await Task.sleep(for: .milliseconds(50))
+                    continue
+                }
                 await self.drainInstantOnce()
             }
         }
@@ -215,27 +250,32 @@ struct RemoteControlReport: Equatable {
         return await sendJSON(request)
     }
 
-    /// 一次轮询：拉取任务并幂等入队（WPF _enqueueTaskIds 同构）。
+    /// 一次轮询：拉取任务并幂等入队（WPF _enqueueTaskIds 同构）。失败日志按失败期节流
+    /// （连续失败只记一次、成功复位——评审中4：WPF 走文件日志，UI 面不逐条刷屏）。
     func pollOnce() async {
         guard let (status, data) = await postJSON(endpoint: getTaskEndpoint,
                                                   body: RemoteControlProtocol.pollBody(user: userIdentity, device: deviceIdentity)),
               (200..<300).contains(status) else {
-            await hooks.log?("远控轮询失败（端点或网络不可用）")
+            if !pollFailureLogged {
+                await hooks.log?("远控轮询失败（端点或网络不可用）")
+                pollFailureLogged = true
+            }
             return
         }
+        pollFailureLogged = false
         await ingest(tasks: RemoteControlProtocol.parseTasks(from: data))
     }
 
-    /// 幂等入队：同 id 永不重复；未知类型记日志（WPF 404 成就面为平台差异）。
+    /// 幂等入队：id 保留在分类**之前**（WPF _enqueueTaskIds 同序，RemoteControlService.cs:261-266）——
+    /// 未知类型同样保留 id 后静默，否则同 id 会以轮询频率重复日志（评审中3）。
     func ingest(tasks: [RemoteControlTask]) async {
         for task in tasks {
             guard !task.id.isEmpty, !enqueuedTaskIDs.contains(task.id) else { continue }
+            enqueuedTaskIDs.insert(task.id)
             switch RemoteControlProtocol.classify(task) {
             case .sequential:
-                enqueuedTaskIDs.insert(task.id)
                 sequentialQueue.append(task)
             case .instant:
-                enqueuedTaskIDs.insert(task.id)
                 instantQueue.append(task)
             case .unknown:
                 await hooks.log?("远控收到未知任务类型：\(task.type)（id=\(task.id)）")
@@ -262,13 +302,15 @@ struct RemoteControlReport: Equatable {
     }
 
     /// 命令矩阵执行（WPF ExecuteSequential/InstantJobLoop switch 同构）。
+    /// LinkStart/Toolbox-Gacha/Settings-Stage1 具失败通道（忙/无目标如实 FAILED，
+    /// 评审中2：无失败通道的假 SUCCESS 曾使回执对远端不可信）。
     func execute(_ task: RemoteControlTask) async -> RemoteControlReport {
         var payload = ""
         var status = RemoteControlReport.success
         let data = task.params ?? ""
         switch task.type {
         case "LinkStart":
-            await hooks.startFull?()
+            if await hooks.startFull?() != true { status = RemoteControlReport.failed }
         case "LinkStart-Base", "LinkStart-WakeUp", "LinkStart-Combat", "LinkStart-Recruiting",
              "LinkStart-Mall", "LinkStart-Mission", "LinkStart-AutoRoguelike", "LinkStart-Reclamation":
             let name = task.type.split(separator: "-").dropFirst().joined(separator: "-")
@@ -276,22 +318,26 @@ struct RemoteControlReport: Equatable {
                 status = RemoteControlReport.failed
             }
         case "Toolbox-GachaOnce":
-            await hooks.gacha?(true)
+            if await hooks.gacha?(true) != true { status = RemoteControlReport.failed }
         case "Toolbox-GachaTenTimes":
-            await hooks.gacha?(false)
+            if await hooks.gacha?(false) != true { status = RemoteControlReport.failed }
         case "Toolbox-Reclamation":
-            // 生息演算完整执行（WPF 按工具箱形态，不进 LinkStart 批处理）。
+            // WPF 走工具箱 StartReclamation（工具箱自身配置、无任务队列依赖，
+            // ReclamationUserControlModel.cs:215-230）；Mac 无工具箱生息演算面，走
+            // LinkStart 子集链（恰一启用日常任务）——差异入档 P26-[a]。
             if await hooks.startSubset?("Reclamation") != true {
                 status = RemoteControlReport.failed
             }
         case "CaptureImage", "CaptureImageNow":
-            let fresh = task.type == "CaptureImageNow"
-            payload = await hooks.captureImage?(fresh) ?? ""
+            // WPF 两类均强制实时帧（AsstProxy.cs:373-401/474-502 forceScreencap）——
+            // 映射对齐为恒 requestFresh（评审中5：原 CaptureImage→缓存帧系反转）；
+            // Mac 运行中强制缓存的差异见 Maa.swift requestFresh 门（P26-[b]）。
+            payload = await hooks.captureImage?(true) ?? ""
             if payload.isEmpty { status = RemoteControlReport.failed }
         case "Settings-ConnectAddress":
             await hooks.setConnectAddress?(data)
         case "Settings-Stage1":
-            await hooks.setStage1?(data)
+            if await hooks.setStage1?(data) != true { status = RemoteControlReport.failed }
         case "HeartBeat":
             payload = currentSequentialTaskID
         case "StopTask":
@@ -309,9 +355,13 @@ struct RemoteControlReport: Equatable {
                                                     status: report.status, task: taskID, payload: report.payload)
         guard let (reportStatus, _) = await postJSON(endpoint: reportStatusEndpoint, body: body),
               (200..<300).contains(reportStatus) else {
-            await hooks.log?("远控回执上报失败")
+            if !reportFailureLogged {
+                await hooks.log?("远控回执上报失败")
+                reportFailureLogged = true
+            }
             return
         }
+        reportFailureLogged = false
     }
 
     /// WPF ConnectionTest 同构：POST get-task 端点验证连通性。

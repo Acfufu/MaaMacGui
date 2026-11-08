@@ -515,13 +515,13 @@ import SwiftUI
     /// @Sendable async 闭包直呼 @MainActor 方法自动 hop。
     func wireRemoteControlHooks() {
         remoteControl.hooks.startFull = { [weak self] in
-            await self?.remoteStartFull()
+            await self?.remoteStartFull() ?? false
         }
         remoteControl.hooks.startSubset = { [weak self] name in
             await self?.startRemoteSubset(name) ?? false
         }
         remoteControl.hooks.gacha = { [weak self] once in
-            await self?.remoteGacha(once: once)
+            await self?.remoteGacha(once: once) ?? false
         }
         remoteControl.hooks.captureImage = { [weak self] fresh in
             await self?.remoteCaptureImage(fresh: fresh) ?? ""
@@ -530,7 +530,7 @@ import SwiftUI
             await self?.remoteSetConnectAddress(value)
         }
         remoteControl.hooks.setStage1 = { [weak self] value in
-            await self?.remoteSetStage1(value)
+            await self?.remoteSetStage1(value) ?? false
         }
         remoteControl.hooks.stop = { [weak self] in
             await self?.remoteStop()
@@ -541,12 +541,20 @@ import SwiftUI
     }
 
     /// 以下为钩子的 @MainActor 执行面（与 UI/任务互斥同一执行域）。
-    @MainActor func remoteStartFull() {
-        Task { _ = await self.startDailyTasks(origin: .remote) }
+    /// LinkStart 全量（评审中2 失败通道）：忙/启动失败如实 FAILED。回执时序差异
+    /// （WPF 经 UntilIdleAsync 等待后启动且运行结束才回执）入档 P26-[c]。
+    @MainActor func remoteStartFull() async -> Bool {
+        await startDailyTasks(origin: .remote) == .started
     }
 
-    @MainActor func remoteGacha(once: Bool) {
-        Task { try? await self.gachaPoll(once: once) }
+    /// 抽卡（评审中2）：忙（taskAlreadyRunning）如实 FAILED（原 try? 吞错假 SUCCESS）。
+    @MainActor func remoteGacha(once: Bool) async -> Bool {
+        do {
+            try await gachaPoll(once: once)
+            return true
+        } catch {
+            return false
+        }
     }
 
     @MainActor func remoteStop() {
@@ -599,20 +607,22 @@ import SwiftUI
         }
     }
 
-    /// Settings-Stage1：首个启用战斗任务的主选关卡改写（WPF StagePlan 单项同位）。
-    func remoteSetStage1(_ stage: String) {
+    /// Settings-Stage1：首个启用战斗任务的主选关卡改写（WPF StagePlan 单项同位）；
+    /// 无启用战斗任务如实 FAILED（评审中2）。
+    func remoteSetStage1(_ stage: String) -> Bool {
         guard let index = tasks.firstIndex(where: { dailyTask in
             guard dailyTask.enabled, case .fight = dailyTask.task else { return false }
             return true
         }) else {
             logError(verbatim: "远控设置主线关卡失败：无启用的战斗任务")
-            return
+            return false
         }
         if case .fight(var config) = tasks[index].task {
             config.stage = stage
             tasks[index] = DailyTask(id: tasks[index].id, task: .fight(config),
                                      enabled: tasks[index].enabled, runOnce: tasks[index].runOnce)
         }
+        return true
     }
 
     // MARK: - Initializer
