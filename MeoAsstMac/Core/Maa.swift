@@ -169,6 +169,12 @@ actor MAAHandle {
         }
     }
 
+    /// P29/U12: Core 版本（AsstCaller.h:136，全局调用无需 handle）。
+    nonisolated static func coreVersion() -> String {
+        guard let cString = AsstGetVersion() else { return "" }
+        return String(cString: cString)
+    }
+
     /// Core AsstBackToHome（pinned 51dac87 AsstCaller.h:88）：MaaTouch 回到游戏首页，
     /// P22 收尾动作「返回安卓主页」消费。
     @discardableResult

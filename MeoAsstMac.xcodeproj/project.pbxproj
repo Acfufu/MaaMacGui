@@ -191,6 +191,8 @@
 		F13300000000000000000002 /* RemoteControlSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13300000000000000000001 /* RemoteControlSettingsView.swift */; };
 		F13400000000000000000002 /* ResourceUpdateNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13400000000000000000001 /* ResourceUpdateNetwork.swift */; };
 		F13500000000000000000002 /* UpdateFeedPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13500000000000000000001 /* UpdateFeedPolicy.swift */; };
+		F13600000000000000000002 /* DiagnosticsReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13600000000000000000001 /* DiagnosticsReport.swift */; };
+		F13700000000000000000002 /* DiagnosticsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13700000000000000000001 /* DiagnosticsSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -411,6 +413,8 @@
 		F13300000000000000000001 /* RemoteControlSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlSettingsView.swift; sourceTree = "<group>"; };
 		F13400000000000000000001 /* ResourceUpdateNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceUpdateNetwork.swift; sourceTree = "<group>"; };
 		F13500000000000000000001 /* UpdateFeedPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateFeedPolicy.swift; sourceTree = "<group>"; };
+		F13600000000000000000001 /* DiagnosticsReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsReport.swift; sourceTree = "<group>"; };
+		F13700000000000000000001 /* DiagnosticsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -697,6 +701,7 @@
 				F13100000000000000000001 /* ExternalNotificationTrigger.swift */,
 				F13200000000000000000001 /* RemoteControlService.swift */,
 				F12500000000000000000001 /* StartupAutoRun.swift */,
+				F13600000000000000000001 /* DiagnosticsReport.swift */,
 				F11400000000000000000001 /* YituliuOperBoxService.swift */,
 				F11500000000000000000001 /* DataExport.swift */,
 				F11700000000000000000001 /* DepotMaintainPlanner.swift */,
@@ -748,6 +753,7 @@
 				92EB82862A0CD315006DD9D2 /* SystemSettingsView.swift */,
 				F13000000000000000000001 /* ExternalNotificationSettingsView.swift */,
 				F13300000000000000000001 /* RemoteControlSettingsView.swift */,
+				F13700000000000000000001 /* DiagnosticsSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -979,6 +985,8 @@
 				F12600000000000000000002 /* MainWindowVisibility.swift in Sources */,
 				F13400000000000000000002 /* ResourceUpdateNetwork.swift in Sources */,
 				F13500000000000000000002 /* UpdateFeedPolicy.swift in Sources */,
+				F13600000000000000000002 /* DiagnosticsReport.swift in Sources */,
+				F13700000000000000000002 /* DiagnosticsSettingsView.swift in Sources */,
 				F12700000000000000000002 /* LocalNotificationService.swift in Sources */,
 				F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */,
 				F11500000000000000000002 /* DataExport.swift in Sources */,

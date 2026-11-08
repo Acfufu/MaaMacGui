@@ -8,6 +8,7 @@ struct SystemSettingsView: View {
     @State private var showHotkeys = false
     @State private var showExternalNotifications = false
     @State private var showRemoteControl = false
+    @State private var showDiagnostics = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -18,6 +19,7 @@ struct SystemSettingsView: View {
             Button("全局热键…") { showHotkeys = true }
             Button("外部通知…") { showExternalNotifications = true }
             Button("远控…") { showRemoteControl = true }
+            Button("诊断与支持…") { showDiagnostics = true }
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 10) {
@@ -112,6 +114,12 @@ struct SystemSettingsView: View {
                 RemoteControlSettingsView(service: viewModel.remoteControl)
                 Button("完成") { showRemoteControl = false }.keyboardShortcut(.defaultAction).padding(.bottom)
             }
+        }
+        .sheet(isPresented: $showDiagnostics) {
+            VStack {
+                DiagnosticsSettingsView()
+                Button("完成") { showDiagnostics = false }.keyboardShortcut(.defaultAction).padding(.bottom)
+            }.environmentObject(viewModel)
         }
     }
 }
