@@ -26,7 +26,7 @@ anchor() {
     fi
 }
 anchor "drop target declares json+movie" '.onDrop(of: [.json, .movie]'
-anchor "movie leg loads movie type per provider" 'movieTypeID'
+anchor "file URL leg uses loadObject (loadItem returns content, not URL)" 'loadObject(ofClass: URL.self)'
 anchor "movie dispatch branch intact" 'conforms(to: .movie)'
 anchor "movie branch reaches recognizeVideo" 'recognizeVideo(url: url)'
 

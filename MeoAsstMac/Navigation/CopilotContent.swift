@@ -151,26 +151,25 @@ struct CopilotContent: View {
     }
 
     private func addCopilots(_ providers: [NSItemProvider]) -> Bool {
-        // C13 触发面：拖入既接受作业 JSON 也接受视频，逐项按声明类型取 URL——
-        // json 走作业导入，movie 走 recognizeVideo（WPF 已移除视频识别面而 Mac 按
-        // CSV C13 有意恢复该面，divergence P15-[b]）。
-        let jsonTypeID = UTType.json.identifier
-        let movieTypeID = UTType.movie.identifier
+        // C13 触发面：拖入既接受作业 JSON 也接受视频，逐项取文件 URL 后按内容类型
+        // 分派——json 走作业导入，movie 走 recognizeVideo（WPF 已移除视频识别面而
+        // Mac 按 CSV C13 有意恢复该面，divergence P15-[b]）。取腿用 loadObject：
+        // loadItem 对文件型 provider 返回内容而非 URL（as? URL 必败——P15-2 复验
+        // 门③运行时断裂实证，json/movie 两腿同断；macOS 27 起 loadItem 已弃用并
+        // 明示改用 loadObject）。
         let canLoadAll = providers.allSatisfy { provider in
-            provider.hasItemConformingToTypeIdentifier(jsonTypeID)
-                || provider.hasItemConformingToTypeIdentifier(movieTypeID)
+            provider.hasItemConformingToTypeIdentifier(UTType.json.identifier)
+                || provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
         }
         guard !providers.isEmpty, canLoadAll else { return false }
 
         let (stream, continuation) = AsyncStream<Result<URL, Error>>.makeStream()
 
         for provider in providers {
-            let typeID = provider.hasItemConformingToTypeIdentifier(jsonTypeID)
-                ? jsonTypeID : movieTypeID
-            provider.loadItem(forTypeIdentifier: typeID) { item, error in
+            provider.loadObject(ofClass: URL.self) { url, error in
                 if let error {
                     continuation.yield(.failure(error))
-                } else if let url = item as? URL {
+                } else if let url {
                     continuation.yield(.success(url))
                 } else {
                     continuation.yield(.failure(CocoaError(.fileReadUnknown)))
