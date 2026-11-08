@@ -97,6 +97,9 @@ struct Events {mutating func register(taskID:Int32,runID:UUID){}}
  func logError(_ text:LocalizedStringResource){logs.append(String(localized:text))}
  func invalidateInventory(){inventory.invalidate();logStore?.setDepot(nil);logStore?.setOperBox(nil)}
  func startCoreTasks(recordDailyTaskStart:Bool) async throws {handle!.starts+=1}
+ // P12.4 识别回填复查钩子（processDailyUserDataTerminal .depot 分支引用）；
+ // 真实复查行为由 run-depot-maintain-dispatch-tests.py 专责，此处 no-op 存根。
+ func reviewDepotMaintainSkippedPlans(){}
 ''' + composite + extra + r'''
  func processExtra(_ info:RawInfo){switch info.taskchain{
 ''' + raw_cases + r'''

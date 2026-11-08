@@ -282,6 +282,17 @@ struct FightConfiguration: MAATaskConfiguration {
         return prepared
     }
 
+    /// 已下发冻结目标战斗任务的会话档案（P12.4 中途重算）：战斗链启动时按最新
+    /// 快照重算缺口（upstream FightTask OnTaskStatusChanged 同构）。重算目标 =
+    /// startInventory + requiredDrops（= 目标总量）；不计双芯片折算（upstream 理智
+    /// 作战路径恒 false），正常完成且未达标同样记录临期药耗尽证明。
+    struct FrozenTargetDispatch {
+        /// 下发时的战斗配置（drops = {目标物品: requiredDrops}），重算按它重建参数。
+        let fight: FightConfiguration
+        let itemID: String
+        let target: Int
+    }
+
     // 掉落物品列表
     @MainActor static var dropItems: [(id: String, item: DropItem)] = []
     @MainActor static var inventoryDropItems: [(id: String, item: DropItem)] {
@@ -421,3 +432,6 @@ extension FightConfiguration.Params {
         }
     }
 }
+
+/// 顶层别名：冻结目标战斗档案的会话态引用面保持裸名（P12.4 中途重算）。
+typealias FrozenTargetDispatch = FightConfiguration.FrozenTargetDispatch

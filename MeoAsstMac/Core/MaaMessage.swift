@@ -407,6 +407,10 @@ extension MAAViewModel {
                 }
                 catch { invalidateInventory(); logError("Inventory.RecognitionRequired") }
             }
+            if message.code == .TaskChainCompleted {
+                // P12.4 识别回填复查：任一仓库识别完成后复查预检充足计划的缓存翻转。
+                reviewDepotMaintainSkippedPlans()
+            }
             if message.code == .TaskChainCompleted || message.code == .TaskChainError {
                 inventoryDepotTaskID = nil
                 pendingInventoryDepot = nil
@@ -428,6 +432,13 @@ extension MAAViewModel {
         }
 
         processDailyUserDataTerminal(coreID: info.taskid, code: message.code, taskchain: info.taskchain)
+
+        // P12.4 中途重算（upstream OnTaskStatusChanged）：库存保持/冻结目标战斗链
+        // 启动时按最新快照重算缺口，正常完成未达标时记录临期药耗尽证明。未登记的
+        // 战斗链在钩子内直接返回。
+        if info.taskchain == "Fight" {
+            Task { await self.processDepotMaintainFight(coreID: info.taskid, code: message.code) }
+        }
 
         if info.taskchain == "CloseDown" {
             // WPF retains this task-chain callback but currently performs no operation.

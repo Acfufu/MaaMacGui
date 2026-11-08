@@ -167,6 +167,16 @@ import SwiftUI
     @Published var taskIDMap: [Int32: UUID] = [:]
     // Preserve the exact parameters submitted to Core for delayed medicine callbacks.
     var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
+    // P12.4 库存保持中途重算（upstream OnTaskStatusChanged 会话态，运行开始重置）：
+    // 已下发战斗的档案、识别回填复查登记与临期药耗尽证明。
+    var depotFightPlans: [Int32: DepotFightDispatch] = [:]
+    var frozenTargetFights: [Int32: FrozenTargetDispatch] = [:]
+    var depotMaintainReviews: [DepotMaintainReviewEntry] = []
+    var provenExhaustedMedicineDays = 0
+    /// 本轮冻结目标的消费凭据（startTasks 规划期设置、战斗下发时消费）：元组字段
+    /// (itemID, 重算目标量 = startInventory + requiredDrops)。不随 ensureHandle 重置
+    /// ——重置发生在规划之后；每轮规划无条件覆写，下发登记消费。
+    var pendingFrozenTarget: (itemID: String, target: Int)?
     @Published var newTaskAdded = false
     @Published var inventory = InventorySnapshotAdapter()
     var inventoryDepotTaskID: Int32?
@@ -410,6 +420,10 @@ extension MAAViewModel {
         taskIDMap.removeAll()
         userDataUpdateRun.reset()
         fightTaskParams.removeAll()
+        depotFightPlans.removeAll()
+        frozenTargetFights.removeAll()
+        depotMaintainReviews.removeAll()
+        provenExhaustedMedicineDays = 0
         taskStatus.removeAll()
 
         guard requireConnect else { return }
@@ -1238,6 +1252,8 @@ extension MAAViewModel {
         var frozenPlan: InventoryTargetPlan?
         var reachedTaskID: UUID?
         var frozenItemID: String?
+        // 每轮规划无条件覆写（含无目标轮次），不残留上一轮凭据。
+        pendingFrozenTarget = nil
         if let targetIndex = targets.first, case .fight(let config) = runTasks[targetIndex].task,
            let target = config.inventoryTarget {
             guard await handle?.connected == true else {
@@ -1258,6 +1274,8 @@ extension MAAViewModel {
                 runTasks[targetIndex].enabled = false
                 reachedTaskID = runTasks[targetIndex].id
             } else {
+                // P12.4 中途重算凭据：战斗链启动时按最新快照重算缺口。
+                pendingFrozenTarget = (itemID: target.itemID, target: plan.startInventory + plan.requiredDrops)
                 runTasks[targetIndex] = DailyTask(id: runTasks[targetIndex].id,
                     task: .fight(config.preparingInventoryTarget(plan)), enabled: true)
             }
@@ -1426,7 +1444,6 @@ extension MAAViewModel {
                     // P12.3 库存保持展开：任务级跳过 → 可选前置识别 → 逐计划战斗追加。
                     let dispatched = try await appendDepotMaintainTask(
                         task: task, config: depotConfig, runID: runID, scope: scope,
-                        hasFrozenInventoryTarget: frozenPlan != nil,
                         inventoryFightIDs: &inventoryFightIDs)
                     appendedAnyTask = appendedAnyTask || dispatched
                     continue
@@ -1473,6 +1490,15 @@ extension MAAViewModel {
                         if let coreID {
                             fightTaskParams[coreID] = params
                             inventoryFightIDs.insert(coreID)
+                            // P12.4 冻结目标战斗档案：战斗链启动时按最新快照重算缺口
+                            // （仅冻结目标战斗携带单键 drops，普通战斗无 drops）。
+                            if let pending = pendingFrozenTarget,
+                               dispatchConfig.drops?.count == 1,
+                               dispatchConfig.drops?.keys.first == pending.itemID {
+                                frozenTargetFights[coreID] = FrozenTargetDispatch(
+                                    fight: dispatchConfig, itemID: pending.itemID, target: pending.target)
+                                pendingFrozenTarget = nil
+                            }
                         }
                     }
                 } else if case .infrast(var dispatchConfig) = task.task {
@@ -2438,6 +2464,8 @@ extension MAAViewModel {
                 case .depot(let items, let complete):
                     try inventory.capture(items: items, complete: complete, scope: entry.owner.scope, now: now)
                     if bound { try depotHistoryStore.save(items: items, complete: complete, scope: entry.owner.scope, now: now) }
+                    // P12.4 识别回填复查：同批独立更新资料任务的识别同样触发。
+                    reviewDepotMaintainSkippedPlans()
                 case .operators(let operators):
                     if bound {
                         try operBoxHistoryStore.save(operators, scope: entry.owner.scope, now: now)
@@ -2501,12 +2529,12 @@ extension MAAViewModel {
     /// P12.3 库存保持分发展开（I05-I12）：任务级跳过 → 可选前置仓库识别 →
     /// 逐计划预检与战斗任务追加。对齐 upstream DepotMaintainTaskUserControlModel
     /// 序列化（dev-v2 d75bf9a）；预检库存取会话快照、空缓存按 0 计（upstream 同口径，
-    /// 由识别回填后的重算纠正——Mac 中途重算归 P12.4，divergence P12-[a]）。
+    /// 识别回填后的中途重算已于 P12.4 落地，divergence P12-[a] 收口）；与冻结目标
+    /// 任务同批共存（P12-[e] 复评后放开，重算承接）。
     /// 返回本任务是否实际下发了 Core 任务。
     @discardableResult
     func appendDepotMaintainTask(task: DailyTask, config: DepotMaintainConfiguration,
                                  runID: UUID, scope: InventoryScope,
-                                 hasFrozenInventoryTarget: Bool,
                                  inventoryFightIDs: inout Set<Int32>) async throws -> Bool {
         guard dailyRunCoordinator.active?.id == runID, inventoryScope == scope else { throw CancellationError() }
         let now = Date.now
@@ -2523,34 +2551,23 @@ extension MAAViewModel {
             logWarn("库存保持未配置计划且未启用执行前识别，已跳过。")
             return false
         }
-        if hasFrozenInventoryTarget && config.updateDepot {
-            // 单目标库存任务的冻结校验依赖快照代际不变；本任务的前置识别会在
-            // 运行中刷新快照使其失效。upstream 靠逐计划重算消化该交互——Mac 重算
-            // 就绪（P12.4）前显式跳过本任务而非让整跑失败。
-            taskStatus[task.id] = .skipped
-            skipDepotMaintainRunOnce(task: task)
-            logWarn("库存保持的执行前识别会刷新库存快照，与目标库存任务同批运行会使冻结校验失效，本轮已跳过「\(config.subtitle)」。")
-            return false
-        }
+        // 冻结共存（P12-[e] 复评，P12.4）：upstream 允许库存保持与目标库存任务同批
+        // 运行并靠中途重算消化——冻结目标战斗与库存保持计划战斗均在战斗链启动时
+        // 按最新快照重算缺口，识别回填复查覆盖预检充足计划的向下翻转，同批共存
+        // 不再显式跳过（端到端共行业界归真机验收）。
 
         logInfo("库存保持")
 
         // 预检库存：会话快照（按账号/区服/档案/本地标识隔离）；无数据按 0 计。
         let depotItems = currentInventorySnapshot?.items ?? [:]
-        let catalog = StageCatalog(context: StageActivityContext(
-            channel: clientChannel, activities: stageActivity))
         let evaluations = DepotMaintainPlanner.evaluate(
             config: config, inventory: depotItems,
             formulas: FightConfiguration.dropFormulaTable,
-            isStageOpen: { code in
-                let normalized = FightConfiguration.normalizedStage(code)
-                if let entry = catalog.entries(at: now).first(where: { $0.code == normalized }) {
-                    return entry.isOpen
-                }
-                // 目录外口径与备选解析同源（F05）：活动形码按过期活动判关，
-                // 其余 fail-open（手输/特殊导航可连性）。
-                return !FightConfiguration.isExpiredActivityShape(normalized)
-            })
+            isStageOpen: depotStageOpenPredicate(at: now))
+        // 登记识别回填复查（upstream _serializedDepotMaintainTasks 同位）：任一仓库
+        // 识别完成后复查充足计划的缓存翻转（含未启用前置识别、同批独立更新资料
+        // 任务识别的场景）。
+        depotMaintainReviews.append(DepotMaintainReviewEntry(config: config, evaluations: evaluations))
 
         var dispatched = false
         for evaluation in evaluations {
@@ -2601,7 +2618,11 @@ extension MAAViewModel {
             dispatched = true
             taskIDMap[coreID] = task.id
             achievementEvents.register(taskID: coreID, runID: runID)
+            // 中途重算档案（P12.4：战斗链启动重算缺口、完成记录临期药耗尽证明）+
             // 掉落并入会话快照（既有水位线管线）：前序计划掉落影响后续预检（I08）。
+            depotFightPlans[coreID] = DepotFightDispatch(plan: evaluation.plan, config: config,
+                                                         label: evaluation.index + 1)
+            fightTaskParams[coreID] = fight.params
             inventoryFightIDs.insert(coreID)
         }
 
@@ -2610,6 +2631,161 @@ extension MAAViewModel {
             taskStatus[task.id] = .success
         }
         return dispatched
+    }
+
+    // MARK: 中途重算与识别回填（P12.4，upstream OnTaskStatusChanged）
+
+    /// 关卡开放判定（预检与识别回填复查共用）：目录内取 isOpen；目录外活动形码
+    /// 按过期活动判关，其余 fail-open（手输/特殊导航可连性，与 F05 备选解析同源）。
+    private func depotStageOpenPredicate(at date: Date) -> (String) -> Bool {
+        let catalog = StageCatalog(context: StageActivityContext(
+            channel: clientChannel, activities: stageActivity))
+        return { code in
+            let normalized = FightConfiguration.normalizedStage(code)
+            if let entry = catalog.entries(at: date).first(where: { $0.code == normalized }) {
+                return entry.isOpen
+            }
+            return !FightConfiguration.isExpiredActivityShape(normalized)
+        }
+    }
+
+    private func inventoryDropName(_ itemID: String) -> String {
+        FightConfiguration.dropItems.first { $0.id == itemID }?.item.name ?? itemID
+    }
+
+    /// P12.4 战斗链状态钩子（upstream OnTaskStatusChanged）：启动时按最新快照重算
+    /// 缺口，正常完成未达标时记录临期药耗尽证明。由消息处理在 Fight 任务链事件
+    /// 时调用；未登记的战斗链（普通日常战斗等）直接返回。
+    func processDepotMaintainFight(coreID: Int32, code: Int) async {
+        switch code {
+        case 10001: // TaskChainStart
+            await refreshDepotFightDrops(coreID: coreID)
+        case 10002: // TaskChainCompleted
+            recordFightCompletionProvenExhaustion(coreID: coreID)
+        default: break
+        }
+    }
+
+    /// 战斗链启动：用最新库存重算缺口并经 AsstSetTaskParams 改写已排队战斗参数
+    /// （upstream RefreshFightTaskDrops）。已充足 → times=0 跳过（核心侧不进终端
+    /// 不导航）；不足 → drops=need。覆盖库存保持计划战斗与冻结目标战斗（重算由
+    /// 前序识别/掉落 merge 刷新后的快照承接）。
+    ///
+    /// 快照缺失（nil）与 upstream「无数据」不同义：Mac 在非 Fight/Depot/OperBox
+    /// 链启动时会做一致性失效（invalidateInventory），nil 可能只是运行中失效而非
+    /// 从未识别。仅前置识别已启用且识别未成功（失败/不完整/作用域失配）时按
+    /// upstream 无数据口径 times=0 停刷（按 0 计会把目标量全额下发）；其余情形
+    /// 保留下发参数（P12-[i]，fail-open——冻结战斗的下发参数本就来自追加时的
+    /// 有效快照校验）。
+    private func refreshDepotFightDrops(coreID: Int32) async {
+        let recalculated: (fight: FightConfiguration, label: String)?
+        if let dispatch = depotFightPlans[coreID] {
+            let label = "计划\(dispatch.label)"
+            let dropName = inventoryDropName(dispatch.plan.dropID)
+            let fight: FightConfiguration
+            if let snapshot = currentInventorySnapshot {
+                let current = DepotMaintainPlanner.effectiveCount(
+                    of: dispatch.plan, inventory: snapshot.items,
+                    formulas: FightConfiguration.dropFormulaTable,
+                    chipConversion: dispatch.config.countDualChipAsChipPack)
+                let need = dispatch.plan.dropCount - current
+                if need <= 0 {
+                    var skipped = DepotMaintainPlanner.dispatchFight(for: dispatch.plan, config: dispatch.config, need: 0)
+                    skipped.times = 0
+                    fight = skipped
+                    logInfo("\(label)：\(dropName) 库存已充足（\(current)/\(dispatch.plan.dropCount)），已跳过")
+                } else {
+                    fight = DepotMaintainPlanner.dispatchFight(for: dispatch.plan, config: dispatch.config, need: need)
+                    logInfo("\(label)：\(dropName) 按最新库存重算缺口（当前 \(current)/目标 \(dispatch.plan.dropCount)），需补 \(need) 个")
+                }
+                recalculated = (fight, label)
+            } else if dispatch.config.updateDepot {
+                var stopped = DepotMaintainPlanner.dispatchFight(for: dispatch.plan, config: dispatch.config, need: 0)
+                stopped.times = 0
+                logWarn("\(label)：库存数据为空，已停止该计划等待重新识别")
+                recalculated = (stopped, label)
+            } else {
+                // 未启用前置识别：下发参数即预检口径，运行中失效不做中途重算。
+                return
+            }
+        } else if let frozen = frozenTargetFights[coreID] {
+            var fight = frozen.fight
+            let label = "「\(fight.subtitle)」"
+            let dropName = inventoryDropName(frozen.itemID)
+            guard let snapshot = currentInventorySnapshot else { return }
+            let current = max(snapshot.items[frozen.itemID] ?? 0, 0)
+            let need = frozen.target - current
+            if need <= 0 {
+                fight.times = 0
+                logInfo("\(label)\(dropName) 库存已充足（\(current)/\(frozen.target)），已跳过")
+            } else {
+                fight.drops = [frozen.itemID: need]
+                logInfo("\(label)\(dropName) 按最新库存重算缺口（当前 \(current)/目标 \(frozen.target)），需补 \(need) 个")
+            }
+            recalculated = (fight, label)
+        } else {
+            return
+        }
+        guard let (fight, label) = recalculated, let params = try? fight.params.jsonString() else { return }
+        // Core 布尔结果不阻断运行（任务可能已被停止/清队）；仅记录可观测告警。
+        if await handle?.setTaskParams(taskID: coreID, params: params) != true {
+            logWarn("\(label)：战斗参数重算下发未生效")
+        }
+    }
+
+    /// 战斗链正常完成：无次数上限的战斗未达库存目标即结束只可能是理智不足，记录
+    /// 其临期药窗口为已耗尽（upstream ProvenExhaustedMedicineDays，运行内只增不减，
+    /// 由 ensureHandle 重置）。有次数限制的战斗打满次数未达标结束原因不唯一，不构成
+    /// 证明（upstream 同口径）；库存数据为空或已达标同样不构成证明。
+    private func recordFightCompletionProvenExhaustion(coreID: Int32) {
+        let expiry: Int
+        let dropID: String
+        let target: Int
+        if let dispatch = depotFightPlans[coreID] {
+            expiry = dispatch.config.useExpiringMedicine ? DepotMaintainConfiguration.expiringMedicineDays : 0
+            dropID = dispatch.plan.dropID
+            target = dispatch.plan.dropCount
+        } else if let frozen = frozenTargetFights[coreID] {
+            guard frozen.fight.times == nil || frozen.fight.times == Int(Int32.max) else { return }
+            expiry = frozen.fight.medicine_expire_days
+            dropID = frozen.itemID
+            target = frozen.target
+        } else {
+            return
+        }
+        guard expiry > 0, !dropID.isEmpty, target > 0 else { return }
+        guard let snapshot = currentInventorySnapshot else { return }
+        let current = max(snapshot.items[dropID] ?? 0, 0)
+        guard current < target else { return }
+        provenExhaustedMedicineDays = max(provenExhaustedMedicineDays, expiry)
+        logInfo("「\(inventoryDropName(dropID))」未达库存目标（\(current)/\(target)）即正常结束，临期药窗口已记录为耗尽")
+    }
+
+    /// 仓库识别完成后复查本轮被预检跳过（未下发）的计划：预检基于识别前的缓存，
+    /// 识别纠正后出现「预检充足、实际不足」的向下翻转时逐条告警，避免静默漏刷
+    /// 一轮（upstream ReviewSkippedPlansAfterDepotSync）。触发源不限库存保持自身的
+    /// 前置识别——同批独立更新资料任务的识别同样触发。登记一次性消费；排序/
+    /// 截断口径见 DepotMaintainPlanner.cacheStaleSkips。
+    func reviewDepotMaintainSkippedPlans() {
+        guard !depotMaintainReviews.isEmpty else { return }
+        let entries = depotMaintainReviews
+        depotMaintainReviews.removeAll()
+        // 没有任何库存数据时无从判断翻转，按 0 计会误报计划不足（upstream 同口径）。
+        guard let snapshot = currentInventorySnapshot else { return }
+        let isOpen = depotStageOpenPredicate(at: Date.now)
+        for entry in entries {
+            let dispatched = Set(entry.evaluations.compactMap {
+                if case .dispatched = $0.outcome { return $0.index }
+                return nil
+            })
+            for skip in DepotMaintainPlanner.cacheStaleSkips(
+                config: entry.config, dispatchedIndexes: dispatched,
+                inventory: snapshot.items, formulas: FightConfiguration.dropFormulaTable,
+                isStageOpen: isOpen) {
+                let plan = entry.config.plans[skip.index]
+                logWarn("计划\(skip.index + 1)：\(inventoryDropName(plan.dropID)) 识别后库存不足（当前 \(skip.current)/目标 \(plan.dropCount)），预检时库存缓存陈旧已按充足跳过")
+            }
+        }
     }
 
     /// 任务级跳过时冻结 runOnce（对齐 appendDailyUserDataUpdate 的跳过语义：

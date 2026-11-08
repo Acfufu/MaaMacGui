@@ -127,6 +127,12 @@ struct RoguelikeCfgStub: Equatable { func validateBlackflowStart(available: Bool
 struct DropItemStub {}
 struct InventoryTarget: Equatable { var itemID: String = ""; var quantity: Int = 0 }
 struct InventoryTargetPlan { var generation = 0; var startInventory = 0; var requiredDrops = 0 }
+// P12.4 冻结目标战斗档案（startTasks 登记引用；生产形状见 InventoryTarget.swift）。
+struct FrozenTargetDispatch {
+    var fight: FightConfiguration
+    var itemID: String
+    var target: Int
+}
 enum InventoryTargetError: Error { case recognitionRequired, unsafeOrder, stalePreparation }
 struct InventoryScope: Equatable { var connection: String }
 struct InventorySnapshot {}
@@ -157,6 +163,7 @@ struct FightConfiguration: Equatable {
     var useActivityMedicine = false
     var inventoryTarget: InventoryTarget? = nil
     var weeklyDays: [Int]? = nil
+    var drops: [String: Int]? = nil
     enum StagePlanOutcome: Equatable { case dispatch(stage: String); case skipAllClosed }
     struct StagePlanResolution: Equatable {
         var outcome: StagePlanOutcome
@@ -266,6 +273,9 @@ struct DailyTask: Equatable {
     var inventoryScope = InventoryScope(connection: "adb")
     var currentInventorySnapshot: InventorySnapshot? { nil }
     var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
+    // P12.4 中途重算会话态（startTasks 冻结目标登记引用）。
+    var frozenTargetFights: [Int32: FrozenTargetDispatch] = [:]
+    var pendingFrozenTarget: (itemID: String, target: Int)?
     var recruitTagNames: [String: String] = [:]
     func invalidateInventory() { inventory.invalidate() }
     func checkStartupCancellation() throws {}

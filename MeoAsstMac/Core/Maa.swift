@@ -179,6 +179,14 @@ actor MAAHandle {
         }
     }
 
+    /// 更新已排队任务的参数（Core AsstSetTaskParams）：库存保持中途重算在战斗链
+    /// 启动时按最新库存快照改写 drops/times。返回 Core 布尔结果，失败处置由调用方
+    /// 决定（消息处理路径不打断运行，仅记录）。
+    @discardableResult
+    func setTaskParams(taskID: Int32, params: String) -> Bool {
+        AsstSetTaskParams(handle, taskID, params).isTrue
+    }
+
     func connect(adbPath: String, address: String, profile: String) async throws {
         let info = try await waitFor(AsstAsyncConnect(handle, adbPath, address, profile, 0))
 

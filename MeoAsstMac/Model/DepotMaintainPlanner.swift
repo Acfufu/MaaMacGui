@@ -93,32 +93,43 @@ enum DepotMaintainPlanner {
 
     // MARK: 预检与下发顺序（I07/I08/I09）
 
+    /// SortByProgress 迭代顺序（下发预检与识别回填复查共用）：达成率升序，达成率
+    /// 相等保持配置顺序——Swift sort 不稳定，显式以下标决胜实现 upstream LINQ
+    /// 稳定序；无效计划置末尾。仅影响迭代顺序，配置列表顺序保持不变。
+    static func progressOrderedPlans(_ plans: [(offset: Int, element: DepotMaintainPlan)],
+                                     sortByProgress: Bool, inventory: [String: Int],
+                                     formulas: [String: [String: Int]],
+                                     chipConversion: Bool) -> [(offset: Int, element: DepotMaintainPlan)] {
+        guard sortByProgress, plans.count > 1 else { return plans }
+        var order = plans
+        order.sort { lhs, rhs in
+            switch (progress(of: lhs.element, inventory: inventory, formulas: formulas, chipConversion: chipConversion),
+                    progress(of: rhs.element, inventory: inventory, formulas: formulas, chipConversion: chipConversion)) {
+            case let (l?, r?):
+                return l == r ? lhs.offset < rhs.offset : l < r
+            case (nil, _?):
+                return false
+            case (_?, nil):
+                return true
+            case (nil, nil):
+                return lhs.offset < rhs.offset
+            }
+        }
+        return order
+    }
+
     /// 全量预检。返回按下发顺序排列的评估：
-    /// - SortByProgress 开启且计划数 > 1 时按达成率升序重排（达成率相等保持配置
-    ///   顺序——Swift sort 不稳定，显式以下标决胜实现 upstream LINQ 稳定序）；
-    ///   无效计划置末尾。仅影响下发顺序，Evaluation.index 保持原配置下标。
+    /// - SortByProgress 开启且计划数 > 1 时按达成率升序重排（顺序实现见
+    ///   progressOrderedPlans）。仅影响下发顺序，Evaluation.index 保持原配置下标。
     /// - OnlyFirstInsufficientPlan 开启时，首个 dispatched 之后的计划不再评估
     ///   （upstream「其后计划本轮不评估也不输出日志」）。
     /// - 预检顺序对齐 upstream：材料 → 目标 → 已达标 → 关卡（已达标先于开放判定）。
     static func evaluate(config: DepotMaintainConfiguration, inventory: [String: Int],
                          formulas: [String: [String: Int]] = [:],
                          isStageOpen: (String) -> Bool = { _ in true }) -> [Evaluation] {
-        var order = Array(config.plans.enumerated())
-        if config.sortByProgress, config.plans.count > 1 {
-            order.sort { lhs, rhs in
-                switch (progress(of: lhs.element, inventory: inventory, formulas: formulas, chipConversion: config.countDualChipAsChipPack),
-                        progress(of: rhs.element, inventory: inventory, formulas: formulas, chipConversion: config.countDualChipAsChipPack)) {
-                case let (l?, r?):
-                    return l == r ? lhs.offset < rhs.offset : l < r
-                case (nil, _?):
-                    return false
-                case (_?, nil):
-                    return true
-                case (nil, nil):
-                    return lhs.offset < rhs.offset
-                }
-            }
-        }
+        let order = progressOrderedPlans(Array(config.plans.enumerated()), sortByProgress: config.sortByProgress,
+                                         inventory: inventory, formulas: formulas,
+                                         chipConversion: config.countDualChipAsChipPack)
 
         var evaluations: [Evaluation] = []
         for (index, plan) in order {
@@ -170,6 +181,57 @@ enum DepotMaintainPlanner {
             client_type: config.client_type,
             DrGrandet: false)
     }
+
+    // MARK: 识别回填复查（P12.4，upstream ReviewSkippedPlansAfterDepotSync）
+
+    /// 复查命中的翻转计划：配置列表下标（日志序号 = index + 1，与 Evaluation 一致）
+    /// 与识别后最新有效库存。
+    struct CacheStaleSkip: Equatable {
+        let index: Int
+        let current: Int
+    }
+
+    /// 复查预检时按充足跳过（未下发）的计划是否被识别纠正为不足。与预检同口径
+    /// 过滤（未选材料/零目标/当日不可执行不提示）；SortByProgress 开启时按最新
+    /// 库存达成率升序挑提示对象（与实际执行顺序一致）；OnlyFirstInsufficientPlan
+    /// 只提示第一个翻转的计划。dispatchedIndexes 为本轮已下发计划（不复查）。
+    static func cacheStaleSkips(config: DepotMaintainConfiguration, dispatchedIndexes: Set<Int>,
+                                inventory: [String: Int], formulas: [String: [String: Int]] = [:],
+                                isStageOpen: (String) -> Bool = { _ in true }) -> [CacheStaleSkip] {
+        let order = progressOrderedPlans(Array(config.plans.enumerated()), sortByProgress: config.sortByProgress,
+                                         inventory: inventory, formulas: formulas,
+                                         chipConversion: config.countDualChipAsChipPack)
+        var skips: [CacheStaleSkip] = []
+        for (index, plan) in order {
+            if dispatchedIndexes.contains(index) { continue }
+            if plan.dropID.isEmpty || plan.dropCount <= 0 { continue }
+            guard isStageOpen(plan.stage) else { continue }
+            let current = effectiveCount(of: plan, inventory: inventory, formulas: formulas,
+                                         chipConversion: config.countDualChipAsChipPack)
+            guard plan.dropCount - current > 0 else { continue }
+            skips.append(CacheStaleSkip(index: index, current: current))
+            if config.onlyFirstInsufficientPlan { break }
+        }
+        return skips
+    }
+}
+
+/// 已下发库存保持战斗任务的会话档案（P12.4 中途重算）：战斗链启动时按最新快照
+/// 重算缺口（AsstSetTaskParams 改写 drops/times），正常完成且未达标时记录临期药
+/// 耗尽证明（upstream ProvenExhaustedMedicineDays 会话态）。
+struct DepotFightDispatch {
+    let plan: DepotMaintainPlan
+    let config: DepotMaintainConfiguration
+    /// 计划序号（配置下标 + 1），与下发日志一致。
+    let label: Int
+}
+
+/// 库存保持任务的识别回填复查登记（upstream _serializedDepotMaintainTasks 同位）：
+/// 预检后登记，任一仓库识别完成后复查充足计划的缓存翻转（含未启用前置识别、
+/// 同批独立更新资料任务识别的场景）。
+struct DepotMaintainReviewEntry {
+    let config: DepotMaintainConfiguration
+    let evaluations: [DepotMaintainPlanner.Evaluation]
 }
 
 extension DepotMaintainConfiguration {

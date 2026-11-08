@@ -50,6 +50,10 @@ final class MedicineLogHarness {
     var tasks: [QueuedTask] = []
     var taskIDMap: [Int32: UUID] = [:]
     var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
+    // P12.4 中途重算会话态（startTasks 冻结目标登记切片引用；运行重置的
+    // DepotMaintain 域行由 run-depot-maintain-dispatch-tests.py 专责，本套件剥离）。
+    var frozenTargetFights: [Int32: FrozenTargetDispatch] = [:]
+    var pendingFrozenTarget: (itemID: String, target: Int)?
     var taskStatus: [UUID: Bool] = [:]
     var handle: RecordingHandle? = RecordingHandle()
     var clientChannel = MAAClientChannel.Official

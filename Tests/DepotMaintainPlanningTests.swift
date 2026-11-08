@@ -324,4 +324,45 @@ do {
           "flags off never skip")
 }
 
+// MARK: - 识别回填复查（P12.4，upstream ReviewSkippedPlansAfterDepotSync）
+
+do {
+    let inventory = ["30012": 30, "3303": 5]
+    var plans = [plan(stage: "1-7", dropID: "30012", dropCount: 100),
+                 plan(stage: "0-1", dropID: "3303", dropCount: 40)]
+    var c = config(plans)
+    // 两个未下发计划均翻转为不足：按配置顺序逐条提示。
+    var skips = DepotMaintainPlanner.cacheStaleSkips(config: c, dispatchedIndexes: [], inventory: inventory)
+    check(skips.map(\.index) == [0, 1] && skips[0].current == 30 && skips[1].current == 5,
+          "flipped plans reported with fresh counts in config order")
+    // 已下发计划不复查。
+    skips = DepotMaintainPlanner.cacheStaleSkips(config: c, dispatchedIndexes: [0], inventory: inventory)
+    check(skips.map(\.index) == [1], "dispatched plans are excluded from cache-stale review")
+    // 足量计划不提示。
+    let rich = ["30012": 100, "3303": 40]
+    check(DepotMaintainPlanner.cacheStaleSkips(config: c, dispatchedIndexes: [], inventory: rich).isEmpty,
+          "sufficient plans never flip")
+    // 无效计划（未选材料/零目标）不提示。
+    plans[0] = plan(stage: "1-7", dropID: "", dropCount: 100)
+    plans[1] = plan(stage: "0-1", dropID: "3303", dropCount: 0)
+    c = config(plans)
+    check(DepotMaintainPlanner.cacheStaleSkips(config: c, dispatchedIndexes: [], inventory: inventory).isEmpty,
+          "invalid plans are skipped by cache-stale review")
+    // 关卡当日不可执行不提示（与预检同口径，谓词由调用方注入）。
+    let closed = config([plan(stage: "1-7", dropID: "30012", dropCount: 100)])
+    check(DepotMaintainPlanner.cacheStaleSkips(config: closed, dispatchedIndexes: [], inventory: inventory,
+                                               isStageOpen: { _ in false }).isEmpty,
+          "closed stages are skipped by cache-stale review")
+    // OnlyFirstInsufficientPlan 只提示第一个翻转计划。
+    c = config([plan(stage: "1-7", dropID: "30012", dropCount: 100),
+                plan(stage: "0-1", dropID: "3303", dropCount: 40)], onlyFirstInsufficientPlan: true)
+    skips = DepotMaintainPlanner.cacheStaleSkips(config: c, dispatchedIndexes: [], inventory: inventory)
+    check(skips.map(\.index) == [0], "onlyFirstInsufficientPlan reports only the first flipped plan")
+    // SortByProgress 按最新库存达成率升序挑提示对象（3303: 5/40=0.125 < 30012: 30/100=0.3）。
+    c = config([plan(stage: "1-7", dropID: "30012", dropCount: 100),
+                plan(stage: "0-1", dropID: "3303", dropCount: 40)], sortByProgress: true)
+    skips = DepotMaintainPlanner.cacheStaleSkips(config: c, dispatchedIndexes: [], inventory: inventory)
+    check(skips.map(\.index) == [1, 0], "sortByProgress orders review by fresh progress ascending")
+}
+
 print("depot-maintain-planning: \(checks) checks passed")

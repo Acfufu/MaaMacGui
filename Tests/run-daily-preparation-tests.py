@@ -5,6 +5,12 @@ import os,re,subprocess,tempfile
 root=Path(__file__).resolve().parents[1]
 source_root=Path(os.environ.get('MAA_TEST_SOURCE_ROOT',root))
 model=(source_root/'MeoAsstMac/Model/MAAViewModel.swift').read_text()
+# P12.3 库存保持拦截块由 run-depot-maintain-dispatch-tests.py 专责覆盖，本套件剥离
+#（提取面纪律：剥离必须有断言，防锚点漂移后静默空转）。
+_strip_pattern = r'\n *if case \.depotMaintain\(let depotConfig\) = task\.task \{\n(?:.*?\n)*? *\}\n'
+assert len(re.findall(_strip_pattern, model, re.M)) == 1, 'depotMaintain interception block drifted'
+model = re.sub(_strip_pattern, '\n', model, count=1)
+
 message=(source_root/'MeoAsstMac/Core/MaaMessage.swift').read_text()
 def declaration(source,pattern):
  match=re.search(pattern,source,re.M);assert match,pattern

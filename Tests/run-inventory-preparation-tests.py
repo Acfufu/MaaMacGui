@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import subprocess,tempfile
+import re
 root=Path(__file__).resolve().parents[1]
 source=(root/'MeoAsstMac/Model/MAAViewModel.swift').read_text()
+# P12.3 库存保持拦截块由 run-depot-maintain-dispatch-tests.py 专责覆盖，本套件剥离
+#（提取面纪律：剥离必须有断言，防锚点漂移后静默空转）。
+_strip_pattern = r'\n *if case \.depotMaintain\(let depotConfig\) = task\.task \{\n(?:.*?\n)*? *\}\n'
+assert len(re.findall(_strip_pattern, source, re.M)) == 1, 'depotMaintain interception block drifted'
+source = re.sub(_strip_pattern, '\n', source, count=1)
 def anchor(source,marker):
  # The signature string is the test contract with the production source.
  try:return source.index(marker)
@@ -124,6 +130,9 @@ actor FakeHandle {
  func recoverGameToHome(runID: UUID, isCurrent: @escaping @MainActor () -> Bool) async throws {}
  func dailyRunCoordinatorTransition(_ phase: DailyRunPhase, for id: UUID) throws {}
  var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
+ // P12.4 中途重算会话态（startTasks 冻结目标登记引用）。
+ var frozenTargetFights: [Int32: FrozenTargetDispatch] = [:]
+ var pendingFrozenTarget: (itemID: String, target: Int)?
  var achievementEvents = AchievementEventAdapter()
  let dailyRunCoordinator = DailyRunCoordinator()
  func checkStartupCancellation() throws {}
