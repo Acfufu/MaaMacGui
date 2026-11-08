@@ -9,7 +9,12 @@ import Foundation
 
 /// 仓库/干员导出行构建（P16 T07/T09，WPF ToolboxViewModel 导出方法同构）。
 /// 行构建为纯函数：表头由调用方传入（本地化属视图层），换行/引号按 RFC 4180 转义。
-/// 一图流技能/模组列需要快照不承载的数据（I04-[b]），本层始终输出基础 7 列（T09 远端字段部分开放）。
+/// 干员扩展列/JSON 现态（勘正 I04-[b] 陈旧注释「本层始终输出基础 7 列」——P16-2-R3
+/// 记录-4、S7-1-R3 低-1；P16-[h] 裁定 2026-11-09 恢复扩展面，快照已承载技能/模组数据）：
+/// Markdown/CSV=基础 7 列，includeYituliuFields=true 时追加主技能等级/技能专精/模组
+/// 三扩展列；JSON 行=WPF OperData（OperBoxData.cs d75bf9a）10 属性同构——7 基键+
+/// mainSkillLevel/skills/equips 三扩展键，缺数据键省略=WPF NullValueHandling.Ignore
+/// 同构（详见 OperBoxJSONRow）。
 enum DataExport {
     // MARK: - Depot（WPF BuildMarkdownExportLines / BuildCsvExportLines 逐字同构）
 
