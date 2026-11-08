@@ -1101,24 +1101,24 @@
         }
       }
     },
-    "累计 %lld 条日志后发送" : {
+    "累计 %lld 条通知后发送" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Send after %lld log entries"
+            "value" : "Send after %lld notifications"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld개 로그 누적 후 전송"
+            "value" : "%lld개 알림 누적 후 전송"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "累计 %lld 条日志后发送"
+            "value" : "累计 %lld 条通知后发送"
           }
         }
       }

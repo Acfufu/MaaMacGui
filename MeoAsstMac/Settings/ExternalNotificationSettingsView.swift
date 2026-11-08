@@ -43,7 +43,9 @@ struct ExternalNotificationTriggerPolicyView: View {
             Toggle("按日志条数发送", isOn: $store.policy.sendAfterLogCount)
             if store.policy.sendAfterLogCount {
                 Stepper(value: $store.policy.newLogCount, in: 1...1000) {
-                    Text("累计 \(store.policy.newLogCount) 条日志后发送")
+                    // 中3（P25-1-R3）：Mac 计数面是通知事件而非展示日志行（WPF
+                    // ProcessLog 每条日志判定），文案如实。
+                    Text("累计 \(store.policy.newLogCount) 条通知后发送")
                 }
             }
             Toggle("按内容匹配发送", isOn: $store.policy.sendWhenContentMatches)

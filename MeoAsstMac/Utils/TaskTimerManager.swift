@@ -165,11 +165,16 @@ import Foundation
     /// P21/S08: 定时开始前的提前通知（WPF NotifyBeforeScheduledStart 同位，
     /// 缺省 5 分钟）。计划变更/停用/时刻已过都会撤下待投递提醒。
     /// P25/E03: 到点时刻按策略 sendBeforeScheduledStart 另发外部通知。
+    /// 中1（P25-1-R3）：本机提前提醒与外部通知是两个独立开关（WPF
+    /// HandleScheduledStartNotifications 分别判 notifyDesktop 与 notifyExternal，
+    /// TaskQueueViewModel.cs:1105-1114）——外部任务调度移出本机开关 guard，由
+    /// notifyExternal(.scheduledStart) 的 sendBeforeScheduledStart 策略单独门控；
+    /// 否则关本机提醒的用户第 4 触发点完全死寂。
     private func rescheduleAdvanceNotification(next: Date?, now: Date) {
         guard let viewModel else { return }
         let id = "scheduled-start-advance"
         advanceExternalTask?.cancel()
-        guard viewModel.notifyBeforeScheduledStart, let next else {
+        guard let next else {
             viewModel.localNotifications.cancelPending(id: id)
             return
         }
@@ -178,11 +183,15 @@ import Foundation
             viewModel.localNotifications.cancelPending(id: id)
             return
         }
-        Task { await viewModel.localNotifications.schedule(
-            id: id,
-            title: String(localized: "定时任务即将开始"),
-            body: String(localized: "MAA 将按计划开始日常任务"),
-            fireDate: fireAt, at: now)
+        if viewModel.notifyBeforeScheduledStart {
+            Task { await viewModel.localNotifications.schedule(
+                id: id,
+                title: String(localized: "定时任务即将开始"),
+                body: String(localized: "MAA 将按计划开始日常任务"),
+                fireDate: fireAt, at: now)
+            }
+        } else {
+            viewModel.localNotifications.cancelPending(id: id)
         }
         advanceExternalTask = Task { [weak self] in
             let delay = fireAt.timeIntervalSince(now)

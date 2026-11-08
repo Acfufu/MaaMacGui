@@ -394,9 +394,12 @@ import SwiftUI
     }
 
     /// 公招识别错误（WPF ToastNotification.ShowDirect(identifyTheMistakes) 同位）。
+    /// 中2（P25-1-R3）：错误类触发点必须显式 kind .error（WPF NotificationKind.
+    /// TaskError 同位）——notifyExternal 缺省 .complete 曾让四事件开关的
+    /// 「错误时发送」管不到公招错误（暗性错位：缺省策略两开关同真不可见）。
     func notifyRecruitRecognitionError() {
         let externalBody = String(localized: "公招任务链出错，请查看日志")
-        notifyExternal(title: String(localized: .identifyTheMistakes), body: externalBody)
+        notifyExternal(title: String(localized: .identifyTheMistakes), body: externalBody, kind: .error)
         Task {
             await localNotifications.send(
                 id: "recruit-error-\(UUID().uuidString)",
@@ -467,14 +470,27 @@ import SwiftUI
 
     /// P25 触发判定 + 历史打包后的逐渠道投递（WPF Notify→ProcessLog→SendExternal 同构）。
     func notifyExternal(title: String, body: String, kind: ExternalNotificationEventKind = .complete) {
-        externalNotificationHistory.add(.init(timestamp: .now, content: body))
+        let eventTime = Date.now
+        // 恒记账（WPF ProcessLog 先 Add 后判定同构）；定时开始前通知不入史
+        // （低8/P25-1-R3，WPF "not a new displayed log entry"）。
+        if kind != .scheduledStart {
+            externalNotificationHistory.add(.init(timestamp: eventTime, content: body, color: kind.historyColorToken))
+        }
         guard externalNotificationEnabled, !externalNotificationSettings.configs.isEmpty else {
             externalNotificationTrigger.reset()
             return
         }
         let policy = externalNotificationPolicyStore.policy
-        guard externalNotificationTrigger.shouldSend(policy: policy, kind: kind, content: body) else { return }
-        let bundled = externalNotificationHistory.bundle(current: body, at: .now, policy: policy)
+        let send = externalNotificationTrigger.shouldSend(policy: policy, kind: kind, content: body)
+        if send {
+            // 中3（P25-1-R3）：判定通过即同步复位计数器（WPF SendExternal 派发即
+            // Reset 同位，NotificationService.cs:150-154）——发送在 Task 内异步派发，
+            // 复位不等它；此前只在禁用/无渠道 guard 复位，过阈后永久锁存
+            //（此后每个事件都发送）。
+            externalNotificationTrigger.reset()
+        }
+        guard send else { return }
+        let bundled = externalNotificationHistory.bundle(current: body, at: eventTime, policy: policy)
         let configs = externalNotificationSettings.configs.filter(\.enabled)
         guard !configs.isEmpty else { return }
         Task { [sender = externalNotificationSender] in

@@ -64,6 +64,17 @@ struct ExternalNotificationDeliveryPolicy: Codable, Equatable {
 
 enum ExternalNotificationEventKind {
     case complete, error, stalled, scheduledStart
+
+    /// 中5（P25-1-R3）：打包前缀的 WPF 色词表（UiLogBrush 同名 token，随历史条目
+    /// 投递）。WPF TaskQueue 事件默认 Trace 色（NotificationService.cs:104）；
+    /// 错误/停滞按语义映射 Error/Warning 色。
+    var historyColorToken: String {
+        switch self {
+        case .complete, .scheduledStart: return "TraceLogBrush"
+        case .error: return "ErrorLogBrush"
+        case .stalled: return "WarningLogBrush"
+        }
+    }
 }
 
 /// 触发判定（WPF NotificationTrigger 同构）：事件类开关 ∨ 日志计数 ∨ 白名单匹配。
@@ -79,6 +90,10 @@ enum ExternalNotificationEventKind {
         case .stalled: selected = policy.sendWhenStalled
         case .scheduledStart: selected = policy.sendBeforeScheduledStart
         }
+        // 低8（P25-1-R3）：WPF 定时开始前通知不走 trigger——不入史（调用面）、
+        // 不计数、不走计数/白名单分支（NotificationService.cs:98-106 "A scheduled
+        // notification is not a new displayed log entry"），仅按策略开关门控。
+        guard kind != .scheduledStart else { return selected }
         newLogs += 1
         return selected
             || (policy.sendAfterLogCount && newLogs >= policy.newLogCount)
@@ -123,6 +138,9 @@ struct ExternalNotificationContentFilter {
     struct Entry: Equatable {
         let timestamp: Date
         let content: String
+        /// 中5（P25-1-R3）：打包前缀色词（WPF NotificationEvent.Color 对位，
+        /// UiLogBrush token；缺省 Trace 色=TaskQueue 事件缺省）。
+        var color: String = "TraceLogBrush"
     }
 
     private(set) var entries: [Entry] = []
@@ -134,29 +152,48 @@ struct ExternalNotificationContentFilter {
         }
     }
 
-    /// 当前事件的正文 + （可选）时间窗内历史条目拼包；条数钳制与黑名单同 WPF。
+    /// 当前事件的正文 + （可选）时间窗内历史条目拼包（WPF NotificationHistory.cs:56-91
+    /// 同构：历史 oldest-first、每条 [HH:mm:ss][color] 前缀、正文在最后——中5/P25-1-R3
+    /// 原 Mac 实现方向相反且无前缀）。条数只计窗内未过滤条目；黑名单非法正则与
+    /// 100ms 预算超时整体放弃历史仅发正文（中4/P25-1-R3 fail-safe 剔除方向与 WPF
+    /// 一致——原 Mac 非法放行全部/超时保留部分，与白名单方向相反）。
     func bundle(current content: String, at now: Date, policy: ExternalNotificationDeliveryPolicy,
                 filter: ExternalNotificationContentFilter = .init(),
                 clock: () -> Date = Date.init) -> String {
         let maxEntries = max(0, min(policy.maxEntries, Self.capacity))
         guard policy.includePreviousLogs, maxEntries > 0 else { return content }
         let cutoff = policy.timeMinutes == 0 ? Date.distantPast : now.addingTimeInterval(-Double(policy.timeMinutes) * 60)
-        var collected: [String] = []
+        var collected: [Entry] = []
         let deadline = clock().addingTimeInterval(0.1)
         for entry in entries.reversed() {
-            if clock() > deadline { break }
             if collected.count >= maxEntries { break }
-            if entry.timestamp < cutoff || entry.content == content { continue }
-            if policy.filterPreviousLogs,
-               filter.matches(patterns: policy.blacklist, content: entry.content) == true {
-                continue
+            if entry.timestamp < cutoff { continue }
+            // 当前事件本体不入附包（WPF ReferenceEquals(item, current) 同义；结构体
+            // 以记账时刻+文本同值判定——旧的相同文案条目照附，低3 同步消除）。
+            if entry.timestamp == now, entry.content == content { continue }
+            if policy.filterPreviousLogs {
+                if clock() > deadline { return content }
+                switch filter.matches(patterns: policy.blacklist, content: entry.content) {
+                case true: continue
+                case nil: return content
+                case false: break
+                }
             }
-            collected.append(entry.content)
+            collected.append(entry)
         }
         if collected.isEmpty { return content }
-        // WPF 按 _events.Reverse() 迭代拼包：正文后先最近事件（newest-first）。
-        return ([content] + collected).joined(separator: "\n")
+        let formatter = Self.timeFormatter
+        let lines = collected.reversed().map { "[\(formatter.string(from: $0.timestamp))][\($0.color)] \($0.content)" }
+        return (lines + [content]).joined(separator: "\n")
     }
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        // 固定 POSIX locale：避免用户日历/历法改写 HH:mm:ss 数字格式。
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
 }
 
 /// 停滞检测（WPF RunningState.StallOccurred 同构）：运行中按超时分钟监控消息活动，
@@ -165,9 +202,14 @@ struct ExternalNotificationContentFilter {
     private var monitorTask: Task<Void, Never>?
     private var lastActivityAt = Date()
     private(set) var accumulatedMinutes = 0
+    /// 中6（P25-1-R3）：时钟与检查点步长可注入——真实路径默认 Date.init 与
+    /// 超时同值步长；测试以假时钟+短步长驱动整条触发路径（原 60s 检查点在
+    /// 测试内永不到达，「喂活防误报」断言恒真）。
+    var now: () -> Date = Date.init
+    var stepInterval: Duration?
 
     /// 消息泵喂活（WPF NotifyOutputActivity 同位）。
-    func activity() { lastActivityAt = Date() }
+    func activity() { lastActivityAt = now() }
 
     /// 运行结束时取消并复位累计。
     func stop() {
@@ -180,14 +222,15 @@ struct ExternalNotificationContentFilter {
     /// （距上次活动 ≥ 超时）时回调；重复间隔与超时同值。
     func arm(timeoutMinutes: Int, onStalled: @escaping @MainActor (Int, Int) -> Void) {
         stop()
-        lastActivityAt = Date()
+        lastActivityAt = now()
         guard timeoutMinutes > 0 else { return }
+        let step = stepInterval ?? .seconds(TimeInterval(timeoutMinutes * 60))
         monitorTask = Task { [weak self] in
             var accumulated = 0
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(TimeInterval(timeoutMinutes * 60)))
+                try? await Task.sleep(for: step)
                 guard !Task.isCancelled, let self else { return }
-                let idle = Date().timeIntervalSince(self.lastActivityAt)
+                let idle = self.now().timeIntervalSince(self.lastActivityAt)
                 guard idle >= Double(timeoutMinutes * 60) - 5 else { continue }
                 accumulated += timeoutMinutes
                 self.accumulatedMinutes = accumulated
