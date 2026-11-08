@@ -170,6 +170,18 @@ struct MiniGameView: View {
                     try await viewModel.miniGame(
                         name: selectedGame.taskName,
                         params: MiniGameLaunch.eventShop(blacklist: eventShopBlacklist.wrappedValue))
+                } else if selectedGame.taskName == MiniGameOption.pixelPaint.taskName {
+                    // P17-[c]（快照 82 清单②裁定：随 WPF 对齐，2026-11-09）：
+                    // 空图/零分组拒启+警示（WPF ToolboxViewModel
+                    // .CheckSelectedMiniGameReady :3590-3597 NeedImage），不再
+                    // 静默下发空 params 空跑。
+                    let pixelParams = taskParams as? [String: Any]
+                    let groups = (pixelParams?["pixel_paint"] as? [String: Any])?["groups"] as? [Any]
+                    guard let groups, !groups.isEmpty else {
+                        startError = String(localized: "请先导入图片并生成预览")
+                        return
+                    }
+                    try await viewModel.miniGame(name: selectedGame.taskName, params: taskParams)
                 } else {
                     try await viewModel.miniGame(name: selectedGame.taskName, params: taskParams)
                 }

@@ -263,6 +263,30 @@ struct CopilotCompileTests {
             failures.append("regular payload must not carry a list key")
         }
 
+        // P13-[g]（快照 82 清单②裁定：随 WPF 对齐）: 神秘代码前缀匹配
+        // OrdinalIgnoreCase——WPF CopilotViewModel.TryParseCopilotCode
+        // （d75bf9a :432-474）maa://、prts://、prts://s、s/S 均不区分大小写。
+        let parseMatrix: [(String, PRTSCode?, String)] = [
+            ("MAA://12345", .copilot(12345), "uppercase maa:// parses (was nil before P13-[g])"),
+            ("mAA://9", .copilot(9), "mixed-case maa:// parses"),
+            ("PRTS://777", .copilot(777), "uppercase prts:// parses"),
+            ("PRTS://S42", .set(42), "uppercase prts://s parses as set"),
+            ("S12345", .set(12345), "uppercase S set shorthand parses (was nil before P13-[g])"),
+            ("s12345", .set(12345), "lowercase s set shorthand still parses"),
+            ("prts://s7", .set(7), "lowercase prts://s set still parses"),
+            ("12345", .copilot(12345), "bare digits unchanged"),
+            ("MAA://s1", nil, "maa:// with set body still rejected (WPF same)"),
+            ("prts://x9", nil, "non-digit body still rejected"),
+            ("S", nil, "bare S without digits rejected"),
+            ("", nil, "empty input rejected"),
+        ]
+        for (input, expected, label) in parseMatrix {
+            let got = input.prtsCode
+            if got != expected {
+                failures.append("P13-[g] \(label): got \(String(describing: got)), expected \(String(describing: expected))")
+            }
+        }
+
         for failure in failures { print("FAIL: \(failure)") }
         guard failures.isEmpty else { exit(1) }
         print("PASS: 3 single-file kinds, list mapping, paradox list payload, SSS ordered single-file tasks, empty/missing-kind/missing-file/mixed-kind rejections, log messages, config round trip")

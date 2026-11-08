@@ -244,7 +244,11 @@ private struct UserAdditionalEditor: View {
                             set: { config.user_additional[index].skill = $0 }
                         )
                     ) {
-                        ForEach(1...3, id: \.self) { rank in
+                        // P13-[f] 对齐（WPF CopilotView.xaml:374-385 NumericUpDown
+                        // 0-3 + CopilotViewModel.cs:670 新行默认 0）：0=不点技能
+                        //（Core BattleFormationTask.cpp:714），恢复 WPF 的
+                        //「不指定技能」可表达态。
+                        ForEach(0...3, id: \.self) { rank in
                             Text("\(rank)").tag(rank)
                         }
                     }
@@ -259,7 +263,8 @@ private struct UserAdditionalEditor: View {
                 }
             }
             Button("添加干员") {
-                config.user_additional.append(.init(name: "", skill: 1))
+                // P13-[f]：新行默认 0=不指定技能（WPF CopilotViewModel.cs:670/725）。
+                config.user_additional.append(.init(name: "", skill: 0))
             }
         }
     }

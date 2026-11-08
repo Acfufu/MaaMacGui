@@ -126,4 +126,30 @@ check(jsonFixData1 == jsonFixData2, "JSON key order is stable across runs (sorte
 check(jsonFixText1.range(of: "\"elite\"")!.lowerBound < jsonFixText1.range(of: "\"id\"")!.lowerBound
         && jsonFixText1.range(of: "\"level\"")!.lowerBound < jsonFixText1.range(of: "\"name\"")!.lowerBound,
       "sortedKeys pins alphabetical key order")
-print("PASS \(checks) export fix assertions (P16-1-R3)")
+
+// P16-[h]（快照 82 清单②裁定：恢复 yituliu 扩展键，2026-11-09）：JSON 行对象
+// 对齐 WPF OperData 10 属性——Optional 键缺数据时 JSON 省略（合成 Codable
+// encodeIfPresent = WPF NullValueHandling.Ignore 同构），有数据时透传；
+// Skill/Equip 嵌套形状与 WPF SkillData/EquipData 逐字段同构。
+check(!jsonFixText1.contains("mainSkillLevel") && !jsonFixText1.contains("\"skills\"")
+        && !jsonFixText1.contains("\"equips\""),
+      "nil extension keys stay omitted (7-key face unchanged, WPF null-ignore parity)")
+let yituliuJSON = String(decoding: try DataExport.operBoxJSONData(rows: [
+    DataExport.OperBoxJSONRow(
+        id: "char_002_amiya", own: true, name: "阿米娅", rarity: 5, elite: 2, level: 60, potential: 6,
+        mainSkillLevel: 7,
+        skills: [.init(id: "skchr_amiya_2", level: 3), .init(id: "skchr_amiya_1", level: 0)],
+        equips: [.init(id: "equip_002_amiya", type: "X", level: 3), .init(id: "equip_002_amiya_b", type: "Y", level: 0)]),
+    DataExport.OperBoxJSONRow(id: "char_999_tenture", own: false, name: "夜刀", rarity: 2, elite: 0, level: 0, potential: 0),
+]), as: UTF8.self)
+for fragment in ["\"mainSkillLevel\" : 7", "\"id\" : \"skchr_amiya_2\"", "\"level\" : 3",
+                 "\"type\" : \"X\"", "\"equips\""] {
+    check(yituliuJSON.contains(fragment), "yituliu row carries extension key: \(fragment)")
+}
+// 混合导出：扩展键仅在有数据的行出现（sortedKeys 下 mainSkillLevel 排在 level 后）。
+check(yituliuJSON.range(of: "\"mainSkillLevel\"")!.lowerBound < yituliuJSON.range(of: "\"name\"")!.lowerBound,
+      "extension keys ride the sortedKeys order")
+let unownedSection = yituliuJSON[yituliuJSON.range(of: "char_999_tenture")!.lowerBound...]
+check(!unownedSection.contains("\"mainSkillLevel\"") && !unownedSection.contains("\"equips\""),
+      "rows without yituliu data still omit extension keys (mixed export)")
+print("PASS \(checks) export fix assertions (P16-1-R3 + P16-[h])")

@@ -242,9 +242,11 @@ private struct UserDataHistorySummary: View {
         switch format {
         case .json:
             let jsonRows = rows.map {
+                // P16-[h]：扩展键随 OperBoxRow 透传（nil 时 JSON 省略=WPF 同构）。
                 DataExport.OperBoxJSONRow(
                     id: $0.id, own: $0.own, name: $0.name, rarity: $0.rarity,
-                    elite: $0.elite, level: $0.level, potential: $0.potential)
+                    elite: $0.elite, level: $0.level, potential: $0.potential,
+                    mainSkillLevel: $0.mainSkillLevel, skills: $0.skills, equips: $0.equips)
             }
             guard let data = try? DataExport.operBoxJSONData(rows: jsonRows) else { return }
             panel.allowedContentTypes = [.json]

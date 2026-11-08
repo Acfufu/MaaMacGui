@@ -102,8 +102,13 @@ enum DataExport {
         }
     }
 
-    /// 中1（P16-1-R3）：JSON 行对象为 WPF OperData 同款 7 键（id/own/name/rarity/
-    /// elite/level/potential）——yituliu 扩展列仅 md/csv 承载（台账 P16-[d]）。
+    /// JSON 行对象对齐 WPF OperData（OperBoxData.cs d75bf9a :21-88）：7 基键
+    /// （id/own/name/rarity/elite/level/potential）+ yituliu 扩展键
+    /// mainSkillLevel/skills/equips（P16-[h] 对齐，2026-11-09 裁定：恢复扩展键，
+    /// 修正 [d]「WPF 7 键」失实前提——WPF 实为 10 属性全量序列化、null 省略）。
+    /// Optional 合成 Codable 走 encodeIfPresent = WPF NullValueHandling.Ignore
+    /// 同构：缺数据（本地识别无扩展值）时键不出现在 JSON，与原 7 键面逐字节一致；
+    /// Skill/Equip 嵌套形状与 WPF SkillData/EquipData 逐字段同构。
     struct OperBoxJSONRow: Codable {
         let id: String
         let own: Bool
@@ -112,6 +117,25 @@ enum DataExport {
         let elite: Int
         let level: Int
         let potential: Int
+        let mainSkillLevel: Int?
+        let skills: [OperBoxHistoryPayload.Skill]?
+        let equips: [OperBoxHistoryPayload.Equip]?
+
+        init(id: String, own: Bool, name: String, rarity: Int, elite: Int, level: Int,
+             potential: Int, mainSkillLevel: Int? = nil,
+             skills: [OperBoxHistoryPayload.Skill]? = nil,
+             equips: [OperBoxHistoryPayload.Equip]? = nil) {
+            self.id = id
+            self.own = own
+            self.name = name
+            self.rarity = rarity
+            self.elite = elite
+            self.level = level
+            self.potential = potential
+            self.mainSkillLevel = mainSkillLevel
+            self.skills = skills
+            self.equips = equips
+        }
     }
 
     /// 中1（P16-1-R3）：WPF ExportOperBoxToJson 同构补齐——Formatting.Indented

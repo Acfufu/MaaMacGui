@@ -51,3 +51,17 @@ xcrun swiftc -parse-as-library -module-cache-path "$test_build_dir/module-cache"
     "$test_dir/Fixtures/CopilotRegularStage.json" \
     "$test_dir/Fixtures/CopilotSSSStage.json" \
     "$test_dir/Fixtures/CopilotParadoxStage.json"
+
+# P13-[f]（快照 82 清单②裁定：随 WPF 对齐，2026-11-09）: C08 编辑面技能
+# 0-3/新行默认 0——WPF CopilotView.xaml:374-385 NumericUpDown 0-3 +
+# CopilotViewModel.cs:670 默认 0。CopilotView.swift 在套件编译面之外
+# （SwiftUI 视图），生产绑定以 fail-loudly 源锚点钉死（VRI 套件先例）。
+view="$repo_dir/MeoAsstMac/Views/CopilotView.swift"
+anchor() {
+    if ! grep -qF -- "$2" "$view"; then
+        echo "FAIL: P13-[f] anchor missing ($1): $2" >&2
+        exit 1
+    fi
+}
+anchor "skill picker spans 0-3" "ForEach(0...3, id: \\.self)"
+anchor "new unit defaults to skill 0" "config.user_additional.append(.init(name: \"\", skill: 0))"

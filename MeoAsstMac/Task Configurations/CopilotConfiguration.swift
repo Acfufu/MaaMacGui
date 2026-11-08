@@ -746,19 +746,23 @@ enum PRTSCode: Hashable {
 }
 
 extension StringProtocol {
+    /// P13-[g] 对齐（WPF CopilotViewModel.TryParseCopilotCode，d75bf9a :432-474）：
+    /// 前缀匹配一律 OrdinalIgnoreCase（maa://、prts://、prts://s），作业集 s/S
+    /// 首字符大小写均可——`MAA://12345`/`S12345` 与 WPF 同为可解析。
     var prtsCode: PRTSCode? {
         let string = trimmingCharacters(in: .whitespacesAndNewlines)
+        let lower = string.lowercased()
 
-        if string.hasPrefix("maa://") {
-            guard let digits = string.trimmingPrefix("maa://").digits, let id = Int(digits) else {
+        if lower.hasPrefix("maa://") {
+            guard let digits = string.dropFirst("maa://".count).digits, let id = Int(digits) else {
                 return nil
             }
             return .copilot(id)
         }
 
-        let trimmed = string.trimmingPrefix("prts://")
-        if trimmed.starts(with: "s") {
-            guard let digits = trimmed.trimmingPrefix("s").digits, let id = Int(digits) else {
+        let trimmed = lower.hasPrefix("prts://") ? string.dropFirst("prts://".count) : string[...]
+        if let first = trimmed.first, first == "s" || first == "S" {
+            guard let digits = trimmed.dropFirst().digits, let id = Int(digits) else {
                 return nil
             }
             return .set(id)

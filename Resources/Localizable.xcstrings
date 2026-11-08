@@ -3431,6 +3431,22 @@
         }
       }
     },
+    "请先导入图片并生成预览" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import an image and generate a preview first"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "먼저 이미지를 불러와 미리보기를 생성하세요"
+          }
+        }
+      }
+    },
     "出现错误，评价失败 : <" : {
       "localizations" : {
         "en" : {

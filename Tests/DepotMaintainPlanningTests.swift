@@ -276,6 +276,18 @@ do {
     check(ingested.formulas["30012"] == ["30011": 3], "ordinary formula collected")
     check(!ingested.items.contains(where: { $0.id == "3223" }) && !ingested.items.contains(where: { $0.id == "4004" }),
           "drop list still excludes dual chip / excluded values")
+    // P12-[u]（快照 82 清单②裁定：随 WPF 对齐，2026-11-09）：排除集补 5 项
+    // （龙骨 3105/加固建材 3131-3133/重相位对映体 30165）——基建产出不可刷取，
+    // WPF FightTaskUserControlModel.cs:777-794 同集。
+    check([3105, 3131, 3132, 3133, 30165].allSatisfy { FightConfiguration._excludedValues.contains($0) },
+          "P12-[u]: five WPF exclusion items present (base-building materials)")
+    let uFixture: [String: DropItem] = [
+        "3105": DropItem(classifyType: "MATERIAL", description: nil, icon: "", name: "龙骨", sortId: 0, usage: nil, formula: nil),
+        "30165": DropItem(classifyType: "MATERIAL", description: nil, icon: "", name: "重相位对映体", sortId: 1, usage: nil, formula: nil),
+    ]
+    let uIngested = FightConfiguration.ingestItemIndex(uFixture)
+    check(uIngested.items.isEmpty,
+          "P12-[u]: newly excluded items stay out of the selectable drop list")
     check(ingested.items.contains(where: { $0.id == "3222" }), "chip pack stays selectable")
     check(DepotMaintainPlanner.dualChipConversion(for: "3222", inventory: ["3223": 5], formulas: ingested.formulas) == 10,
           "real loading path: conversion wired through ingested table")

@@ -17,7 +17,9 @@ struct ReclamationConfiguration: MAATaskConfiguration {
     var num_craft_batches: Int
     /// T03：Tales 无存档（mode 0）刷分结束后是否清空商店。Core 仅在该分支
     /// 消费（ReclamationTask.cpp `clear_store`）；其余主题/模式忽略。
-    var clear_store = false
+    /// P17-[a] 对齐（2026-11-09 裁定：随 WPF）：缺省 true——WPF Reclamation.cs
+    /// :53 `ClearStore { get; set; } = true`，新装/缺键行为两平台一致。
+    var clear_store = true
 
     var modes: [Int: String] {
         switch theme {
@@ -140,7 +142,8 @@ extension ReclamationConfiguration {
         self.tools_to_craft = try container.decodeIfPresent([String].self, forKey: .tools_to_craft) ?? ["荧光棒"]
         self.increment_mode = try container.decodeIfPresent(Int.self, forKey: .increment_mode) ?? 0
         self.num_craft_batches = try container.decodeIfPresent(Int.self, forKey: .num_craft_batches) ?? 16
-        self.clear_store = try container.decodeIfPresent(Bool.self, forKey: .clear_store) ?? false
+        // P17-[a]：缺键回退随 WPF 缺省 true（对齐说明见属性注记）。
+        self.clear_store = try container.decodeIfPresent(Bool.self, forKey: .clear_store) ?? true
 
         if self.theme == .relaunch && rawMode < 1 << 4 {
             self.mode = rawMode == 1 ? (2 << 4) : (1 << 4)
