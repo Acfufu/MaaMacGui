@@ -573,46 +573,46 @@
         }
       }
     },
-    "代理地址（如 127.0.0.1:7890 或 socks5://127.0.0.1:1080）" : {
+    "代理地址（如 127.0.0.1:7890）" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Proxy address (e.g. 127.0.0.1:7890 or socks5://127.0.0.1:1080)"
+            "value" : "Proxy address (e.g. 127.0.0.1:7890)"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "프록시 주소 (예: 127.0.0.1:7890 또는 socks5://127.0.0.1:1080)"
+            "value" : "프록시 주소 (예: 127.0.0.1:7890)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "代理地址（如 127.0.0.1:7890 或 socks5://127.0.0.1:1080）"
+            "value" : "代理地址（如 127.0.0.1:7890）"
           }
         }
       }
     },
-    "支持 http/https/socks5 代理；仅作用于资源更新链（查询与下载）。" : {
+    "支持 http/https 代理；仅作用于资源更新链（查询与下载）。" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Supports http/https/socks5 proxies; applies only to the resource update chain (query and download)."
+            "value" : "Supports http/https proxies; applies only to the resource update chain (query and download)."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "http/https/socks5 프록시를 지원하며, 리소스 업데이트 체인(조회 및 다운로드)에만 적용됩니다."
+            "value" : "http/https 프록시를 지원하며, 리소스 업데이트 체인(조회 및 다운로드)에만 적용됩니다."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "支持 http/https/socks5 代理；仅作用于资源更新链（查询与下载）。"
+            "value" : "支持 http/https 代理；仅作用于资源更新链（查询与下载）。"
           }
         }
       }

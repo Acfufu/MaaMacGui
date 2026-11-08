@@ -1465,7 +1465,9 @@ extension MAAViewModel {
         scheduledResourceCheckTimer?.invalidate()
         scheduledResourceCheckTimer = nil
         guard checkResourceUpdateOnSchedule else { return }
-        let interval = TimeInterval(max(1, resourceUpdateCheckIntervalHours) * 3600)
+        // P27.2（低2）：间隔钳 1-168 与 UI Stepper 一致——原逻辑面仅下钳，defaults
+        // 手写越界值（如 500）曾直达定时器。
+        let interval = TimeInterval(min(168, max(1, resourceUpdateCheckIntervalHours)) * 3600)
         let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.checkResourceUpdate() }
         }

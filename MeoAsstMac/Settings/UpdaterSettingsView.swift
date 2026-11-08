@@ -87,12 +87,14 @@ struct UpdaterSettingsView: View {
 
             Divider()
 
-            // P27/U08: 更新链网络代理（WPF Proxy/ProxyType 同位子集）。
+            // P27/U08: 更新链网络代理（WPF Proxy/ProxyType 同位子集；P27-[b]：
+            // 仅 http/https——URLSession 对 SOCKS 代理字典实测旁路，socks5 配置
+            // 走系统默认直连，不声称支持）。
             Toggle("使用代理更新资源", isOn: $resourceProxyEnabled)
             if resourceProxyEnabled {
-                TextField("代理地址（如 127.0.0.1:7890 或 socks5://127.0.0.1:1080）",
+                TextField("代理地址（如 127.0.0.1:7890）",
                           text: $resourceUpdateProxy)
-                Text("支持 http/https/socks5 代理；仅作用于资源更新链（查询与下载）。")
+                Text("支持 http/https 代理；仅作用于资源更新链（查询与下载）。")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
