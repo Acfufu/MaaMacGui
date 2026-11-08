@@ -20,6 +20,24 @@ extension Notification.Name {
     static let MAAPreviewFrameDisplayed = Notification.Name("MAAPreviewFrameDisplayed")
 }
 
+/// T19 目标 FPS 与截图过慢自适应（WPF PeepTargetFps/信号量降速同构）。
+enum PeepRefreshPolicy {
+    /// WPF Peep.cs 缺省 20。
+    static let defaultTargetFps = 20
+
+    /// WPF set 钳制 1...600 同构。
+    static func clampTargetFps(_ fps: Int) -> Int {
+        min(600, max(1, fps))
+    }
+
+    /// 连续 3 次刷新出错（截图超时/占用——Mac 的 isReading 序列化下等价于
+    /// WPF 信号量满）→ 目标 FPS 降 1，下限 1；无失败不减。
+    static func adaptedFps(current: Int, consecutiveFailures: Int) -> Int {
+        guard consecutiveFailures >= 3 else { return current }
+        return max(1, current - 1)
+    }
+}
+
 @MainActor final class PeepViewModel: ObservableObject {
     @Published private(set) var frame: PreviewFrame?
     @Published private(set) var isReading = false

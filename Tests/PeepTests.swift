@@ -176,6 +176,17 @@ final class BufferAllocations {
         cancelled.cancel()
         await cancelled.value
         check(!model.isReading, "parent cancellation releases request")
+
+        // T19: refresh policy (WPF PeepTargetFps 同构).
+        check(PeepRefreshPolicy.defaultTargetFps == 20, "default target fps matches WPF")
+        check(PeepRefreshPolicy.clampTargetFps(0) == 1 && PeepRefreshPolicy.clampTargetFps(-5) == 1, "fps clamps low bound")
+        check(PeepRefreshPolicy.clampTargetFps(601) == 600 && PeepRefreshPolicy.clampTargetFps(600) == 600, "fps clamps high bound")
+        check(PeepRefreshPolicy.clampTargetFps(30) == 30, "in-range fps unchanged")
+        check(PeepRefreshPolicy.adaptedFps(current: 20, consecutiveFailures: 2) == 20, "two failures keep fps")
+        check(PeepRefreshPolicy.adaptedFps(current: 20, consecutiveFailures: 3) == 19, "three failures reduce fps by one")
+        check(PeepRefreshPolicy.adaptedFps(current: 1, consecutiveFailures: 9) == 1, "reduction floors at one")
+        check(PeepRefreshPolicy.adaptedFps(current: 20, consecutiveFailures: 0) == 20, "success resets adaptation")
+
         print("Passed \(count) assertions against production preview buffer and view model")
     }
 }

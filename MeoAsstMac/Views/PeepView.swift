@@ -7,6 +7,13 @@ struct PeepView: View {
     @State private var automatic = false
     @State private var displaySize = CGSize.zero
     @State private var backingScale = 1.0
+    /// T19：目标 FPS（持久化；WPF 缺省 20、钳制 1...600 同构）。
+    @AppStorage("PeepTargetFps") private var peepTargetFps = PeepRefreshPolicy.defaultTargetFps
+    @State private var measuredFps: Double = 0
+    @State private var frameCountInWindow = 0
+    @State private var fpsWindowStart = Date.now
+    @State private var consecutiveFailures = 0
+    @State private var fpsReducedNotice: String?
 
     /// A preview only needs as many pixels as its own area times the backing scale.
     /// `backingScale` mirrors the environment into state: the automatic-refresh `.task` below
@@ -24,6 +31,14 @@ struct PeepView: View {
                 Toggle("Peep.Automatic", isOn: $automatic)
                     .toggleStyle(.switch)
                 Spacer()
+                if automatic {
+                    Stepper(
+                        "Peep.TargetFps \(peepTargetFps)",
+                        onIncrement: { peepTargetFps = PeepRefreshPolicy.clampTargetFps(peepTargetFps + 1) },
+                        onDecrement: { peepTargetFps = PeepRefreshPolicy.clampTargetFps(peepTargetFps - 1) }
+                    )
+                    .fixedSize()
+                }
                 Button("Peep.Refresh") {
                     Task { await preview.refresh(from: viewModel, maxPixelSize: maxPixelSize) }
                 }
@@ -47,6 +62,14 @@ struct PeepView: View {
             }
             if let error = preview.error {
                 Text(error).foregroundStyle(.orange).accessibilityIdentifier("peepError")
+            }
+            if automatic {
+                Text("Peep.FpsStatus \(peepTargetFps) \(Int(measuredFps.rounded()))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            if let fpsReducedNotice {
+                Text(fpsReducedNotice).font(.caption).foregroundStyle(.orange)
             }
             Text("Peep.TimestampHint")
                 .font(.caption)
@@ -73,10 +96,36 @@ struct PeepView: View {
         }
         .task(id: automatic) {
             guard automatic else { return }
+            // T19：按目标 FPS 循环；刷新耗时计入间隔（不叠加请求——refresh 内部
+            // isReading 序列化）；连续 3 次出错降 1 FPS（WPF 信号量降速同构），
+            // 成功则复位并按 1s 窗口统计实测 FPS。
             while !Task.isCancelled {
-                do { try await Task.sleep(for: .seconds(preview.error == nil ? 1 : 5)) } catch { return }
-                guard !Task.isCancelled else { return }
+                let interval = 1.0 / Double(peepTargetFps)
+                let start = Date.now
                 await preview.refresh(from: viewModel, maxPixelSize: maxPixelSize)
+                guard !Task.isCancelled else { return }
+                if preview.error != nil {
+                    consecutiveFailures += 1
+                    let adapted = PeepRefreshPolicy.adaptedFps(
+                        current: peepTargetFps, consecutiveFailures: consecutiveFailures)
+                    if adapted < peepTargetFps {
+                        peepTargetFps = adapted
+                        fpsReducedNotice = String(
+                            localized: "Peep.FpsReduced \(adapted)")
+                    }
+                } else {
+                    consecutiveFailures = 0
+                    frameCountInWindow += 1
+                    let window = Date.now.timeIntervalSince(fpsWindowStart)
+                    if window >= 1 {
+                        measuredFps = Double(frameCountInWindow) / window
+                        frameCountInWindow = 0
+                        fpsWindowStart = .now
+                    }
+                }
+                let elapsed = Date.now.timeIntervalSince(start)
+                let remaining = max(0, interval - elapsed)
+                do { try await Task.sleep(for: .seconds(remaining)) } catch { return }
             }
         }
         .onChange(of: preview.frame?.readAt) {

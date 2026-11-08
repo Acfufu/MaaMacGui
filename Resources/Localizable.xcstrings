@@ -1,6 +1,72 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "Peep.FpsReduced %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screencap is slow; target FPS reduced to %lld."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크린샷이 느려 목표 FPS를 %lld(으)로 낮췄습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peep.FpsReduced %lld"
+          }
+        }
+      }
+    },
+    "Peep.FpsStatus %lld %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target %lld FPS · Measured %lld FPS"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목표 %lld FPS · 실측 %lld FPS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peep.FpsStatus %lld %lld"
+          }
+        }
+      }
+    },
+    "Peep.TargetFps %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target FPS: %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목표 FPS: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peep.TargetFps %lld"
+          }
+        }
+      }
+    },
     "「活动期间跳过」已开启，导入的计划在活动期间不会执行。" : {
       "localizations" : {
         "en" : {
