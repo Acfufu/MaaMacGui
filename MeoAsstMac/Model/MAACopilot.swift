@@ -159,6 +159,9 @@ extension URL {
     /// CopilotContent.Item.name（作业树条目名）。MAACopilot.swift 落位使三个
     /// copilot 套件（compile/persistence/video-recognition）的 verbatim 提取面
     /// 均含本助手，无需 strip 同步。
+    /// 数字谓词第二份拷贝（CopilotConfiguration 私有 `digits`，prtsCode 用）
+    /// 未随本助手移动——移动会打破 compile/persistence 两套件的单文件编译
+    /// 布局（需 stub 同步且 stub 复制实现无测试价值），S6-1-R3 低-1 注记。
     var copilotFileStem: String {
         deletingPathExtension().lastPathComponent
     }

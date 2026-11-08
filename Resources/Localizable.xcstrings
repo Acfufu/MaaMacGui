@@ -9914,6 +9914,22 @@
         }
       }
     },
+    "%@：%@ 按最新库存重算缺口（当前 %lld/目标 %lld），需补 %lld 个" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %@ recomputed the gap against the latest inventory (current %lld/target %lld); %lld more needed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %@ 최신 재고 기준으로 부족분을 재계산(현재 %lld/목표 %lld), %lld개 추가 필요"
+          }
+        }
+      }
+    },
     "%@：战斗参数重算下发未生效" : {
       "localizations" : {
         "en" : {
