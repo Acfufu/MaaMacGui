@@ -14263,7 +14263,39 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "아니요"
+            "value" : "아니오"
+          }
+        }
+      }
+    },
+    "干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operator"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터"
+          }
+        }
+      }
+    },
+    "是否拥有" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Owned"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보유"
           }
         }
       }
@@ -19507,6 +19539,22 @@
       }
     },
     "精英化" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elite"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정예화"
+          }
+        }
+      }
+    },
+    "精英化等级" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {

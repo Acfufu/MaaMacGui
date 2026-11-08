@@ -204,9 +204,7 @@ private struct UserDataHistorySummary: View {
 
     private enum OperatorExportFormat { case json, markdown, csv }
 
-    /// WPF ExportOperBoxToFile 同构：按持有列表导出；JSON 缩进、md/csv 基础 7 列、
-    /// UTF-8 BOM（Excel 兼容）；空集按钮已禁用，构建层空集兜底不产生文件。
-    /// 展示行：基础三段；一图流来源携带技能/模组时以同源格式化器追加。
+    /// 展示行文本：基础三段；一图流来源携带技能/模组时以同源格式化器追加。
     private func operRowText(_ oper: OperBoxHistoryPayload.OwnedOperator) -> String {
         var text = "\(oper.name) · E\(oper.elite) Lv\(oper.level) · P\(oper.potential)"
         let skills = DataExport.skillsText(oper.skills)
@@ -219,34 +217,36 @@ private struct UserDataHistorySummary: View {
         return text
     }
 
+    /// WPF ExportOperBoxToFile/BuildOperBoxExportList 同构：**全表导出**（未拥有
+    /// 行 Own=false、Elite/Level/Potential=0——中2/P16-1-R3：owned-only 为未申报
+    /// 范围选择，快照 allOperators 全表在位）；行序 = 快照负载序（Core 资源序，
+    /// 低-5）；JSON 缩进+sortedKeys 钉键序+三格式统一 UTF-8 BOM（中1，WPF
+    /// ExportOperBoxToFile UTF8Encoding(true) 同构）；表头对齐 WPF 本地化键值
+    /// （低-3：干员/精英化等级/是否拥有等 6 处）；空集防线 = store isValid 门 +
+    /// 按钮禁用（构建层恒产表头，低-6 注释如实化）。
     private func exportOperators(_ format: OperatorExportFormat) {
         guard let snapshot = operatorHistory else { return }
-        // 与 MAAOperBox.OwnedOper 的展示排序同构（快照负载类型未声明 Comparable）。
-        let owned = snapshot.operators.ownedOperators.sorted { lhs, rhs in
-            if lhs.elite != rhs.elite { return lhs.elite > rhs.elite }
-            if lhs.level != rhs.level { return lhs.level > rhs.level }
-            if lhs.rarity != rhs.rarity { return lhs.rarity > rhs.rarity }
-            return lhs.id < rhs.id
-        }
+        let rows = DataExport.operBoxExportRows(
+            allOperators: snapshot.operators.allOperators,
+            ownedOperators: snapshot.operators.ownedOperators)
         let includeYituliuFields = snapshot.source == "yituliu"
         let headers = DataExport.OperBoxHeaders(
-            name: String(localized: "名称"), id: String(localized: "ID"),
-            rarity: String(localized: "星级"), elite: String(localized: "精英化"),
-            level: String(localized: "等级"), own: String(localized: "已持有"),
+            name: String(localized: "干员"), id: String(localized: "ID"),
+            rarity: String(localized: "星级"), elite: String(localized: "精英化等级"),
+            level: String(localized: "等级"), own: String(localized: "是否拥有"),
             potential: String(localized: "潜能"), yes: String(localized: "是"), no: String(localized: "否"),
             mainSkill: String(localized: "主技能等级"), skills: String(localized: "专精"),
             equips: String(localized: "模组"))
-        let rows = owned.map { oper in
-            DataExport.OperBoxRow(
-                name: oper.name, id: oper.id, rarity: oper.rarity, elite: oper.elite,
-                level: oper.level, own: oper.own, potential: oper.potential,
-                mainSkillLevel: oper.mainSkillLevel, skills: oper.skills, equips: oper.equips)
-        }
         let panel = NSSavePanel()
         let content: String
         switch format {
         case .json:
-            guard let data = try? JSONEncoder().encode(owned) else { return }
+            let jsonRows = rows.map {
+                DataExport.OperBoxJSONRow(
+                    id: $0.id, own: $0.own, name: $0.name, rarity: $0.rarity,
+                    elite: $0.elite, level: $0.level, potential: $0.potential)
+            }
+            guard let data = try? DataExport.operBoxJSONData(rows: jsonRows) else { return }
             panel.allowedContentTypes = [.json]
             panel.nameFieldStringValue = "Arknights_OperBox_Export.json"
             content = String(decoding: data, as: UTF8.self)
@@ -267,7 +267,9 @@ private struct UserDataHistorySummary: View {
         }
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
-            try DataExport.write(content, to: url, withBOM: format != .json)
+            // 中1（P16-1-R3）：三格式统一 BOM（WPF ExportOperBoxToFile
+            // UTF8Encoding(true) 同构——JSON 腿不再豁免）。
+            try DataExport.write(content, to: url, withBOM: true)
             operatorExportMessage = String(localized: "已导出：\(url.path)")
         } catch {
             operatorExportMessage = String(localized: "导出失败：\(error.localizedDescription)")

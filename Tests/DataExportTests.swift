@@ -96,3 +96,34 @@ check(extCsv[0] == "名称,ID,星级,精英化,等级,已持有,潜能,主技能
 check(extCsv[1] == "阿米娅,char_002_amiya,5,2,60,是,6,7,3/0,X3", "extended csv row")
 check(extCsv[2] == "夜刀,char_999_tenture,2,0,1,是,1,,,", "csv rows without data keep empty fields")
 print("PASS \(checks) yituliu export column assertions (P16.2)")
+
+// P16.2 修复（P16-1-R3）：全表导出合并（中2）+ JSON 缩进/键序钉死（中1）。
+let exportAllOps = [
+    OperBoxHistoryPayload.Operator(id: "char_002_amiya", own: true, name: "阿米娅", rarity: 5),
+    OperBoxHistoryPayload.Operator(id: "char_999_tenture", own: false, name: "夜刀", rarity: 2),
+]
+let exportOwnedOps = [
+    OperBoxHistoryPayload.OwnedOperator(id: "char_002_amiya", own: true, name: "阿米娅", rarity: 5,
+                                        elite: 2, level: 60, potential: 6),
+]
+let mergedRows = DataExport.operBoxExportRows(allOperators: exportAllOps, ownedOperators: exportOwnedOps)
+check(mergedRows.count == 2, "full-roster export includes unowned rows (P16-1-R3 中2)")
+check(mergedRows[1].own == false && mergedRows[1].elite == 0 && mergedRows[1].level == 0
+        && mergedRows[1].potential == 0, "unowned rows carry zeroed details")
+check(mergedRows[0].elite == 2 && mergedRows[0].level == 60 && mergedRows[0].potential == 6,
+      "owned rows keep recognition details")
+check(mergedRows[0].id == "char_002_amiya" && mergedRows[1].id == "char_999_tenture",
+      "row order follows snapshot payload order (resource order, 低-5)")
+let jsonFixData1 = try DataExport.operBoxJSONData(rows: [
+    DataExport.OperBoxJSONRow(id: "a", own: true, name: "阿米娅", rarity: 5, elite: 2, level: 60, potential: 6),
+])
+let jsonFixText1 = String(decoding: jsonFixData1, as: UTF8.self)
+check(jsonFixText1.contains("\n"), "JSON export is pretty-printed (P16-1-R3 中1)")
+let jsonFixData2 = try DataExport.operBoxJSONData(rows: [
+    DataExport.OperBoxJSONRow(id: "a", own: true, name: "阿米娅", rarity: 5, elite: 2, level: 60, potential: 6),
+])
+check(jsonFixData1 == jsonFixData2, "JSON key order is stable across runs (sortedKeys)")
+check(jsonFixText1.range(of: "\"elite\"")!.lowerBound < jsonFixText1.range(of: "\"id\"")!.lowerBound
+        && jsonFixText1.range(of: "\"level\"")!.lowerBound < jsonFixText1.range(of: "\"name\"")!.lowerBound,
+      "sortedKeys pins alphabetical key order")
+print("PASS \(checks) export fix assertions (P16-1-R3)")

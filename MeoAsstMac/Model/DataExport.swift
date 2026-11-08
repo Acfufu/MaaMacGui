@@ -77,6 +77,53 @@ enum DataExport {
         return equips.filter { $0.level > 0 }.map { "\($0.type)\($0.level)" }.joined(separator: " ")
     }
 
+    /// 中2（P16-1-R3）：WPF BuildOperBoxExportList 全表导出同构——未拥有行以
+    /// Own=false、Elite/Level/Potential=0 补齐（快照 allOperators 全表在位，
+    /// 非 owned-only 的未申报范围选择）；行序 = 快照负载序（Core battle_data
+    /// 遍历序 ≈ WPF DataHelper.Operators 资源序，低-5 同步对齐；Mac 展示排序
+    /// 不适用于导出）。行内容中 owned 细节以 ownedOperators 按 id 取得。
+    static func operBoxExportRows(
+        allOperators: [OperBoxHistoryPayload.Operator],
+        ownedOperators: [OperBoxHistoryPayload.OwnedOperator]
+    ) -> [OperBoxRow] {
+        let detailsByID = Dictionary(ownedOperators.map { ($0.id, $0) },
+                                     uniquingKeysWith: { first, _ in first })
+        return allOperators.map { oper in
+            guard let detail = detailsByID[oper.id] else {
+                return OperBoxRow(
+                    name: oper.name, id: oper.id, rarity: oper.rarity, elite: 0,
+                    level: 0, own: false, potential: 0,
+                    mainSkillLevel: nil, skills: nil, equips: nil)
+            }
+            return OperBoxRow(
+                name: detail.name, id: detail.id, rarity: detail.rarity, elite: detail.elite,
+                level: detail.level, own: true, potential: detail.potential,
+                mainSkillLevel: detail.mainSkillLevel, skills: detail.skills, equips: detail.equips)
+        }
+    }
+
+    /// 中1（P16-1-R3）：JSON 行对象为 WPF OperData 同款 7 键（id/own/name/rarity/
+    /// elite/level/potential）——yituliu 扩展列仅 md/csv 承载（台账 P16-[d]）。
+    struct OperBoxJSONRow: Codable {
+        let id: String
+        let own: Bool
+        let name: String
+        let rarity: Int
+        let elite: Int
+        let level: Int
+        let potential: Int
+    }
+
+    /// 中1（P16-1-R3）：WPF ExportOperBoxToJson 同构补齐——Formatting.Indented
+    /// 对应 `.prettyPrinted`；键序以 `.sortedKeys` 钉死（JSONEncoder 缺省哈希序
+    /// 逐次运行漂移不可复现；sortedKeys 字母序 vs WPF Newtonsoft 声明序残余
+    /// 差异入台账 P16-[a]）。
+    static func operBoxJSONData(rows: [OperBoxJSONRow]) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try encoder.encode(rows)
+    }
+
     static func operBoxMarkdownLines(
         rows: [OperBoxRow], headers: OperBoxHeaders, includeYituliuFields: Bool = false
     ) -> [String] {
@@ -117,7 +164,10 @@ enum DataExport {
 
     // MARK: - 共享
 
-    /// WPF 导出空集直接返回，不产生空文件。
+    /// 行拼接（LF join；WPF 为 Environment.NewLine=CRLF——平台惯例差异入台账
+    /// P16-[b]，行内容级同构）。字面空数组返回 nil；注意运行期空集防线在
+    /// OperBoxHistoryStore.save 的 isValid 门+按钮禁用（低-6/P16-1-R3：构建层
+    /// 恒产表头，四个构建器对空行集产出仅表头文件——此处兜底语义有限）。
     static func joinedLines(_ lines: [String]) -> String? {
         guard !lines.isEmpty else { return nil }
         return lines.joined(separator: "\n")
