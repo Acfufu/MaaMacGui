@@ -146,6 +146,12 @@ private let profileLoadLogger = Logger(subsystem: "com.hguandl.MeoAsstMac", cate
             }
             try Task.checkCancellation()
             logStore?.clearLogs(upTo: sessionBaseline)
+            // 低-1（P29-3-R3-verify）：启动路径清日志同步失效缩略图，与 linkStart
+            // 会话重置路径同款（清日志同步失效缩略图）。该点全量失效语义正确：
+            // status==.idle 门控下 await 窗口不可能有完成/错误挂载，现存缩略图
+            // 全属被清前缀，滞留至多 100 张 ≈88 MiB 量级。
+            logThumbnails.removeAll()
+            thumbnailOrder.removeAll()
         }
         accepted = true
     }

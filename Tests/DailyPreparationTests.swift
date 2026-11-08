@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 @main struct DailyPreparationTests {
  @MainActor static func main() async {
@@ -356,6 +357,21 @@ import Foundation
     try? await Task.sleep(for: .milliseconds(20))
    }
    check(missing.dailyRunCoordinator.lastTerminal?.outcome == .failed, "missing callbacks reach failed terminal after bounded grace")
+  }
+  // P29.3 低-1（P29-3-R3-verify）：beginTaskOperation 启动路径（requiresIdle）
+  // 清日志必须同步失效缩略图——与 linkStart 会话重置路径同款；失效语义只属
+  // 会话重置，stop(requiresIdle:false) 不得失效。
+  do {
+   let model = MAAViewModel()
+   model.logThumbnails = [UUID(): NSImage(), UUID(): NSImage()]
+   model.thumbnailOrder = Array(model.logThumbnails.keys)
+   check(await model.startDailyTasks() == .started, "thumbnail invalidation: startup reaches session reset")
+   check(model.logThumbnails.isEmpty, "startup session reset invalidates stale thumbnails")
+   check(model.thumbnailOrder.isEmpty, "startup session reset invalidates thumbnail order")
+   model.logThumbnails = [UUID(): NSImage()]
+   model.thumbnailOrder = Array(model.logThumbnails.keys)
+   try! await model.stop()
+   check(!model.logThumbnails.isEmpty && !model.thumbnailOrder.isEmpty, "stop keeps thumbnails (invalidation belongs to session reset only)")
   }
   print("DailyPreparationTests: \(count) production async assertions passed")
  }

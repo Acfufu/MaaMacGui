@@ -206,11 +206,15 @@ func run() async throws {
         let m2 = makeVM(runID: runID)
         m2.stageActivity = resourceOpenActivities
         var fights2 = Set<Int32>()
+        // P12-3-R3 记录4 死支清理：原断言 `!d2 && m2.taskStatus[UUID()] != nil || !d2`
+        // 中 `taskStatus[UUID()]`（新随机 UUID 永无登记）恒 false，复合条件退化为
+        // `!d2`——删除死支并按场景 1 同款捕获任务 id 断言 skip 登记面。
+        let taskID2 = UUID()
         let d2 = try await m2.appendDepotMaintainTask(
-            task: DailyTask(id: UUID(), task: .depotMaintain(cfg), enabled: true, runOnce: false),
+            task: DailyTask(id: taskID2, task: .depotMaintain(cfg), enabled: true, runOnce: false),
             config: cfg, runID: runID, scope: m2.inventoryScope,
             inventoryFightIDs: &fights2)
-        check(!d2 && m2.taskStatus[UUID()] != nil || !d2, "resource window alone also skips")
+        check(!d2 && m2.taskStatus[taskID2] == .skipped, "resource window alone also skips")
         check(m2.logs.contains { $0.message.contains("资源全开放") }, "resource skip logged")
     }
 

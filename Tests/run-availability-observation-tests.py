@@ -23,6 +23,9 @@ wiring=re.search(r'^        dailyRunCoordinator\.didChange = .*$',model,re.M)[0]
 copilot_bridge=block(bridge,r'^    nonisolated\(nonsending\) func startCopilot\(')
 # P14.2: the production dispatch condition matrix verbatim (bridge references it).
 copilot_policy=block((root/'MeoAsstMac/Task Configurations/CopilotConfiguration.swift').read_text(),r'^enum CopilotDispatchPolicy')
+# P14.2 B3 收编（P14-1-R3 §6 残余记录）：真实 prepareOperBoxAssistFile verbatim
+# 注入——assist-ON 桥路径（D1-D5）的断言自本套件起由项目承担，不再独靠复验探针。
+assist_prepare=block(bridge,r'^    @MainActor private func prepareOperBoxAssistFile')
 support='''import Foundation
 import Combine
 import Observation
@@ -39,9 +42,9 @@ enum CopilotCategory { case bundled, list }
 enum CopilotKind { case regular, sss, paradox }
 struct CopilotSet { var kind = CopilotKind.regular }
 struct CopilotItem { var isOn = true; var url = URL(filePath: "/fixture.json"); var isRaid: Bool? }
-enum CopilotContent { case copilot(URL, CopilotKind, Bool); case invalid }
-struct CopilotConfiguration {
- struct Item { var filename: String; var nav_name_override: String?; var is_raid: Bool }
+enum CopilotContent { case copilot(URL, CopilotKind, Bool); case invalid; case mixedRegularAndSSS }
+struct CopilotConfiguration: Encodable {
+ struct Item: Codable { var filename: String; var nav_name_override: String?; var is_raid: Bool }
  var filename: String?
  var copilot_list: [Item] = []
  // C11 边界面：P14.1 起 startCopilot 桥按任务类型清写该参数。
@@ -49,7 +52,9 @@ struct CopilotConfiguration {
  // P14.2 边界面：条件矩阵读取面（真实 CopilotDispatchPolicy verbatim 注入）。
  var formation = true
  var use_sanity_potion = false
- func jsonString() throws -> String { "{}" }
+ // B3 收编：桥面 jsonString 编码真实参数面（JSONEncoder 对 nil 可选键整体
+ // 省略——「无路径」断言=键不存在；生产键名即属性名，Core 消费面同名）。
+ func jsonString() throws -> String { String(data: try JSONEncoder().encode(self), encoding: .utf8)! }
 }
 struct CopilotContext {
  var config = CopilotConfiguration()
@@ -60,8 +65,9 @@ struct CopilotContext {
  var copilotList = [CopilotItem]()
  var content = CopilotContent.copilot(URL(filePath:"/fixture.json"), .regular, false)
 }
-// P01.2 起生产桥经 CopilotCompiler 编译后才入队;本夹具按同一边界形态
-// 提供纯编译器:invalid 内容编译失败,其余产出单个 Copilot 追加项。
+// P01.2 起生产桥经 CopilotCompiler 编译后才入队;本夹具按同一边界形态提供
+// 纯编译器:invalid 编译失败;.copilot 按成员类型产出单追加项(config 直传);
+// .mixedRegularAndSSS 产出 Copilot+SSS 两成员(B3-D2 混合列表面)。
 struct MAALog {
  enum LogColor { case error }
  var date: Date; var content: String; var color: LogColor
@@ -74,7 +80,15 @@ enum CopilotCompiler {
  static func compile(_ input: Input) -> Result<[Output], CompileError> {
   switch input.context.content {
   case .invalid: return .failure(CompileError(logMessage: "invalid"))
-  case .copilot: return .success([Output(type: .Copilot, config: CopilotConfiguration())])
+  case .copilot(_, let kind, _):
+   switch kind {
+   case .regular: return .success([Output(type: .Copilot, config: input.context.config)])
+   case .sss: return .success([Output(type: .SSSCopilot, config: input.context.config)])
+   case .paradox: return .success([Output(type: .ParadoxCopilot, config: input.context.config)])
+   }
+  case .mixedRegularAndSSS:
+   return .success([Output(type: .Copilot, config: input.context.config),
+                    Output(type: .SSSCopilot, config: input.context.config)])
   }
  }
 }
@@ -88,10 +102,19 @@ enum CopilotCompiler {
  let dailyRunCoordinator = DailyRunCoordinator()
 '''+block(model,r'^    var canStartTasks:')+'\n'+block(model,r'^    var canStopTasks:')+'\n'+block(model,r'^    var activeRun:')+'\n'+block(model,r'^    var lastRunOutcome:')+'\n'+menu_predicates+'''
  var copilotStartCount = 0
+ // B3 收编：真实 Store/Export 注入面——scope 为普通存储面（生产为计算属性，
+ // 桩世界按 user-data 套件先例直存）；store 按用例注入临时目录。
+ var inventoryScope = InventoryScope(connection:"adb",server:"CN",profile:"Default",account:"A")
+ var operBoxHistoryStore = OperBoxHistoryStore(directory: URL(fileURLWithPath:"/tmp/maa-availability-fixture"))
+ // B3 收编：桥面下发任务捕获面（type/params 供 D/E 断言逐成员核对）。
+ var startedTypes: [MAATaskType] = []
+ var startedParams: [String] = []
  var failCopilotStart = false
  var copilotGate: Gate?
  func startCopilot(tasks: [(type: MAATaskType, params: String)]) async throws {
   copilotStartCount += 1
+  startedTypes = tasks.map(\.type)
+  startedParams = tasks.map(\.params)
   if let copilotGate { await copilotGate.wait() }
   if failCopilotStart { throw FixtureError.connection }
  }
@@ -104,11 +127,7 @@ enum CopilotCompiler {
  var logs=[MAALog]()
  func appendLog(_ entry: MAALog) { logs.append(entry) }
  @ObservationIgnored private var cancellables = Set<AnyCancellable>()
-'''+block(bridge,r'^    @MainActor var status:')+'\n'+block(bridge,r'^    @MainActor var canStartTasks:')+'''
- func prepareOperBoxAssistFile() async -> String? {
-  // C11 边界桩：探针走默认关闭路径，不触达真实写盘。
-  return nil
- }
+'''+block(bridge,r'^    @MainActor var status:')+'\n'+block(bridge,r'^    @MainActor var canStartTasks:')+'\n'+assist_prepare+'''
  @MainActor init(parent: MAAViewModel) {
   self.parent=parent
 '''+subscriptions+'''
@@ -172,11 +191,138 @@ final class Flag: @unchecked Sendable {
   copilotGate.release()
   try! await copilotTask.value
   precondition(copilotBridge.copilotStartToken != nil,"successful Copilot start emits a token")
-  print("RunAvailabilityObservationTests: 18 production assertions passed")
+  // P14.2 B3 收编（P14-1-R3 §6 残余记录）：assist-ON 桥路径 D1-D5/E1-E3 直测。
+  // 真实桥（verbatim）+真实 CopilotDispatchPolicy（verbatim）+真实
+  // prepareOperBoxAssistFile（verbatim）+真实 OperBoxHistoryStore/OperBoxAssistExport
+  // （生产文件编译）；M3 类桥接线回归（policy 对而桥回退 P14.1 门控）自此由
+  // 项目套件当场捕获，红线不再独靠复验探针。
+  func b3Fixture(_ tag: String) -> (MAAViewModel, NewModel, URL, URL) {
+   let storeDir = FileManager.default.temporaryDirectory.appending(path: "maa-b3-store-\(tag)-\(UUID().uuidString)")
+   let exportDir = FileManager.default.temporaryDirectory.appending(path: "maa-b3-export-\(tag)-\(UUID().uuidString)")
+   let parent = MAAViewModel()
+   parent.operBoxHistoryStore = OperBoxHistoryStore(directory: storeDir)
+   OperBoxAssistExport.overrideDirectory = exportDir
+   return (parent, NewModel(parent: parent), storeDir, exportDir)
+  }
+  func b3Teardown(_ dirs: [URL]) {
+   OperBoxAssistExport.overrideDirectory = nil
+   for dir in dirs { try? FileManager.default.removeItem(at: dir) }
+  }
+  func b3SeedUsable(_ parent: MAAViewModel) throws {
+   let skilled = OperBoxHistoryPayload.OwnedOperator(
+    id: "char_002_amiya", own: true, name: "阿米娅", rarity: 5, elite: 2, level: 80,
+    potential: 5, mainSkillLevel: 7, skills: [.init(id: "skchr_amiya_1", level: 3)])
+   try parent.operBoxHistoryStore.save(
+    OperBoxHistoryPayload(
+     done: true,
+     allOperators: [.init(id: "char_002_amiya", own: true, name: "阿米娅", rarity: 5)],
+     ownedOperators: [skilled]),
+    scope: parent.inventoryScope, source: "yituliu")
+  }
+  // D5（assist 关→无路径）：开关关即全量不写盘不预检,即便快照可用。
+  do {
+   let (parent, bridge, storeDir, exportDir) = b3Fixture("d5")
+   defer { b3Teardown([storeDir, exportDir]) }
+   try b3SeedUsable(parent)
+   try await bridge.startCopilot()
+   precondition(bridge.copilotStartToken != nil,"D5: assist off still starts the copilot")
+   precondition(bridge.logs.isEmpty,"D5: assist off reports no error")
+   let params = try JSONSerialization.jsonObject(with: Data(parent.startedParams[0].utf8)) as! [String: Any]
+   precondition(params["operbox_data_path"] == nil,"D5: assist off carries no assist path")
+   precondition(!FileManager.default.fileExists(atPath: exportDir.appending(path: "OperBoxData.json").path),"D5: assist off never writes the assist file")
+  }
+  // D1（formation 关+可用快照→不阻断无路径）：WPF 同态不预检——桥面即
+  // prepare 不被触达（无写盘）。
+  do {
+   let (parent, bridge, storeDir, exportDir) = b3Fixture("d1")
+   defer { b3Teardown([storeDir, exportDir]) }
+   try b3SeedUsable(parent)
+   bridge.copilot.enableOperBoxAssist = true
+   bridge.copilot.config.formation = false
+   try await bridge.startCopilot()
+   precondition(bridge.copilotStartToken != nil && bridge.logs.isEmpty,"D1: formation off does not block or report")
+   let params = try JSONSerialization.jsonObject(with: Data(parent.startedParams[0].utf8)) as! [String: Any]
+   precondition(params["operbox_data_path"] == nil,"D1: formation off carries no assist path")
+   precondition(!FileManager.default.fileExists(atPath: exportDir.appending(path: "OperBoxData.json").path),"D1: formation off never reaches the real export")
+  }
+  // D3（formation 关+不可用快照→不阻断不报错）：空 store 不可用,WPF 同态可跑。
+  do {
+   let (parent, bridge, storeDir, exportDir) = b3Fixture("d3")
+   defer { b3Teardown([storeDir, exportDir]) }
+   bridge.copilot.enableOperBoxAssist = true
+   bridge.copilot.config.formation = false
+   try await bridge.startCopilot()
+   precondition(bridge.copilotStartToken != nil && bridge.logs.isEmpty,"D3: unusable snapshot with formation off runs without block or error")
+   let params = try JSONSerialization.jsonObject(with: Data(parent.startedParams[0].utf8)) as! [String: Any]
+   precondition(params["operbox_data_path"] == nil,"D3: unusable snapshot carries no assist path")
+  }
+  // D4（formation 开+不可用→阻断+真实错误日志）：WPF ValidateStartAsync 同构——
+  // 不到 Core 边界、无 token、真实错误文案。
+  do {
+   let (parent, bridge, storeDir, exportDir) = b3Fixture("d4")
+   defer { b3Teardown([storeDir, exportDir]) }
+   bridge.copilot.enableOperBoxAssist = true
+   try await bridge.startCopilot()
+   precondition(
+    parent.copilotStartCount == 0 && bridge.copilotStartToken == nil
+     && bridge.logs.contains(where: { $0.color == .error && $0.content.contains("一图流干员数据") }),
+    "D4: unusable snapshot blocks start with the real error log")
+  }
+  // D2（formation 开→Copilot 携带、SSS 成员不携带）：真实落盘文件路径逐字下发。
+  do {
+   let (parent, bridge, storeDir, exportDir) = b3Fixture("d2")
+   defer { b3Teardown([storeDir, exportDir]) }
+   try b3SeedUsable(parent)
+   bridge.copilot.enableOperBoxAssist = true
+   bridge.copilot.content = .mixedRegularAndSSS
+   try await bridge.startCopilot()
+   let assistFile = exportDir.appending(path: "OperBoxData.json")
+   precondition(parent.copilotStartCount == 1 && bridge.copilotStartToken != nil,"D2: usable snapshot starts without blocking")
+   precondition(parent.startedTypes == [.Copilot, .SSSCopilot],"D2: mixed list keeps member order")
+   precondition(FileManager.default.fileExists(atPath: assistFile.path),"D2: real export wrote the assist file")
+   let copilotParams = try JSONSerialization.jsonObject(with: Data(parent.startedParams[0].utf8)) as! [String: Any]
+   precondition(copilotParams["operbox_data_path"] as? String == assistFile.path(percentEncoded: false),"D2: formation-on Copilot member carries the written assist path")
+   let sssParams = try JSONSerialization.jsonObject(with: Data(parent.startedParams[1].utf8)) as! [String: Any]
+   precondition(sssParams["operbox_data_path"] == nil,"D2: SSS member never carries the assist path")
+  }
+  // E1/E2/E3（C06 吃药参数面）：单文件强制 false/列表逐项直传/单文件 SSS 亦强制 false。
+  do {
+   let (parent, bridge, storeDir, exportDir) = b3Fixture("e1")
+   defer { b3Teardown([storeDir, exportDir]) }
+   bridge.copilot.config.use_sanity_potion = true
+   try await bridge.startCopilot()
+   let single = try JSONSerialization.jsonObject(with: Data(parent.startedParams[0].utf8)) as! [String: Any]
+   precondition((single["use_sanity_potion"] as? NSNumber)?.boolValue == false,"E1: single-file mode forces use_sanity_potion false")
+   let (listParent, listBridge, listStore, listExport) = b3Fixture("e2")
+   defer { b3Teardown([listStore, listExport]) }
+   listBridge.copilot.category = .list
+   listBridge.copilot.config.use_sanity_potion = true
+   try await listBridge.startCopilot()
+   let list = try JSONSerialization.jsonObject(with: Data(listParent.startedParams[0].utf8)) as! [String: Any]
+   precondition((list["use_sanity_potion"] as? NSNumber)?.boolValue == true,"E2: list mode passes the configured use_sanity_potion")
+   let (sssParent, sssBridge, sssStore, sssExport) = b3Fixture("e3")
+   defer { b3Teardown([sssStore, sssExport]) }
+   sssBridge.copilot.content = .copilot(URL(filePath: "/fixture.json"), .sss, false)
+   sssBridge.copilot.config.use_sanity_potion = true
+   try await sssBridge.startCopilot()
+   precondition(sssParent.startedTypes == [.SSSCopilot],"E3: single SSS file compiles to one SSS member")
+   let sss = try JSONSerialization.jsonObject(with: Data(sssParent.startedParams[0].utf8)) as! [String: Any]
+   precondition((sss["use_sanity_potion"] as? NSNumber)?.boolValue == false,"E3: single-file SSS also forces use_sanity_potion false")
+  }
+  print("RunAvailabilityObservationTests: 40 production assertions passed")
  }
 }
 '''
 with tempfile.TemporaryDirectory(prefix='maa-run-observation-') as directory:
  p=Path(directory);(p/'Probe.swift').write_text(support)
- subprocess.run(['xcrun','swiftc','-swift-version','5','-parse-as-library',str(p/'Probe.swift'),str(root/'MeoAsstMac/RunHooks/RunContext.swift'),'-o',str(p/'test')],check=True)
+ # B3 收编编译面：真实 Store/Export verbatim（与 run-operbox-history-tests.sh/
+ # run-copilot-persistence-tests.sh 同款生产文件）。
+ subprocess.run(['xcrun','swiftc','-swift-version','5','-parse-as-library',
+                 str(root/'MeoAsstMac/Model/InventoryTarget.swift'),
+                 str(root/'MeoAsstMac/Model/DepotHistoryStore.swift'),
+                 str(root/'MeoAsstMac/Model/OperBoxHistoryStore.swift'),
+                 str(root/'MeoAsstMac/Model/OperBoxHistoryPayload.swift'),
+                 str(root/'MeoAsstMac/Model/YituliuOperBoxService.swift'),
+                 str(root/'MeoAsstMac/Task Configurations/OperBoxAssistExport.swift'),
+                 str(root/'MeoAsstMac/RunHooks/RunContext.swift'),str(p/'Probe.swift'),'-o',str(p/'test')],check=True)
  subprocess.run([str(p/'test')],check=True)

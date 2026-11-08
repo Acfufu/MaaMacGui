@@ -56,7 +56,6 @@ import Foundation
         check(noThumb[0].thumbnailLogID == nil, "no thumbnail without id")
 
         // --- TrimOldThumbnails（WPF 同构：超上限删最旧）
-        var thumbs: [UUID: NSImage] = [:]
         let keys = (0..<LogCardBuilder.maxThumbnails + 5).map { _ in UUID() }
         // 低1（P29-2-R3）：trim 改按挂载时序（原 uuidString 序=随机淘汰，探针
         // 实证时间最旧者反被保留）；keys[0..<5] 即最早挂载的 5 个。

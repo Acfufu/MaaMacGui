@@ -143,8 +143,17 @@ for (code, expected) in [(20010, YituliuOperBoxService.TokenValidationResult.wri
 StubYituliuProtocol.handler = { _ in (500, Data()) }
 let (http500Verdict, _) = await fetchAwait("t")
 yituliuCheck(http500Verdict == .networkError, "HTTP 500 maps to networkError")
-let (badVerdict, _) = await service.fetchOperatorInfo(token: "t", session: stubbedSession, url: URL(string: "https://unreachable.invalid/api")!)
-yituliuCheck(badVerdict == .networkError, "connection failure maps to networkError")
+// P11.5 低-1（P11-5-R3）：原「connection failure」断言经 URLProtocol 桩拦截
+// 实走 500 路径，catch 分支零直测。改用空 protocolClasses 会话对保留 TLD
+// （.invalid 恒不可解析、无真实外联）真实连接失败，直测 catch 分支。
+let unstubbedSession: URLSession = {
+  let config = URLSessionConfiguration.ephemeral
+  config.protocolClasses = []
+  return URLSession(configuration: config)
+}()
+let (connectionVerdict, connectionData) = await service.fetchOperatorInfo(
+  token: "t", session: unstubbedSession, url: URL(string: "https://unreachable.invalid/api")!)
+yituliuCheck(connectionVerdict == .networkError && connectionData == nil, "connection failure maps to networkError")
 StubYituliuProtocol.handler = { _ in (200, Data("not-json".utf8)) }
 let (malformedVerdict, _) = await fetchAwait("t")
 yituliuCheck(malformedVerdict == .invalid, "malformed body maps to invalid")

@@ -1,3 +1,4 @@
+import AppKit
 import Combine
 import Foundation
 import Observation
@@ -265,6 +266,11 @@ struct DailyTask: Equatable {
     var useAdbLite = true
     var touchMode = TouchMode.maatouch
     var taskIDMap: [Int32: UUID] = [:]
+    // P29/U11 卡尾缩略图（生产形状 @Published private(set) [UUID: NSImage] +
+    // private [UUID] 挂载时序；桩去发布化/可写供直测。失效语义由本套件
+    // beginTaskOperation 启动路径/stop 路径断言守护，见 P29-3-R3-verify 低-1）。
+    var logThumbnails: [UUID: NSImage] = [:]
+    var thumbnailOrder: [UUID] = []
     enum TaskStatusValue { case success }
     var taskStatus: [UUID: TaskStatusValue] = [:]
     var messageTask: Task<Void, Never>?
