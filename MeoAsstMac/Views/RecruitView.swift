@@ -42,6 +42,12 @@ struct RecruitView: View {
         HStack(spacing: 20) {
             VStack(alignment: .leading) {
                 Toggle("自动设置时间", isOn: $viewModel.recruitConfig.set_time)
+                // P11-7：开关自日常任务设置面移入工具页（WPF ToolboxView.xaml:205-214
+                // 同位，绑定同页持久配置 cs:436-440）——与下方展示门控/onChange 同源
+                // （viewModel.recruitConfig.showPotential），修复 P11-4-R3 高-1 安慰剂断链。
+                Toggle("显示已持有干员潜能", isOn: $viewModel.recruitConfig.showPotential)
+                Text("公招结果按最近一次干员识别的持有数据标注潜能与新增干员；数据按账号/区服隔离，未识别时不标注。")
+                    .font(.caption).foregroundStyle(.secondary)
                 Text("自动选择 Tags：")
             }
 

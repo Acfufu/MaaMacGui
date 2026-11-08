@@ -78,9 +78,9 @@ struct RecruitSettingsView: View {
                     Text("尽可能多选四星以上的Tag").tag(2)
                 }
 
-                Toggle("显示已持有干员潜能", isOn: $config.showPotential)
-                Text("公招结果按最近一次干员识别的持有数据标注潜能与新增干员；数据按账号/区服隔离，未识别时不标注。")
-                    .font(.caption).foregroundStyle(.secondary)
+                // P11-7 勘误：显示已持有干员潜能开关移至工具页 RecruitView.configView()
+                // （WPF ToolboxView.xaml:205-214 同位）——此处经 TaskDetail 绑定日常任务
+                // 配置，其 showPotential 无消费者（P11-4-R3 高-1 安慰剂开关，已移除）。
 
                 Divider()
 

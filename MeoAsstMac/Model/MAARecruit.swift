@@ -73,11 +73,15 @@ extension MAARecruit.Result {
         let annotated = opers.enumerated().map { index, oper -> AnnotatedOperator in
             guard showPotential, let potentialByID,
                   let id = oper.id, !id.isEmpty,
+                  // 空 id 不标注为有意防御收窄：Core 恒发 id（AutoRecruitTask.cpp:590），
+                  // 真实数据不可达；WPF 空串→TryGetValue 失败→NEW（P11-4-R3 记-2）。
                   level >= 4 || oper.level == 1
             else { return .init(oper: oper, annotation: nil) }
             guard let potential = potentialByID[id] else {
                 return .init(oper: oper, annotation: .newOper)
             }
+            // >= 6 为有意收窄：WPF 为 == 6；Core pot 域 1-6，手改快照 7+ 时 Mac 显示
+            // MAX 更保守（P11-4-R3 记-1），勿「修复」回 WPF 语义。
             return .init(oper: oper, annotation: potential >= 6 ? .max : .rank(potential))
         }
         return annotated.enumerated().sorted { lhs, rhs in
