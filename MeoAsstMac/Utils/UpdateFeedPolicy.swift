@@ -15,7 +15,9 @@ enum UpdateFeedPolicy {
         useBetaChannel ? ["beta"] : []
     }
 
-    /// 配置的 feed URL 校验：https 直接可用；http 可用但属明文（UI 层警示）；
+    /// 配置的 feed URL 校验：https 直接可用；http 策略放行但运行面受系统 ATS
+    /// 约束——多数域明文拉取被拒（Info.plist 例外域仅 mirrorc.top/mirrorchyan.com），
+    /// UI 层警示口径见 UpdaterSettingsView（低-2/P28-1-R3；台账 P28-[d]）；
     /// 空/非 http(s) → nil（nil 时 Sparkle 回退 Info.plist——fork 已移除，即无 feed）。
     static func feedURLString(configured: String) -> String? {
         let trimmed = configured.trimmingCharacters(in: .whitespacesAndNewlines)

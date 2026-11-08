@@ -41,7 +41,10 @@ struct UpdaterSettingsView: View {
                     updater.automaticallyChecksForUpdates = $1
                 }
 
-            Toggle("自动下载更新", isOn: $automaticallyDownloadsUpdates)
+            // 中危-1（P28-1-R3）：Mac 单开关经 Sparkle requiresSilentInstall:YES
+            // = 下载+静默安装（≈WPF AutoInstall）——文案如实化；WPF AutoDownload
+            // -only（下载后确认安装）无 Mac 对应（台账 P28-[a]）。
+            Toggle("自动下载并安装更新", isOn: $automaticallyDownloadsUpdates)
                 .disabled(!automaticallyChecksForUpdates)
                 .onChange(of: automaticallyDownloadsUpdates) {
                     updater.automaticallyDownloadsUpdates = $1
@@ -52,7 +55,9 @@ struct UpdaterSettingsView: View {
             // P28/U01: fork 自有更新源（上游 SUFeedURL 已被移除；端到端需正式签名+appcast，验收单列）。
             TextField("更新源 Appcast URL（fork 自建，可选）", text: $updateFeedURL)
             if UpdateFeedPolicy.isUnsafeHTTP(updateFeedURL) {
-                Text("当前更新源为 http 明文连接，存在被窃听/篡改的风险。")
+                // 低-1/低-2（P28-1-R3）：补本地化键（en/ko 用户此前见中文键面）；
+                // 口径如实化——策略放行 ≠ 可拉取，ATS 拒绝多数域明文。
+                Text("当前更新源为 http 明文连接，存在被窃听/篡改的风险；系统 ATS 会拒绝多数域的明文拉取（仅例外域可用），一般域请改用 https。")
                     .font(.caption).foregroundStyle(.orange)
             }
             Text("未配置时主程序更新不可用（上游 feed 已移除）；渠道由 appcast 的 sparkle:channel 标记分流（stable/beta）。")

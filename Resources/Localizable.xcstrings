@@ -19851,12 +19851,34 @@
         }
       }
     },
-    "自动下载更新" : {
+    "自动下载并安装更新" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatically download and install updates"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "자동 업데이트 다운로드"
+            "value" : "자동 다운로드 및 설치"
+          }
+        }
+      }
+    },
+    "当前更新源为 http 明文连接，存在被窃听/篡改的风险；系统 ATS 会拒绝多数域的明文拉取（仅例外域可用），一般域请改用 https。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This update feed uses plain-text HTTP and can be intercepted or tampered with. ATS rejects plain HTTP for most domains (only exempted domains work) — prefer https."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 업데이트 소스가 http 평문 연결이며 도청·변조 위험이 있습니다. ATS는 대부분 도메인의 평문 가져오기를 거부하며(예외 도메인만 허용) 일반 도메인은 https를 사용하세요."
           }
         }
       }

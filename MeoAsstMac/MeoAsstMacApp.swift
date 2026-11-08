@@ -137,7 +137,8 @@ final class MaaUpdaterDelegate: NSObject, SPUUpdaterDelegate {
     }
 
     /// U01: fork feed 注入。未配置时返回 nil——Sparkle 回退 Info.plist（fork 已移除，
-    /// 即无 feed，检查失败有可见错误而非静默空转）。
+    /// 即无 feed）。检查失败可见性：手动检查有报错弹窗；定时/后台检查 Sparkle
+    /// 内建为静默失败并停排本会话（低-3/P28-1-R3；台账 P28-[e]）。
     func feedURLString(for updater: SPUUpdater) -> String? {
         UpdateFeedPolicy.feedURLString(configured: updateFeedURL)
     }
