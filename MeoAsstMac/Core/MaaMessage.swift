@@ -401,7 +401,10 @@ extension MAAViewModel {
         if info.taskchain == "Depot", info.taskid == inventoryDepotTaskID {
             if message.code == .TaskChainCompleted, let depot = pendingInventoryDepot,
                let scope = inventoryDepotScope, scope == inventoryScope {
-                do { try inventory.capture(items: depot.items, complete: depot.done, scope: scope) }
+                do {
+                    try inventory.capture(items: depot.items, complete: depot.done, scope: scope)
+                    persistDepotHistory(items: depot.items, scope: scope)
+                }
                 catch { invalidateInventory(); logError("Inventory.RecognitionRequired") }
             }
             if message.code == .TaskChainCompleted || message.code == .TaskChainError {
@@ -1212,6 +1215,7 @@ extension MAAViewModel {
         case "AccountSwitch":
             // Connection/server/profile can stay unchanged across game accounts.
             // Also discard pending Depot recognition and ownership of Fight drops.
+            userDataAccount = ""
             invalidateInventory()
             let accountName: String = (try? info.details["account_name"]) ?? ""
             logTrace(.accountSwitch(to: accountName))

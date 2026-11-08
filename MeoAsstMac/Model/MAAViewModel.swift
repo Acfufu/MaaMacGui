@@ -170,9 +170,14 @@ import SwiftUI
     var pendingInventoryDepot: MAADepot?
     var inventoryDepotScope: InventoryScope?
 
+    /// A local label explicitly bound by the user, never inferred from a task profile.
+    @AppStorage("MAAUserDataAccount") var userDataAccount = "" {
+        didSet { if userDataAccount != oldValue { invalidateInventory() } }
+    }
+
     var inventoryScope: InventoryScope {
         InventoryScope(connection: "\(connectionAddress)|\(touchMode.rawValue)|\(toolsMode.rawValue)|\(useGzip)|\(useAdbLite)",
-                       server: clientChannel.rawValue, profile: dailyTaskProfile)
+                       server: clientChannel.rawValue, profile: dailyTaskProfile, account: userDataAccount)
     }
 
     var currentInventorySnapshot: InventorySnapshot? { inventory.usableSnapshot(scope: inventoryScope) }
@@ -2091,3 +2096,17 @@ extension MAAViewModel {
 
 private enum ForcedRecoveryFailure: Error { case notReady, timedOut, resultStalled }
 private struct ForcedRecoveryCleanupFailure: Error {}
+
+// MARK: - Depot history integration
+
+extension MAAViewModel {
+    var depotHistoryStore: DepotHistoryStore {
+        .init(directory: Self.userDirectory.appendingPathComponent("UserData/DepotHistory", isDirectory: true))
+    }
+
+    func persistDepotHistory(items: [String: Int], scope: InventoryScope) {
+        guard scope == inventoryScope, !scope.account.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        do { try depotHistoryStore.save(items: items, complete: true, scope: scope) }
+        catch { logError("仓库历史快照保存失败。") }
+    }
+}

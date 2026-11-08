@@ -1,6 +1,22 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "仓库历史快照保存失败。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not save the historical depot snapshot."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 창고 스냅샷을 저장하지 못했습니다."
+          }
+        }
+      }
+    },
     "以逗号分隔的任务名列表，将执行第一个匹配的任务及其后续链。示例：TaskA, TaskB → 运行 TaskA（若未匹配则尝试 TaskB）" : {
       "localizations" : {
         "ko" : {
@@ -7291,6 +7307,22 @@
         }
       }
     },
+    "仓库历史快照读取失败；请重新识别。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not read depot history. Recognize inventory again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 창고 자료를 읽지 못했습니다. 다시 인식하세요."
+          }
+        }
+      }
+    },
     "仓库材料" : {
       "localizations" : {
         "ko" : {
@@ -8980,6 +9012,22 @@
       }
     },
     "即将" : {},
+    "历史仓库快照" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historical depot snapshot"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 창고 스냅샷"
+          }
+        }
+      }
+    },
     "原始分辨率：" : {},
     "参数（每行一个）" : {
       "localizations" : {
@@ -12291,6 +12339,22 @@
         }
       }
     },
+    "查看历史仓库快照" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View historical depot snapshot"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 창고 스냅샷 보기"
+          }
+        }
+      }
+    },
     "档案名称" : {
       "localizations" : {
         "zh-Hans" : {
@@ -15287,6 +15351,22 @@
       }
     },
     "请拖入图片" : {},
+    "请按游戏账号分别命名；此标识不验证登录身份。游戏切换账号后将清空绑定。历史快照仅供查看，重启后仍须重新识别库存。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use a separate label for each game account. This label does not verify login identity and is cleared when the game reports an account switch. History is for reference; recognize inventory again after restarting."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "게임 계정마다 별도의 이름을 지정하세요. 이 이름은 로그인 신원을 확인하지 않으며 게임 계정 전환 시 연결이 해제됩니다. 과거 자료는 참고용이며 재시작 후 창고를 다시 인식해야 합니다."
+          }
+        }
+      }
+    },
     "请检查干员名和养成目标：精英化 1–2，技能 2–7，专精为三个 0–3 的整数。" : {
       "localizations" : {
         "en" : {
@@ -15446,6 +15526,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "무역소 - 용문폐"
+          }
+        }
+      }
+    },
+    "资料账号标识（本地自定义）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data account label (local)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자료 계정 이름 (로컬)"
           }
         }
       }
