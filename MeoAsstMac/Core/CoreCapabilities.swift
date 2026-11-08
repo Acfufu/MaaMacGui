@@ -25,7 +25,8 @@ struct CoreCapabilities: Equatable, Sendable {
     /// 未挂钩前先记录于任务证据 run.json（当前被 coreVersion:nil 掩盖）。
     var recycleProductAvailable: Bool
     /// Core 达到 GUI 内置期望（当前语义：能读到 Core 版本号即视为达标；
-    /// Maa.swift 尚未暴露 AsstGetVersion，接线前调用方只能传 nil → false）。
+    /// Maa.swift 已暴露 MAAHandle.coreVersion()（P29.1），装载路径尚未接线
+    /// 仍传 nil → false——接线即可提升门控，台账 P29-[e]）。
     var minimumCoreVersionMet: Bool
 
     /// 资源未知时的保守初值：布尔能力全关；seriesUpperBound 按 P01.1
