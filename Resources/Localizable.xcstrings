@@ -13315,6 +13315,28 @@
         }
       }
     },
+    "删除计划" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除计划"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete plan"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획 삭제"
+          }
+        }
+      }
+    },
     "制造站" : {
       "localizations" : {
         "ko" : {
@@ -16315,6 +16337,12 @@
     },
     "手动输入关卡名" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual entry of stage names"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",

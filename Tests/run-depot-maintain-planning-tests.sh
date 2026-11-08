@@ -4,6 +4,22 @@ cd "$(dirname "$0")/.."
 test_dir=$(mktemp -d "${TMPDIR:-/tmp}/maa-depot-maintain.XXXXXX")
 trap 'rm -rf "$test_dir"' EXIT
 
+# Production binding-chain contract (P12-2-R3 高-1/中-1): the plan editor's
+# delete affordance and manual stage-code toggle live in DepotMaintainSettingsView
+# (a SwiftUI view outside this suite's compile face), so their wiring is pinned
+# by fail-loudly source anchors. Any change to the entry surface must keep these
+# anchors true.
+editor="MeoAsstMac/Configuration Views/DepotMaintainSettingsView.swift"
+anchor() {
+    if ! grep -qF -- "$2" "$editor"; then
+        echo "FAIL: binding anchor missing ($1): $2" >&2
+        exit 1
+    fi
+}
+anchor "per-row delete writes config.plans" 'config.plans.remove(at: index)'
+anchor "manual stage toggle writes config.isStageManually" 'Toggle("手动输入关卡名", isOn: $config.isStageManually)'
+anchor "manual TextField reachable via toggle" 'config.isStageManually || isStoredOutsideCatalog'
+
 # P12.1：规划核心引用 FightConfiguration（合成下发参数）与活动窗口模型，
 # 编译面与 run-stage-plan-tests 同族（Core/Startup 模型切片补齐依赖）。
 python3 - "$test_dir" <<'PY'

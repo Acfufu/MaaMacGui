@@ -11,6 +11,9 @@ struct DepotMaintainSettingsView: View {
     @Binding var config: DepotMaintainConfiguration
 
     @State private var showClearConfirmation = false
+    /// 材料面数据经 @State 承载（FightSettingsView 先例）：initDropItems 在 onAppear
+    /// 才填充 static，直接读 static 不触发首渲染后刷新（P12-2-R3 记录-2 收口）。
+    @State private var dropItems: [(name: String, id: String)] = []
 
     var body: some View {
         Form {
@@ -29,6 +32,7 @@ struct DepotMaintainSettingsView: View {
             catch let err {
                 print(String(localized: "Read item_index.json failed: \(err.localizedDescription)"))
             }
+            dropItems = FightConfiguration.dropItems.map { (name: $0.item.name, id: $0.id) }
         }
     }
 
@@ -158,13 +162,17 @@ struct DepotMaintainSettingsView: View {
                     }
                 }
             }
+            // P12-8：手输开关（WPF DepotMaintainTaskUserControl.xaml:416 CustomStageCode
+            // 同位）——原 isStageManually 全仓零写点，手输 TextField 仅存档关卡过期可达
+            // （P12-2-R3 中-1）。Mac Picker/TextField 并存与 WPF 互斥形态差已在 [t](a) 入档。
+            Toggle("手动输入关卡名", isOn: $config.isStageManually)
             if config.isStageManually || isStoredOutsideCatalog(plan.wrappedValue.stage) {
                 TextField("关卡名", text: plan.stage)
             }
             Picker("材料", selection: plan.dropID) {
                 Text("未选择").tag("")
-                ForEach(FightConfiguration.dropItems, id: \.id) { item in
-                    Text(item.item.name).tag(item.id)
+                ForEach(dropItems, id: \.id) { item in
+                    Text(verbatim: item.name).tag(item.id)
                 }
             }
             TextField("目标数量", value: plan.dropCount, format: .number)
@@ -187,11 +195,24 @@ struct DepotMaintainSettingsView: View {
                 Text(verbatim: planTitle(index))
                     .font(.subheadline)
                 Spacer()
+                // P12-8：行内删除按钮（WPF DepotMaintainTaskUserControl.xaml:159-176
+                // DeleteTaskGeometry 行内按钮同位）——原 .onDelete 在 macOS List/Form
+                // 无触发 UI，删腿不可达（P12-2-R3 高-1）。borderless 防整行误触。
+                Button(role: .destructive) {
+                    guard index < config.plans.count else { return }
+                    config.plans.remove(at: index)
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(Text("删除计划"))
             }
         }
     }
 
     private func planTitle(_ index: Int) -> String {
+        // 越界防护（P06.1 先例同款）：删除行导致的暂态 stale index 不越界（P12-2-R3 记录-3 收口）。
+        guard index < config.plans.count else { return "" }
         let plan = config.plans[index]
         let stage = plan.stage.isEmpty ? String(localized: "未选择") : plan.stage
         let drop = FightConfiguration.dropItems.first { $0.id == plan.dropID }?.item.name
