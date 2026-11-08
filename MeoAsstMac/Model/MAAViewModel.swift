@@ -360,6 +360,10 @@ import SwiftUI
             localNotifications.userEnabled = localNotificationsEnabled
             if localNotificationsEnabled {
                 Task { await localNotifications.requestIfNecessary() }
+            } else {
+                // 评审 P23-1-R3 中2：关闭开关须撤已登记待投递——否则理智恢复定时提醒
+                // 等 UN 请求原样存活，到点照常弹（僵尸通知）。
+                Task { await localNotifications.cancelAllPending() }
             }
         }
     }
@@ -402,11 +406,13 @@ import SwiftUI
     }
 
     /// 独立作业完成反馈（WPF runOwner==Copilot 的 TaskComplete 同位）。
+    /// id 含每次运行的 UUID（评审 P23-1-R3 中3：按静态链名构造会让同会话第二次
+    /// 作业完成被会话去重静默吞掉；activeCopilotRunID 于每次作业运行开始时生成）。
     func notifyCopilotCompleted(chainName: String) {
         notifyExternal(title: String(localized: "作业已完成"), body: chainName)
         Task {
             await localNotifications.send(
-                id: "copilot-completed-\(chainName)",
+                id: "copilot-completed-\(activeCopilotRunID)",
                 title: String(localized: "作业已完成"),
                 body: chainName,
                 deduplicateSession: true
@@ -421,6 +427,9 @@ import SwiftUI
     @AppStorage("MAAExecuteScriptOnCopilot") var executeScriptOnCopilot = false
     /// S15: 本轮运行是否为作业——终态 after-hook 的门控标记。
     @Published private(set) var activeRunIsCopilot = false
+    /// S15: 当前作业运行的唯一标识（评审 P23-1-R3 中3：作业完成通知 id 须含运行
+    /// 身份——静态链名会让同会话第二次完成被会话去重吞掉；每次运行开始时刷新）。
+    @Published private(set) var activeCopilotRunID = UUID()
     /// S16: 运行时长上限（WPF RunDurationLimit* 同位；缺省关）。
     @AppStorage("MAARunDurationLimitEnabled") var runDurationLimitEnabled = false
     @AppStorage("MAARunDurationLimitMinutes") var runDurationLimitMinutes = RunDurationLimit.clampedMinutes(240)
@@ -628,6 +637,13 @@ import SwiftUI
     // MARK: - Initializer
 
     init() {
+        // 评审 P23-1-R3 高1：@AppStorage 的 didSet 初始化时不触发（语言级事实）——
+        // 重启后持久化 true 不会到达 service，全部投递/定时静默失效而 UI 显示已开启。
+        // init 显式同步为唯一可靠路径（userEnabled 全树仅 didSet 与此处两个同步点）。
+        localNotifications.userEnabled = localNotificationsEnabled
+        if localNotificationsEnabled {
+            Task { await localNotifications.requestIfNecessary() }
+        }
         // P03.2: 注册表的活跃指针在启动时是权威的（Q04 的 --config 在本类
         // 构造前已写入指针）；AppStorage 仅作 UI 侧缓存同步。
         if let active = try? profileStore.activeProfileID(), active != dailyTaskProfile {
@@ -1154,6 +1170,8 @@ extension MAAViewModel {
     func prepareForTermination(timeout: TimeInterval = 65) async {
         let deadline = Date.now.addingTimeInterval(max(0, timeout))
         runTerminationDeadline = deadline
+        // P23-[b]（评审低6）：正常退出撤 UN 待投递对齐 WPF 进程内 Timer 语义；强杀残留归系统。
+        await localNotifications.cancelAllPending()
         if isTestingHook {
             activeHookTask?.cancel()
             if let task = activeHookTask { _ = try? await task.value }
@@ -2292,6 +2310,7 @@ extension MAAViewModel {
 
         // S15: 作业运行标记 + 前置脚本（失败阻止开始）。
         activeRunIsCopilot = true
+        activeCopilotRunID = UUID()
         try await runCopilotPreHookIfEnabled()
 
         try await ensureHandle()
@@ -2313,6 +2332,7 @@ extension MAAViewModel {
 
         // S15: 作业运行标记 + 前置脚本（失败阻止开始）。
         activeRunIsCopilot = true
+        activeCopilotRunID = UUID()
         try await runCopilotPreHookIfEnabled()
 
         try await ensureHandle()

@@ -10,6 +10,7 @@ import UserNotifications
     func alertSetting() async -> UNNotificationSetting
     func add(_ request: UNNotificationRequest) async throws
     func removePending(withIdentifiers identifiers: [String])
+    func removeAllPending()
     func openSettings()
 }
 
@@ -36,6 +37,10 @@ struct SystemNotificationCenter: NotificationCentering {
 
     func removePending(withIdentifiers identifiers: [String]) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
+    }
+
+    func removeAllPending() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
 
     func openSettings() {
@@ -113,10 +118,13 @@ struct SystemNotificationCenter: NotificationCentering {
         try? await center.add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
     }
 
-    /// 理智恢复等定时提醒：同 id 先移除待投递再登记（重跑覆盖旧计划）。
+    /// 理智恢复等定时提醒：**先撤同 id 旧待投递再判新计划**（撤除无副作用——评审
+    /// P23-1-R3 低5：先 guard 后撤会让新时刻已过时旧残留原样存活并在旧时刻触发）。
+    /// 关闭态同样先撤：与主开关关闭的撤除语义（cancelAllPending）一致。
+    /// 注意 P21/S08 提前通知复用本门：实际投递以「系统通知」主开关为总闸（P23-[a]）。
     func schedule(id: String, title: String, body: String, fireDate: Date, at now: Date = Date()) async {
-        guard userEnabled, authorizationState == .authorized, fireDate > now else { return }
         center.removePending(withIdentifiers: [id])
+        guard userEnabled, authorizationState == .authorized, fireDate > now else { return }
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
@@ -125,17 +133,24 @@ struct SystemNotificationCenter: NotificationCentering {
         try? await center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
     }
 
+    /// P21/S08: 撤下待投递提醒（计划变更/停用/时刻已过）。
+    func cancelPending(id: String) {
+        center.removePending(withIdentifiers: [id])
+    }
+
+    /// 撤除本应用名下全部待投递请求（评审 P23-1-R3 中2：主开关关闭不撤已登记 UN
+    /// 待投递会留僵尸通知——理智恢复定时提醒到点照常弹；WPF SanityRecoveryTimer 为
+    /// 进程内 Timer 随进程死亡，Mac 策略=开关关闭与正常退出时撤除，P23-[b]）。
+    func cancelAllPending() async {
+        center.removeAllPending()
+    }
+
     func sendTest() async {
         await send(
             id: Self.testNotificationID,
             title: String(localized: "测试通知"),
             body: String(localized: "MAA 本机通知工作正常")
         )
-    }
-
-    /// P21/S08: 撤下待投递提醒（计划变更/停用/时刻已过）。
-    func cancelPending(id: String) {
-        center.removePending(withIdentifiers: [id])
     }
 
     func openSystemSettings() {

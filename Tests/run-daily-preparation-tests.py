@@ -19,6 +19,11 @@ model = re.sub(_p22_arm, '\n', model, count=1)
 _p25_arm = r'\n *// P25/E05: 停滞检测武装（开关关或分钟为 0 时不监控）。\n *if notifyStallTimeoutEnabled \{\n(?:.*?\n)*? *(?:self\?\.)?notifyExternalStalled\(initialMinutes: initial, accumulatedMinutes: accumulated\)\n *\}\n *\}\n'
 assert len(re.findall(_p25_arm, model, re.M)) == 1, 'P25 stall arm block drifted'
 model = re.sub(_p25_arm, '\n', model, count=1)
+# P23.2 退出撤除待投递（localNotifications.cancelAllPending）属通知域，由 local-notification
+# 套件覆盖；本套件编译面不含 LocalNotificationService，剥离并 fail-loudly。
+_p23_sweep = r'\n *// P23-\[b\]（评审低6）：正常退出撤 UN 待投递对齐 WPF 进程内 Timer 语义；强杀残留归系统。\n *await localNotifications\.cancelAllPending\(\)\n'
+assert len(re.findall(_p23_sweep, model, re.M)) == 1, 'P23 termination notification sweep drifted'
+model = re.sub(_p23_sweep, '\n', model, count=1)
 
 message=(source_root/'MeoAsstMac/Core/MaaMessage.swift').read_text()
 def declaration(source,pattern):
