@@ -29,7 +29,7 @@ enum DataExport {
         return lines
     }
 
-    // MARK: - OperBox（WPF BuildOperBoxMarkdownExportLines / Csv，基础列版）
+    // MARK: - OperBox（WPF BuildOperBoxMarkdownExportLines / Csv 同构；一图流列按 includeYituliuFields）
 
     struct OperBoxRow: Equatable {
         let name: String
@@ -39,6 +39,9 @@ enum DataExport {
         let level: Int
         let own: Bool
         let potential: Int
+        var mainSkillLevel: Int? = nil
+        var skills: [OperBoxHistoryPayload.Skill]? = nil
+        var equips: [OperBoxHistoryPayload.Equip]? = nil
     }
 
     /// 表头文本由视图按当前语言传入；列序与分隔符固定（WPF 同构）。
@@ -52,29 +55,62 @@ enum DataExport {
         let potential: String
         let yes: String
         let no: String
+        var mainSkill: String = ""
+        var skills: String = ""
+        var equips: String = ""
+    }
+
+    /// WPF FormatMainSkillColumn：1~7，无数据为空。
+    static func mainSkillText(_ level: Int?) -> String {
+        level.map(String.init) ?? ""
+    }
+
+    /// WPF FormatSkillsColumn：按技能顺序拼接专精等级（如 3/3/0），无专精技能为空。
+    static func skillsText(_ skills: [OperBoxHistoryPayload.Skill]?) -> String {
+        guard let skills, !skills.isEmpty else { return "" }
+        return skills.map { String($0.level) }.joined(separator: "/")
+    }
+
+    /// WPF FormatEquipsColumn：分支加等级（如 X3 Y1），过滤等级为 0 的占位条目。
+    static func equipsText(_ equips: [OperBoxHistoryPayload.Equip]?) -> String {
+        guard let equips, !equips.isEmpty else { return "" }
+        return equips.filter { $0.level > 0 }.map { "\($0.type)\($0.level)" }.joined(separator: " ")
     }
 
     static func operBoxMarkdownLines(
-        rows: [OperBoxRow], headers: OperBoxHeaders
+        rows: [OperBoxRow], headers: OperBoxHeaders, includeYituliuFields: Bool = false
     ) -> [String] {
-        var lines = [
-            "| \(headers.name) | \(headers.id) | \(headers.rarity) | \(headers.elite) | \(headers.level) | \(headers.own) | \(headers.potential) |",
-            "| :-- | :-- | :-- | :-- | :-- | :-- | :-- |",
-        ]
+        var header = "| \(headers.name) | \(headers.id) | \(headers.rarity) | \(headers.elite) | \(headers.level) | \(headers.own) | \(headers.potential) |"
+        var separator = "| :-- | :-- | :-- | :-- | :-- | :-- | :-- |"
+        if includeYituliuFields {
+            header += " \(headers.mainSkill) | \(headers.skills) | \(headers.equips) |"
+            separator += " :-- | :-- | :-- |"
+        }
+        var lines = [header, separator]
         for row in rows {
-            lines.append(
-                "| \(row.name) | \(row.id) | \(row.rarity) | \(row.elite) | \(row.level) | \(row.own ? headers.yes : headers.no) | \(row.potential) |")
+            var line = "| \(row.name) | \(row.id) | \(row.rarity) | \(row.elite) | \(row.level) | \(row.own ? headers.yes : headers.no) | \(row.potential) |"
+            if includeYituliuFields {
+                line += " \(mainSkillText(row.mainSkillLevel)) | \(skillsText(row.skills)) | \(equipsText(row.equips)) |"
+            }
+            lines.append(line)
         }
         return lines
     }
 
-    static func operBoxCsvLines(rows: [OperBoxRow], headers: OperBoxHeaders) -> [String] {
-        var lines = [
-            "\(Self.csvField(headers.name)),\(Self.csvField(headers.id)),\(Self.csvField(headers.rarity)),\(Self.csvField(headers.elite)),\(Self.csvField(headers.level)),\(Self.csvField(headers.own)),\(Self.csvField(headers.potential))",
-        ]
+    static func operBoxCsvLines(
+        rows: [OperBoxRow], headers: OperBoxHeaders, includeYituliuFields: Bool = false
+    ) -> [String] {
+        var header = "\(Self.csvField(headers.name)),\(Self.csvField(headers.id)),\(Self.csvField(headers.rarity)),\(Self.csvField(headers.elite)),\(Self.csvField(headers.level)),\(Self.csvField(headers.own)),\(Self.csvField(headers.potential))"
+        if includeYituliuFields {
+            header += ",\(Self.csvField(headers.mainSkill)),\(Self.csvField(headers.skills)),\(Self.csvField(headers.equips))"
+        }
+        var lines = [header]
         for row in rows {
-            lines.append(
-                "\(Self.csvField(row.name)),\(row.id),\(row.rarity),\(row.elite),\(row.level),\(row.own ? headers.yes : headers.no),\(row.potential)")
+            var line = "\(Self.csvField(row.name)),\(row.id),\(row.rarity),\(row.elite),\(row.level),\(row.own ? headers.yes : headers.no),\(row.potential)"
+            if includeYituliuFields {
+                line += ",\(mainSkillText(row.mainSkillLevel)),\(skillsText(row.skills)),\(equipsText(row.equips))"
+            }
+            lines.append(line)
         }
         return lines
     }

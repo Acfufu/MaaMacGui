@@ -2239,7 +2239,7 @@ extension MAAViewModel {
                 return
             }
             do {
-                try operBoxHistoryStore.save(payload, scope: inventoryScope)
+                try operBoxHistoryStore.save(payload, scope: inventoryScope, source: "yituliu")
                 operBoxHistoryRevision = UUID()
                 yituliuImportMessage = String(localized: "已导入 \(payload.ownedOperators.count) 名干员练度")
             } catch {
@@ -2337,7 +2337,7 @@ extension MAAViewModel {
                 return
             }
             do {
-                try operBoxHistoryStore.save(payload, scope: scope)
+                try operBoxHistoryStore.save(payload, scope: scope, source: "yituliu")
                 operBoxHistoryRevision = UUID()
                 taskStatus[taskID] = .success
                 logInfo("一图流干员练度已更新（\(payload.ownedOperators.count) 名）。")

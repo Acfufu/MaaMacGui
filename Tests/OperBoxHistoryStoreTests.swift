@@ -71,7 +71,7 @@ yituliuCheck(OperatorCatalog.load(resourceDirectory:nil,localeIdentifier:"en").o
 
 // 转换：本地表补名/星级，未知名跳过，越界行跳过，去重保留首个，skills/equips 丢弃。
 let rows:[YituliuOperBoxService.OperatorInfo]=[
-  .init(id:"char_002_amiya",level:60,evolvePhase:2,mainSkillLevel:7,potentialRank:6,skills:[.init(id:"skchr_amiya_2",level:3)],equips:[.init(id:"equip_002_amiya",type:"X")]),
+  .init(id:"char_002_amiya",level:60,evolvePhase:2,mainSkillLevel:7,potentialRank:6,skills:[.init(id:"skchr_amiya_2",level:3)],equips:[.init(id:"equip_002_amiya",type:"X",level:3)]),
   .init(id:"char_999_unknown",level:1,evolvePhase:0,mainSkillLevel:1,potentialRank:1,skills:nil,equips:nil),
   .init(id:"char_143_ghost",level:50,evolvePhase:1,mainSkillLevel:6,potentialRank:2,skills:nil,equips:nil),
   .init(id:"char_002_amiya",level:1,evolvePhase:0,mainSkillLevel:1,potentialRank:1,skills:nil,equips:nil),
@@ -81,11 +81,12 @@ let rows:[YituliuOperBoxService.OperatorInfo]=[
 ]
 let payload=YituliuOperBoxService.convert(rows,catalog:zh)
 yituliuCheck(payload.done && payload.ownedOperators.count==2,"done with only usable rows")
-yituliuCheck(payload.ownedOperators[0]==OperBoxHistoryPayload.OwnedOperator(id:"char_002_amiya",own:true,name:"阿米娅",rarity:5,elite:2,level:60,potential:6),"evolvePhase/potentialRank map onto elite/potential")
+// P16.2：一图流技能/模组随行携带（原"丢弃"断言已被 schema 扩展取代）。
+yituliuCheck(payload.ownedOperators[0].elite==2 && payload.ownedOperators[0].level==60 && payload.ownedOperators[0].potential==6 && payload.ownedOperators[0].mainSkillLevel==7 && payload.ownedOperators[0].skills==[OperBoxHistoryPayload.Skill(id:"skchr_amiya_2",level:3)] && payload.ownedOperators[0].equips==[OperBoxHistoryPayload.Equip(id:"equip_002_amiya",type:"X",level:3)],"evolvePhase/potentialRank map and yituliu fields carry through")
 yituliuCheck(payload.ownedOperators[1].name=="幽灵鲨" && payload.ownedOperators[1].elite==1 && payload.ownedOperators[1].potential==2,"unknown/out-of-range rows skipped")
 yituliuCheck(payload.isValid,"converted payload passes snapshot validity")
 let encodedOper=try! JSONSerialization.jsonObject(with:JSONEncoder().encode(payload.ownedOperators[0])) as! [String:Any]
-yituliuCheck(Set(encodedOper.keys)==Set(["id","own","name","rarity","elite","level","potential"]),"yituliu skills/equips are dropped from the snapshot face")
+yituliuCheck(Set(encodedOper.keys)==Set(["id","own","name","rarity","elite","level","potential","mainSkillLevel","skills","equips"]),"yituliu fields encode under exact keys (P16.2)")
 yituliuCheck(YituliuOperBoxService.convert(rows,catalog:OperatorCatalog(operators:[:])).ownedOperators.isEmpty,"empty catalog converts to empty payload (noData path)")
 yituliuCheck(YituliuOperBoxService.convert([],catalog:zh).ownedOperators.isEmpty,"empty yituliu data converts to empty payload (noData path)")
 
@@ -148,3 +149,33 @@ StubYituliuProtocol.handler = { _ in (200, Data("not-json".utf8)) }
 let (malformedVerdict, _) = await fetchAwait("t")
 yituliuCheck(malformedVerdict == .invalid, "malformed body maps to invalid")
 print("PASS: yituliu fetch path offline semantics (\(checks) total checks)")
+
+// MARK: - P16.2 快照附加字段（一图流技能/专精/模组，schema v1 additive）
+
+let skills=[OperBoxHistoryPayload.Skill(id:"skchr_amiya_2",level:3),OperBoxHistoryPayload.Skill(id:"skchr_amiya_1",level:0)]
+let equips=[OperBoxHistoryPayload.Equip(id:"equip_002_amiya",type:"X",level:3),OperBoxHistoryPayload.Equip(id:"equip_002_amiya_b",type:"Y",level:0)]
+let yituliuOper=OperBoxHistoryPayload.OwnedOperator(id:"char_002_amiya",own:true,name:"阿米娅",rarity:5,elite:2,level:60,potential:6,mainSkillLevel:7,skills:skills,equips:equips)
+let yituliuAll=OperBoxHistoryPayload.Operator(id:"char_002_amiya",own:true,name:"阿米娅",rarity:5)
+let yituliuPayload=OperBoxHistoryPayload(done:true,allOperators:[yituliuAll],ownedOperators:[yituliuOper])
+yituliuCheck(yituliuPayload.isValid,"yituliu extended payload passes validity")
+try store.save(yituliuPayload,scope:scope,now:fixed,source:"yituliu")
+let loadedYituliu=try! store.load(scope:scope)!
+yituliuCheck(loadedYituliu.source=="yituliu" && loadedYituliu.operators.ownedOperators[0].mainSkillLevel==7,"source tag and main skill round-trip")
+yituliuCheck(loadedYituliu.operators.ownedOperators[0].skills==skills && loadedYituliu.operators.ownedOperators[0].equips==equips,"skills/equips round-trip in order")
+// 识别路径构造仍零参数差异（缺省 nil），编码省略空可选键。
+let baseOper=OperBoxHistoryPayload.OwnedOperator(id:"char_143_ghost",own:true,name:"幽灵鲨",rarity:5,elite:1,level:50,potential:2)
+yituliuCheck(baseOper.mainSkillLevel==nil && baseOper.skills==nil && baseOper.equips==nil,"recognition path keeps optional fields nil by default")
+let baseEncoded=try! JSONSerialization.jsonObject(with:JSONEncoder().encode(baseOper)) as! [String:Any]
+yituliuCheck(Set(baseEncoded.keys)==Set(["id","own","name","rarity","elite","level","potential"]),"nil optionals stay absent from encoded face")
+let extendedEncoded=try! JSONSerialization.jsonObject(with:JSONEncoder().encode(yituliuOper)) as! [String:Any]
+yituliuCheck(Set(extendedEncoded.keys)==Set(["id","own","name","rarity","elite","level","potential","mainSkillLevel","skills","equips"]),"present optionals encode under exact keys")
+// 越界值拒绝：专精 4、主技能 0、模组负级。
+for bad in [
+  OperBoxHistoryPayload.OwnedOperator(id:"x",own:true,name:"x",rarity:5,elite:2,level:60,potential:6,mainSkillLevel:0),
+  OperBoxHistoryPayload.OwnedOperator(id:"x",own:true,name:"x",rarity:5,elite:2,level:60,potential:6,skills:[.init(id:"s",level:4)]),
+  OperBoxHistoryPayload.OwnedOperator(id:"x",own:true,name:"x",rarity:5,elite:2,level:60,potential:6,equips:[.init(id:"e",type:"X",level:-1)]),
+] {
+  do{try store.save(.init(done:true,allOperators:[yituliuAll],ownedOperators:[bad]),scope:scope);preconditionFailure("Out-of-range yituliu field accepted")}catch{checks+=1}
+}
+yituliuCheck(try! store.load(scope:scope)!.operators.ownedOperators[0].skills==skills,"Rejected refresh preserves last extended snapshot")
+print("PASS P16.2 extended snapshot schema: source tag, optional round-trip, validity bounds (\(checks) total checks)")

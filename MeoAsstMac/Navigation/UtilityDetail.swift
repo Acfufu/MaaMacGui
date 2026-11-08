@@ -140,15 +140,17 @@ private struct UserDataHistorySummary: View {
                     ScrollView {
                         LazyVStack(alignment: .leading) {
                             ForEach(operatorHistory.operators.ownedOperators.sorted { $0.id < $1.id }) { oper in
-                                Text(verbatim: "\(oper.name) · E\(oper.elite) Lv\(oper.level) · P\(oper.potential)")
+                                Text(verbatim: operRowText(oper))
                             }
                         }
                     }.frame(maxHeight: 160)
                 }
-                Text("干员识别结果不包含技能、专精与模组信息，历史快照不会补造这些字段。")
+                Text(operatorHistory.source == "yituliu"
+                        ? "干员识别结果不包含技能、专精与模组信息；一图流来源的技能/专精/模组仅为一图流数据展示。"
+                        : "干员识别结果不包含技能、专精与模组信息，历史快照不会补造这些字段。")
                     .font(.caption).foregroundStyle(.secondary)
-                // T09 干员导出（WPF ExportOperBoxToJson/Markdown/Csv 基础列同构；
-                // 一图流技能/模组列需快照不承载数据，保持开放）。
+                // T09 干员导出（WPF ExportOperBoxToJson/Markdown/Csv 同构；一图流
+                // 技能/模组列按快照 source 门控，与 WPF _operBoxDataSource 同位）。
                 Menu("导出干员资料") {
                     Button("JSON") { exportOperators(.json) }
                     Button("Markdown") { exportOperators(.markdown) }
@@ -204,6 +206,19 @@ private struct UserDataHistorySummary: View {
 
     /// WPF ExportOperBoxToFile 同构：按持有列表导出；JSON 缩进、md/csv 基础 7 列、
     /// UTF-8 BOM（Excel 兼容）；空集按钮已禁用，构建层空集兜底不产生文件。
+    /// 展示行：基础三段；一图流来源携带技能/模组时以同源格式化器追加。
+    private func operRowText(_ oper: OperBoxHistoryPayload.OwnedOperator) -> String {
+        var text = "\(oper.name) · E\(oper.elite) Lv\(oper.level) · P\(oper.potential)"
+        let skills = DataExport.skillsText(oper.skills)
+        let equips = DataExport.equipsText(oper.equips)
+        if !skills.isEmpty || !equips.isEmpty {
+            if let main = oper.mainSkillLevel { text += " · 主技能\(main)" }
+            if !skills.isEmpty { text += " · 专精\(skills)" }
+            if !equips.isEmpty { text += " · 模组 \(equips)" }
+        }
+        return text
+    }
+
     private func exportOperators(_ format: OperatorExportFormat) {
         guard let snapshot = operatorHistory else { return }
         // 与 MAAOperBox.OwnedOper 的展示排序同构（快照负载类型未声明 Comparable）。
@@ -213,11 +228,20 @@ private struct UserDataHistorySummary: View {
             if lhs.rarity != rhs.rarity { return lhs.rarity > rhs.rarity }
             return lhs.id < rhs.id
         }
+        let includeYituliuFields = snapshot.source == "yituliu"
         let headers = DataExport.OperBoxHeaders(
             name: String(localized: "名称"), id: String(localized: "ID"),
             rarity: String(localized: "星级"), elite: String(localized: "精英化"),
             level: String(localized: "等级"), own: String(localized: "已持有"),
-            potential: String(localized: "潜能"), yes: String(localized: "是"), no: String(localized: "否"))
+            potential: String(localized: "潜能"), yes: String(localized: "是"), no: String(localized: "否"),
+            mainSkill: String(localized: "主技能等级"), skills: String(localized: "专精"),
+            equips: String(localized: "模组"))
+        let rows = owned.map { oper in
+            DataExport.OperBoxRow(
+                name: oper.name, id: oper.id, rarity: oper.rarity, elite: oper.elite,
+                level: oper.level, own: oper.own, potential: oper.potential,
+                mainSkillLevel: oper.mainSkillLevel, skills: oper.skills, equips: oper.equips)
+        }
         let panel = NSSavePanel()
         let content: String
         switch format {
@@ -227,20 +251,16 @@ private struct UserDataHistorySummary: View {
             panel.nameFieldStringValue = "Arknights_OperBox_Export.json"
             content = String(decoding: data, as: UTF8.self)
         case .markdown:
-            let rows = owned.map {
-                DataExport.OperBoxRow(name: $0.name, id: $0.id, rarity: $0.rarity,
-                                      elite: $0.elite, level: $0.level, own: $0.own, potential: $0.potential)
-            }
-            guard let joined = DataExport.joinedLines(DataExport.operBoxMarkdownLines(rows: rows, headers: headers)) else { return }
+            guard let joined = DataExport.joinedLines(
+                DataExport.operBoxMarkdownLines(rows: rows, headers: headers, includeYituliuFields: includeYituliuFields))
+            else { return }
             panel.allowedContentTypes = [.plainText]
             panel.nameFieldStringValue = "Arknights_OperBox_Export.md"
             content = joined
         case .csv:
-            let rows = owned.map {
-                DataExport.OperBoxRow(name: $0.name, id: $0.id, rarity: $0.rarity,
-                                      elite: $0.elite, level: $0.level, own: $0.own, potential: $0.potential)
-            }
-            guard let joined = DataExport.joinedLines(DataExport.operBoxCsvLines(rows: rows, headers: headers)) else { return }
+            guard let joined = DataExport.joinedLines(
+                DataExport.operBoxCsvLines(rows: rows, headers: headers, includeYituliuFields: includeYituliuFields))
+            else { return }
             panel.allowedContentTypes = [.commaSeparatedText]
             panel.nameFieldStringValue = "Arknights_OperBox_Export.csv"
             content = joined

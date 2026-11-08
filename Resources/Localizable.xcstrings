@@ -13050,6 +13050,22 @@
         }
       }
     },
+    "模组" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Module"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모듈"
+          }
+        }
+      }
+    },
     "次" : {
       "localizations" : {
         "ko" : {
@@ -17410,6 +17426,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "현재/최근(으)로 초기화"
+          }
+        }
+      }
+    },
+    "专精" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mastery"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "특화"
+          }
+        }
+      }
+    },
+    "主技能等级" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Main skill level"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메인 스킬 레벨"
           }
         }
       }

@@ -41,6 +41,7 @@ struct YituliuOperBoxService: Sendable {
         struct Equip: Codable, Equatable, Sendable {
             let id: String
             let type: String?
+            let level: Int?
         }
 
         let id: String
@@ -97,7 +98,7 @@ struct YituliuOperBoxService: Sendable {
     /// 一图流数据 → 历史快照等价面（WPF ConvertYituliuDataToDetails 同构）：
     /// 本地干员表查不到的 id（资源过旧）跳过；名字/星级来自 battle_data.json；
     /// 越界行（空 id、负值、elite>2、potential 越界）整行跳过，避免污染快照有效性。
-    /// skills/equips 一图流可提供但 Mac 历史快照面不承载（差异入档）；done=true、own=true。
+    /// skills/equips 随行携带（快照 schema v1 附加字段，P16.2）；done=true、own=true。
     /// 去重保留首个；结果可能为空（全部跳过时由调用方按 noData 处理，不落盘覆盖）。
     static func convert(
         _ data: [OperatorInfo], catalog: OperatorCatalog
@@ -112,9 +113,19 @@ struct YituliuOperBoxService: Sendable {
                   (1...6).contains(oper.potentialRank)
             else { continue }
             seen.insert(oper.id)
+            let skills = oper.skills?.map {
+                OperBoxHistoryPayload.Skill(id: $0.id, level: $0.level)
+            }
+            let equips = oper.equips?.compactMap { equip -> OperBoxHistoryPayload.Equip? in
+                guard let type = equip.type, !type.isEmpty, let level = equip.level else { return nil }
+                return OperBoxHistoryPayload.Equip(id: equip.id, type: type, level: level)
+            }
             let operatorEntry = OperBoxHistoryPayload.OwnedOperator(
                 id: oper.id, own: true, name: entry.name, rarity: entry.rarity,
-                elite: oper.evolvePhase, level: oper.level, potential: oper.potentialRank)
+                elite: oper.evolvePhase, level: oper.level, potential: oper.potentialRank,
+                mainSkillLevel: (1...7).contains(oper.mainSkillLevel) ? oper.mainSkillLevel : nil,
+                skills: (skills?.isEmpty == false) ? skills : nil,
+                equips: (equips?.isEmpty == false) ? equips : nil)
             owned.append(operatorEntry)
         }
         let all = owned.map {
