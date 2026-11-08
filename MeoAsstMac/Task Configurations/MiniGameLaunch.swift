@@ -67,10 +67,11 @@ enum MiniGameLaunch {
         }
     }
 
-    /// 组合最终黑名单（WPF :3635-3656 同构）：Other 开关门控自定义列表
+    /// 组合最终黑名单（WPF :3635-3656+:3668 同构）：Other 开关门控自定义列表
     /// （trim+剔空+Distinct 保序去重）；四类预设按开关追加于自定义之后、按
-    /// instrument→stick→lmd→furniturePart 固定序。预设间天然唯一；自定义与
-    /// 预设的重复**不去重**（WPF Distinct 仅作用于 Other 拆分列表，同构）。
+    /// instrument→stick→lmd→furniturePart 固定序；**收尾对最终合并列表整体
+    /// Distinct**（S8-1-R3 中-1 勘正——WPF :3668 `Distinct().ToList()` 作用于
+    /// 自定义+预设合并后的完整列表，首版误判为仅 Other 拆分列表）。
     static func eventShopBlacklist(
         custom: [String], otherEnabled: Bool,
         instrument: Bool, stick: Bool, lmd: Bool, furniturePart: Bool,
@@ -92,6 +93,8 @@ enum MiniGameLaunch {
         if stick { list.append(keywords.stick) }
         if lmd { list.append(keywords.lmd) }
         if furniturePart { list.append(keywords.furniturePart) }
-        return list
+        // WPF :3668：最终列表整体 Distinct（保序首现）。
+        var seen = Set<String>()
+        return list.filter { seen.insert($0).inserted }
     }
 }

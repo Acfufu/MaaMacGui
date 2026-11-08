@@ -115,28 +115,34 @@ extension MAAClientChannel {
 /// 解码面在），WPF `StageManager.cs:560-582` 的消费形态为**条目 Tip 警示、
 /// 非硬门禁**：MinimumRequired 不可解析 → 直接以原文警示；当前版本可解析且
 /// 低于需求 → 警示；当前版本不可解析 → 不警示（WPF `curVerParsed` 门同）。
-/// WPF `isDebugVersion` 豁免在 Mac 无对应渠道概念，恒生效。
+/// WPF `isDebugVersion` 豁免在 Mac 无 debug 渠道概念，Mac 侧门恒启用（无豁免
+/// 面——S8-1-R3 低-3 措辞勘正）。
 enum StageActivityVersionGate {
-    /// 解析 "v?X.Y.Z?"（WPF SemVersionStyles.AllowLowerV | OptionalPatch）：
-    /// 可选 v/V 前缀、patch 段可选（缺省 0）。不可解析返回 nil。
+    /// 解析语义勘正（S8-1-R3 中-2）：WPF StageManager.cs:468
+    /// `SemVersion.TryParse(version, SemVersionStyles.AllowLowerV, …)`——
+    /// **仅** AllowLowerV（小写 v 前缀可选；**无** OptionalPatch → patch 段
+    /// 必需；大写 V 不收；多余段/预发布段不收）。「AllowLowerV|OptionalPatch」
+    /// 系 CopilotHelper.cs:258 作业门口径，非本门。两段式（"1.2"）不可解析 →
+    /// 走「需求不可解析」警示分支（WPF :569-573 同）。
     static func parseVersion(_ text: String) -> (major: Int, minor: Int, patch: Int)? {
         var body = text
-        if let first = body.first, first == "v" || first == "V" {
+        if body.hasPrefix("v") {
             body.removeFirst()
         }
         let parts = body.split(separator: ".", omittingEmptySubsequences: false)
-        guard (2...3).contains(parts.count) else { return nil }
+        guard parts.count == 3 else { return nil }
         var numbers: [Int] = []
         for part in parts {
             guard !part.isEmpty, let n = Int(part), n >= 0 else { return nil }
             numbers.append(n)
         }
-        let patch = numbers.count == 3 ? numbers[2] : 0
-        return (numbers[0], numbers[1], patch)
+        return (numbers[0], numbers[1], numbers[2])
     }
 
     /// 版本门判定：返回 Tip 文案（「版本过低\n最低需求: <ver>」，WPF
     /// :571-581 组装同构）或 nil（无需警示）。
+    /// 当前版本源注记（S8-1-R3 低-5）：WPF 用 GUI 自更新版本（CoreVersion
+    /// 口径），Mac 用 app bundle CFBundleShortVersionString——源差异入档。
     static func lowVersionTip(minimumRequired: String?, currentVersion: String) -> String? {
         guard let minimumRequired, !minimumRequired.isEmpty else { return nil }
         let required = String(localized: "最低需求:")

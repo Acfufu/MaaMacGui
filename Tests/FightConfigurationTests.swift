@@ -249,8 +249,8 @@ struct FightConfigurationTests {
         // 低于需求→警示；当前不可解析→不警示（curVerParsed 门）；Tip 非硬门禁。
         do {
             let parseCases: [(String, (Int, Int, Int)?)] = [
-                ("1.2", (1, 2, 0)), ("1.2.3", (1, 2, 3)), ("v4.5.6", (4, 5, 6)),
-                ("V0.1", (0, 1, 0)), ("1", nil), ("1.2.3.4", nil), ("a.b", nil),
+                ("1.2", nil), ("1.2.3", (1, 2, 3)), ("v4.5.6", (4, 5, 6)),
+                ("V0.1.0", nil), ("1", nil), ("1.2.3.4", nil), ("a.b", nil),
                 ("1..3", nil), ("", nil), ("v", nil),
             ]
             for (input, expected) in parseCases {
@@ -269,8 +269,9 @@ struct FightConfigurationTests {
                 ("1.2.4", "1.2.3", true, "current below required tips"),
                 ("1.2.3", "1.2.4", false, "current above required no tip"),
                 ("1.2.3", "1.2.3", false, "equal version no tip"),
-                ("v1.2", "1.1.9", true, "lower-v prefix + optional patch parses"),
+                ("v1.2.0", "1.1.9", true, "lower-v prefix parses (patch required, S8-1-R3 中-2)"),
                 ("not.a.version", "9.9.9", true, "unparseable required tips with raw text"),
+                ("1.2", "1.2.5", true, "two-segment required unparseable -> always tips (WPF StageManager :468 no OptionalPatch)"),
                 ("1.2.3", "garbage", false, "unparseable current no tip (curVerParsed gate)"),
                 ("", "1.0.0", false, "empty required no tip"),
                 (nil, "1.0.0", false, "nil required no tip"),

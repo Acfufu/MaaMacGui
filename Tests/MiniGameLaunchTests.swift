@@ -108,14 +108,15 @@ struct MiniGameLaunchTests {
                 check(MiniGameLaunch.eventShopKeywordLanguage(channelRawValue: raw) == lang,
                       "P17-[d] channel bucket \(raw)")
             }
-            // 组合语义（WPF :3635-3656 同构）：Other 门控、trim+剔空+Distinct
-            // 保序、预设按固定序追加、自定义∩预设重复不去重。
+            // 组合语义（WPF :3635-3656+:3668 同构，S8-1-R3 中-1 勘正）：Other
+            // 门控、trim+剔空+保序、预设按固定序追加、**最终合并列表整体
+            // Distinct**（自定义∩预设重复在收尾去重中移除）。
             let composed = MiniGameLaunch.eventShopBlacklist(
                 custom: ["  龙门币 ", "", "技能书", "龙门币"], otherEnabled: true,
                 instrument: true, stick: false, lmd: true, furniturePart: false,
                 channelRawValue: "Official")
-            check(composed == ["龙门币", "技能书", "数据增补仪", "龙门币"],
-                  "P17-[d] composition: Other gate + trim/distinct/preserve order + presets appended; custom∩preset dup kept (WPF parity)")
+            check(composed == ["龙门币", "技能书", "数据增补仪"],
+                  "P17-[d] composition: Other gate + trim/preserve order + presets appended + final whole-list Distinct (WPF :3668 parity)")
             let otherOff = MiniGameLaunch.eventShopBlacklist(
                 custom: ["技能书"], otherEnabled: false,
                 instrument: false, stick: true, lmd: false, furniturePart: true,

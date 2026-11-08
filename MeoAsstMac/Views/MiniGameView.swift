@@ -385,7 +385,8 @@ extension MAAStageActivity.MiniGame {
             tip = defaultTip
         }
         // P17-[e]：MinimumRequired 版本门（WPF StageManager.cs:560-582——Tip 非
-        // 硬门禁；WPF isDebugVersion 豁免在 Mac 无渠道概念恒生效）。
+        // 硬门禁；WPF isDebugVersion 豁免在 Mac 无 debug 渠道概念——Mac 侧门
+        // 恒启用、无豁免面，S8-1-R3 低-3 措辞勘正）。
         let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
             as? String ?? ""
         return .init(

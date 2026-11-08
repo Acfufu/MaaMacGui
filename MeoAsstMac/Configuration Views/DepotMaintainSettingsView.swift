@@ -196,9 +196,10 @@ struct DepotMaintainSettingsView: View {
                     .font(.subheadline)
                 Spacer()
                 // P12-[w]（快照 82 清单②裁定：随 WPF 对齐，2026-11-09）：行内
-                // 上/下移按钮——WPF dd:DragDrop 拖拽重排（xaml:99-103）的可达
-                // 重排入口；macOS Form 的 List 拖拽 onMove 行为随平台版本不稳
-                // （P11.4 安慰剂先例），取确定性按钮形态，I05「顺序」腿真实可达。
+                // 上/下移按钮——WPF dd:DragDrop 拖拽重排（xaml:121-123，S8-1-R3
+                // 低-4 行号勘正）的可达重排入口；macOS Form 的 List 拖拽 onMove
+                // 行为随平台版本不稳（P11.4 安慰剂先例），取确定性按钮形态，
+                // I05「顺序」腿真实可达。
                 Button {
                     guard index > 0, index < config.plans.count else { return }
                     config.plans.swapAt(index, index - 1)
