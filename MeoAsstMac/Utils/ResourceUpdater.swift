@@ -46,36 +46,37 @@ extension MAAResourceChannel.Error: LocalizedError {
 }
 
 extension MAAResourceChannel {
-    public func latestVersion() async throws -> String {
+    /// P27/U08+D06: 代理会话与 GitHub token 由调用方（ViewModel 设置）注入。
+    public func latestVersion(session: URLSession = .shared, githubToken: String? = nil) async throws -> String {
         let localVersion = try version().1.last_updated
         switch self {
         case .github:
-            let (remoteVersion, _) = try await latest(currentVersion: localVersion)
+            let (remoteVersion, _) = try await latest(currentVersion: localVersion, session: session, githubToken: githubToken)
             return remoteVersion
         case .mirrorChyan:
             let mirrorChyan = MirrorChyan(rid: "MaaResource", cdk: nil)
-            let version = try await mirrorChyan.query(currentVersion: localVersion)
+            let version = try await mirrorChyan.query(currentVersion: localVersion, session: session)
             return version.version_name
         }
     }
 
-    public func latestURL() async throws -> URL {
+    public func latestURL(session: URLSession = .shared, githubToken: String? = nil) async throws -> URL {
         let localVersion = try version().1.last_updated
-        let (remoteVersion, url) = try await latest(currentVersion: localVersion)
+        let (remoteVersion, url) = try await latest(currentVersion: localVersion, session: session, githubToken: githubToken)
         guard remoteVersion > localVersion else { throw Error.noNeedUpdate }
         guard let url else { throw Error.emptyURL }
         return url
     }
 
-    private func latest(currentVersion: String) async throws -> (String, URL?) {
+    private func latest(currentVersion: String, session: URLSession, githubToken: String?) async throws -> (String, URL?) {
         switch self {
         case .github:
             let github = GitHub(repo: "MaaAssistantArknights/MaaResource")
-            let version = try await github.query()
+            let version = try await github.query(session: session, token: githubToken)
             return (version.last_updated, github.archiveURL(ref: "heads/main"))
         case .mirrorChyan:
             let mirrorChyan = MirrorChyan(rid: "MaaResource")
-            let version = try await mirrorChyan.query(currentVersion: currentVersion)
+            let version = try await mirrorChyan.query(currentVersion: currentVersion, session: session)
             return (version.version_name, version.url)
         }
     }

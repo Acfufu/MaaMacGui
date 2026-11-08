@@ -1,6 +1,182 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "下载的资源缺少 version.json，已放弃应用。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded resource is missing version.json; not applied."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다운로드한 리소스에 version.json이 없어 적용하지 않습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的资源缺少 version.json，已放弃应用。"
+          }
+        }
+      }
+    },
+    "GitHub Token（可选，用于解除限流）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub token (optional; lifts rate limits)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub 토큰 (선택, 속도 제한 해제용)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub Token（可选，用于解除限流）"
+          }
+        }
+      }
+    },
+    "定时检查资源更新" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check for resource updates on a schedule"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정기적으로 리소스 업데이트 확인"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "定时检查资源更新"
+          }
+        }
+      }
+    },
+    "每 %lld 小时检查一次" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check every %lld hours"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld시간마다 확인"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每 %lld 小时检查一次"
+          }
+        }
+      }
+    },
+    "使用代理更新资源" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use a proxy for resource updates"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프록시를 사용해 리소스 업데이트"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用代理更新资源"
+          }
+        }
+      }
+    },
+    "代理地址（如 127.0.0.1:7890 或 socks5://127.0.0.1:1080）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proxy address (e.g. 127.0.0.1:7890 or socks5://127.0.0.1:1080)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프록시 주소 (예: 127.0.0.1:7890 또는 socks5://127.0.0.1:1080)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代理地址（如 127.0.0.1:7890 或 socks5://127.0.0.1:1080）"
+          }
+        }
+      }
+    },
+    "支持 http/https/socks5 代理；仅作用于资源更新链（查询与下载）。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supports http/https/socks5 proxies; applies only to the resource update chain (query and download)."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "http/https/socks5 프록시를 지원하며, 리소스 업데이트 체인(조회 및 다운로드)에만 적용됩니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持 http/https/socks5 代理；仅作用于资源更新链（查询与下载）。"
+          }
+        }
+      }
+    },
+    "任务运行中，资源更新已延后到任务结束后。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks are running; the resource update is deferred until they finish."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업이 실행 중입니다. 리소스 업데이트는 작업이 끝난 후 연기됩니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务运行中，资源更新已延后到任务结束后。"
+          }
+        }
+      }
+    },
     "远控" : {
       "localizations" : {
         "en" : {

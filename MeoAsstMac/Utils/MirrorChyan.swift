@@ -52,7 +52,7 @@ private struct MirrorChyanResponse: Decodable {
 }
 
 extension MirrorChyan {
-    public func query(currentVersion: String? = nil) async throws -> Version {
+    public func query(currentVersion: String? = nil, session: URLSession = .shared) async throws -> Version {
         var queryItems = [URLQueryItem(name: "user_agent", value: userAgent)]
         if let currentVersion {
             queryItems.append(URLQueryItem(name: "current_version", value: currentVersion))
@@ -66,7 +66,7 @@ extension MirrorChyan {
             urlComps.queryItems = queryItems
         }
 
-        let (data, _) = try await URLSession.shared.data(from: urlComps.url!)
+        let (data, _) = try await session.data(from: urlComps.url!)
         let response = try JSONDecoder().decode(MirrorChyanResponse.self, from: data)
         return try response.get()
     }

@@ -314,6 +314,17 @@ import SwiftUI
     @AppStorage("ResourceUpdateChannel") var resourceChannel = MAAResourceChannel.github
 
     @Published var showResourceUpdate = false
+    /// U04: 忙时延后标记——运行收口后由 applyDeferredResourceUpdateIfPending 消费。
+    @Published private(set) var pendingResourceUpdateNotice = false
+    // P27/U03/U04/U08: 资源更新代理/GitHub token/定时检查（WPF Update.Proxy/ProxyType/
+    // GitHubToken/CheckOnSchedule 同位；WPF 的 CheckOnSchedule 无消费者为休眠字段，
+    // Mac 实现为活体定时检查——差异入档）。
+    @AppStorage("MAAResourceUpdateProxyEnabled") var resourceProxyEnabled = false
+    @AppStorage("MAAResourceUpdateProxy") var resourceUpdateProxy = ""
+    @AppStorage("MAAGitHubResourceToken") var githubResourceToken = ""
+    @AppStorage("MAACheckResourceUpdateOnSchedule") var checkResourceUpdateOnSchedule = false
+    @AppStorage("MAAResourceUpdateCheckIntervalHours") var resourceUpdateCheckIntervalHours = 24
+    private var scheduledResourceCheckTimer: Timer?
 
     // MARK: - System Settings
 
@@ -635,6 +646,11 @@ import SwiftUI
         // P26: 远控命令钩子接线；端点为空时轮询不启动（WPF InitializePollJobTask 同位）。
         wireRemoteControlHooks()
         remoteControl.startPolling()
+        // P27/U04: 定时资源检查 + 忙时延后应用（运行收口回空闲时消费）。
+        armScheduledResourceCheck()
+        $status.sink(receiveValue: { [weak self] newValue in
+            if newValue == .idle { self?.applyDeferredResourceUpdateIfPending() }
+        }).store(in: &cancellables)
         dailyRunCoordinator.didChange = { [weak self] in self?.objectWillChange.send() }
         initScheduledDailyTaskTimer()
         AchievementStore.shared.recordLaunch()
@@ -1298,21 +1314,54 @@ extension MAAViewModel {
         guard false else { return }
         #endif
 
+        checkResourceUpdate()
+    }
+
+    /// U03/U04/U08: 资源更新检查（启动与定时共用；代理会话 + GitHub token 注入）。
+    /// 发现新版本且开启自动更新时：空闲即弹窗；忙时记 pending，运行收口后延后应用。
+    func checkResourceUpdate() {
         Task {
             do {
-                let version = try await self.resourceChannel.latestVersion()
-                if version > currentResourceVersion.last_updated {
-                    logInfo("发现新资源版本：\(version)")
-                    if autoResourceUpdate {
-                        showResourceUpdate = true
-                    }
-                } else {
+                let session = ResourceUpdateNetwork.session(for: resourceProxyEnabled ? resourceUpdateProxy : "")
+                let currentVersion = (try? resourceChannel.version().1.last_updated) ?? ""
+                let version = try await resourceChannel.latestVersion(
+                    session: session, githubToken: githubResourceToken.isEmpty ? nil : githubResourceToken)
+                guard version > currentVersion else {
                     logInfo("资源已是最新版本")
+                    return
+                }
+                logInfo("发现新资源版本：\(version)")
+                guard autoResourceUpdate else { return }
+                if status == .idle {
+                    showResourceUpdate = true
+                } else {
+                    pendingResourceUpdateNotice = true
+                    logInfo("任务运行中，资源更新已延后到任务结束后。")
                 }
             } catch {
                 logError("无法检查资源更新: \(error.localizedDescription)")
             }
         }
+    }
+
+    /// U04: 忙时延后的资源更新在运行收口（回到空闲）时应用。
+    func applyDeferredResourceUpdateIfPending() {
+        guard pendingResourceUpdateNotice, status == .idle, autoResourceUpdate else { return }
+        pendingResourceUpdateNotice = false
+        showResourceUpdate = true
+    }
+
+    /// U04: 定时资源检查（WPF CheckOnSchedule 为休眠字段；Mac 实现为活体定时器——差异入档）。
+    func armScheduledResourceCheck() {
+        scheduledResourceCheckTimer?.invalidate()
+        scheduledResourceCheckTimer = nil
+        guard checkResourceUpdateOnSchedule else { return }
+        let interval = TimeInterval(max(1, resourceUpdateCheckIntervalHours) * 3600)
+        let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.checkResourceUpdate() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        scheduledResourceCheckTimer = timer
     }
 
     private func updateChannel(channel: MAAClientChannel) {
