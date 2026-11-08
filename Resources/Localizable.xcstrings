@@ -10976,6 +10976,22 @@
         }
       }
     },
+    "开启后每日更新资料不再为干员部分启动模拟器识别；Token 为空时该次运行失败，其余失败按条目记录，不影响仓库识别。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When enabled, the daily data update no longer runs emulator recognition for operators; an empty token fails that run, while other failures are recorded per entry and do not affect depot recognition."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "활성화하면 매일 데이터 갱신 시 오퍼레이터 부분의 에뮬레이터 인식을 실행하지 않습니다. 토큰이 비어 있으면 해당 실행이 실패하고, 그 외 실패는 항목별로 기록되며 창고 인식에는 영향을 주지 않습니다."
+          }
+        }
+      }
+    },
     "开始" : {
       "localizations" : {
         "ko" : {
@@ -12186,6 +12202,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "일상 작업이 실행 중이므로 이번 예약을 건너뛰었습니다."
+          }
+        }
+      }
+    },
+    "日常更新资料的干员识别改用一图流" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Yituliu for daily operator-data update"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일일 오퍼레이터 데이터 갱신에 일유류 사용"
           }
         }
       }

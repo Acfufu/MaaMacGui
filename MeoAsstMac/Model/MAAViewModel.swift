@@ -19,6 +19,9 @@ import SwiftUI
     /// 先置钩子脚本执行失败(exit≠0,非超时):记 .failed 而非 .cancelled,
     /// 使结果四态与任务卡"成功/失败/取消/超时"字面一致(A 审 Q1)。
     private struct PreparationHookFailure: Error {}
+    /// 日常「更新资料」准入期 token 为空（I04-b）：与 WPF 同构地失败整跑，
+    /// 与条目级失败（writeOnly/invalid/network/noData）的"条目 .failure 不中止跑"区分。
+    private struct YituliuDailyTokenEmpty: Error {}
 
 // MARK: - Core Status
 
@@ -182,6 +185,11 @@ import SwiftUI
     /// 一图流 OpenAPI token（I04 只读练度导入）。明文存 UserDefaults：WPF 为 DPAPI 加密，
     /// Keychain 迁移待正式签名环境（P28/P29 批次）；token 不进日志与支持包。
     @AppStorage("MAAYituliuOpenApiToken") var yituliuOpenApiToken = ""
+    /// 日常「更新资料」组合任务的干员资料改用一图流拉取（I04-b，WPF
+    /// EnableOperBoxYituliuApi 同位）；关闭时干员识别照常进 Core 队列。
+    @AppStorage("MAAYituliuOperBoxForDaily") var yituliuOperBoxForDaily = false
+    /// 生产为默认会话；隔离验证注入 URLProtocol 桩会话。
+    var yituliuSession: URLSession = .shared
     @Published private(set) var yituliuImportInFlight = false
     @Published private(set) var yituliuImportMessage: String?
 
@@ -2288,6 +2296,13 @@ extension MAAViewModel {
         for kind in due {
             try Task.checkCancellation()
             guard dailyRunCoordinator.active?.id == runID, inventoryScope == scope else { throw CancellationError() }
+            if kind == .operBox, yituliuOperBoxForDaily {
+                // I04-b：干员资料改用一图流拉取，不进 Core 队列（WPF 同构）。WPF 为
+                // fire-and-forget，Mac 在追加期同步等待：条目终态确定、无未观察异常，
+                // 代价是最长一个请求超时的启动延迟（差异入档）。
+                try await syncDailyOperBoxFromYituliu(taskID: task.id, scope: runScope)
+                continue
+            }
             let type: MAATaskType = kind == .depot ? .Depot : .OperBox
             guard let id = try await handle?.appendTask(type: type, params: "{}") else { throw MaaCoreError.appendTaskFailed }
             taskIDMap[id] = task.id
@@ -2296,6 +2311,50 @@ extension MAAViewModel {
             ids.append(id)
         }
         return ids
+    }
+
+    /// 日常「更新资料」的一图流干员拉取（I04-b）。Token 为空与 WPF 同构：直接失败整跑
+    /// （WPF 在准入即 return false）。其余失败按条目级 .failure 收口、不中止跑（WPF
+    /// fire-and-forget 的条目 Error 同语义）；成功写 runScope 快照并广播 revision。
+    func syncDailyOperBoxFromYituliu(taskID: UUID, scope: InventoryScope) async throws {
+        let token = yituliuOpenApiToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !token.isEmpty else {
+            taskStatus[taskID] = .failure
+            logError("一图流 Token 为空，干员练度拉取失败。")
+            throw YituliuDailyTokenEmpty()
+        }
+        let (verdict, data) = await YituliuOperBoxService()
+            .fetchOperatorInfo(token: token, session: yituliuSession)
+        switch verdict {
+        case .valid:
+            let catalog = OperatorCatalog.load(
+                resourceDirectory: recruitResourceDirectory,
+                localeIdentifier: Locale.preferredLanguages.first ?? "zh-Hans")
+            let payload = YituliuOperBoxService.convert(data ?? [], catalog: catalog)
+            guard !payload.ownedOperators.isEmpty else {
+                taskStatus[taskID] = .failure
+                logError("一图流账号未绑定或未导入练度，本轮干员资料未更新。")
+                return
+            }
+            do {
+                try operBoxHistoryStore.save(payload, scope: scope)
+                operBoxHistoryRevision = UUID()
+                taskStatus[taskID] = .success
+                logInfo("一图流干员练度已更新（\(payload.ownedOperators.count) 名）。")
+            } catch {
+                taskStatus[taskID] = .failure
+                logError("练度快照保存失败：\(error.localizedDescription)")
+            }
+        case .writeOnly:
+            taskStatus[taskID] = .failure
+            logError("一图流 Token 只有写入权限，无法读取练度。")
+        case .invalid:
+            taskStatus[taskID] = .failure
+            logError("一图流 Token 无效或已失效。")
+        case .networkError:
+            taskStatus[taskID] = .failure
+            logError("一图流网络请求失败。")
+        }
     }
 
     func successfulUserDataReceipt(_ kind: UserDataKind, scope: InventoryScope) throws -> UserDataSyncReceipt? {

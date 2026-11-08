@@ -85,6 +85,9 @@ struct Events {mutating func register(taskID:Int32,runID:UUID){}}
  var operBoxHistoryTaskID:Int32?;var operBoxHistoryScope:InventoryScope?;var pendingOperBoxHistory:OperBoxHistoryPayload?
  var logStore:RecognitionPresentation?=RecognitionPresentation();var logs=[String]()
  var userDataAccount="account";var connection="adb";var server="CN";var clientChannel=MAAClientChannel.Official
+ var yituliuOpenApiToken="";var yituliuOperBoxForDaily=false
+ var yituliuSession=URLSession(configuration:.ephemeral);var recruitResourceDirectory:URL?
+ struct YituliuDailyTokenEmpty: Error {}
  var inventoryScope:InventoryScope{.init(connection:connection,server:server,profile:dailyTaskProfile,account:userDataAccount)}
  var depotHistoryStore:DepotHistoryStore{.init(directory:tasksDirectory.appendingPathComponent("depot"))}
  var operBoxHistoryStore:OperBoxHistoryStore{.init(directory:tasksDirectory.appendingPathComponent("operators"))}
@@ -252,6 +255,87 @@ struct Events {mutating func register(taskID:Int32,runID:UUID){}}
   drain.failIncompleteDailyUserDataUpdates(runID:drainRun)
   check(drain.dailyRunOutcome == .failed && drain.taskStatus[drainTask.id] == .failure,"Missing terminal callbacks explicitly fail instead of false completion")
   complete(drain,1,.operBox);check(try saved(drain).lastOperBoxSync==nil,"Missing-callback terminal revokes later writes")
+
+  // MARK: I04-b 日常更新资料一图流源分支
+
+  final class StubYituliuProtocol: URLProtocol {
+    nonisolated(unsafe) static var handler:((URLRequest)->(Int,Data))?
+    override class func canInit(with request:URLRequest)->Bool{true}
+    override class func canonicalRequest(for request:URLRequest)->URLRequest{request}
+    override func startLoading(){
+      let (status,data)=Self.handler!(request)
+      let http=HTTPURLResponse(url:request.url!,statusCode:status,httpVersion:nil,headerFields:nil)!
+      client?.urlProtocol(self,didReceive:http,cacheStoragePolicy:.notAllowed)
+      client?.urlProtocol(self,didLoad:data)
+      client?.urlProtocolDidFinishLoading(self)
+    }
+    override func stopLoading(){}
+  }
+  func yituliuFactory(config:UserDataUpdateConfiguration,daily:Bool,token:String)->(MAAViewModel,DailyTask,UUID){
+    let (m,task,run)=try! factory(config)
+    m.yituliuOperBoxForDaily=daily
+    m.yituliuOpenApiToken=token
+    let res=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory:true)
+    try! FileManager.default.createDirectory(at:res,withIntermediateDirectories:true)
+    try! JSONSerialization.data(withJSONObject:["chars":["char_002_amiya":["name":"阿米娅","rarity":5]]]).write(to:res.appendingPathComponent("battle_data.json"))
+    m.recruitResourceDirectory=res
+    let stub=URLSessionConfiguration.ephemeral
+    stub.protocolClasses=[StubYituliuProtocol.self]
+    m.yituliuSession=URLSession(configuration:stub)
+    return (m,task,run)
+  }
+  func yituliuBody(_ code:Int,_ data:[[String:Any]])->Data{
+    try! JSONSerialization.data(withJSONObject:["code":code,"msg":"","data":data])
+  }
+  let operRows:[[String:Any]] = [["id":"char_002_amiya","level":60,"evolvePhase":2,"mainSkillLevel":7,"potentialRank":3] as [String:Any]]
+
+  // token 为空：准入即失败整跑（WPF 同构），不启动 Core。
+  do {
+    let (m,task,run)=yituliuFactory(config:UserDataUpdateConfiguration(),daily:true,token:"  ")
+    do { _ = try await m.appendDailyUserDataUpdate(task:task,config:UserDataUpdateConfiguration(),runID:run,scope:m.inventoryScope); preconditionFailure("Empty token must fail the run") }
+    catch is MAAViewModel.YituliuDailyTokenEmpty {}
+    catch { preconditionFailure("unexpected \(error)") }
+    check(m.handle!.starts==0 && m.taskStatus[task.id] == .failure,"Empty token fails the run without core start")
+  }
+
+  // 有效拉取：干员部分不进 Core 队列，快照按 runScope 落盘，条目成功。
+  do {
+    StubYituliuProtocol.handler={ _ in (200, yituliuBody(200, operRows)) }
+    var cfg=UserDataUpdateConfiguration();cfg.updateOperBox=true;cfg.updateDepot=false
+    let (m,task,run)=yituliuFactory(config:cfg,daily:true,token:"tok")
+    let ids=try await m.appendDailyUserDataUpdate(task:task,config:cfg,runID:run,scope:m.inventoryScope)
+    check(ids.isEmpty && m.handle!.starts==0,"Yituliu operbox due appends no core task and starts nothing")
+    check(m.taskStatus[task.id] == .success,"Valid yituliu sync marks the entry successful")
+    let snapshot=try m.operBoxHistoryStore.load(scope:m.inventoryScope)
+    check(snapshot?.operators.ownedOperators.count==1 && snapshot?.operators.ownedOperators[0].potential==3,"Yituliu snapshot persisted under run scope")
+    check(try saved(m).lastOperBoxSync==nil,"No core chain means no callback receipt machinery")
+  }
+
+  // 未绑定/空数据：条目失败但不中止跑，不写快照。
+  do {
+    StubYituliuProtocol.handler={ _ in (200, yituliuBody(200, [])) }
+    let (m,task,run)=yituliuFactory(config:UserDataUpdateConfiguration(),daily:true,token:"tok")
+    _ = try await m.appendDailyUserDataUpdate(task:task,config:UserDataUpdateConfiguration(),runID:run,scope:m.inventoryScope)
+    check(m.taskStatus[task.id] == .failure,"NoData marks entry failure without failing the run")
+    check(try m.operBoxHistoryStore.load(scope:m.inventoryScope)==nil,"NoData writes no snapshot")
+  }
+
+  // token 无效：条目失败不中止跑；writeOnly 同路径。
+  do {
+    StubYituliuProtocol.handler={ _ in (200, yituliuBody(20027, [])) }
+    let (m,task,run)=yituliuFactory(config:UserDataUpdateConfiguration(),daily:true,token:"tok")
+    _ = try await m.appendDailyUserDataUpdate(task:task,config:UserDataUpdateConfiguration(),runID:run,scope:m.inventoryScope)
+    check(m.taskStatus[task.id] == .failure,"Invalid token marks entry failure without failing the run")
+  }
+
+  // 关闭开关：干员识别照常进 Core 队列（回归）。
+  do {
+    let (m,task,run)=yituliuFactory(config:UserDataUpdateConfiguration(),daily:false,token:"tok")
+    let ids=try await m.appendDailyUserDataUpdate(task:task,config:UserDataUpdateConfiguration(),runID:run,scope:m.inventoryScope)
+    check(ids.count==2 && m.handle!.nativeTypes==[.OperBox,.Depot],"Mode off keeps core recognition path")
+  }
+
+  print("PASS I04-b daily yituliu branch: admission failure, no-core persistence, entry-level failures and mode-off regression")
   print("PASS \(checks) production daily user-data preparation/callback/profile assertions")
  }
 }
@@ -260,5 +344,5 @@ struct Events {mutating func register(taskID:Int32,runID:UUID){}}
 probe=probe.replace('check(anonymous.taskStatus[anonTask.id] == .success && (try saved(anonymous)).lastDepotSync==nil,','check(try anonymous.taskStatus[anonTask.id] == .success && saved(anonymous).lastDepotSync==nil,')
 with tempfile.TemporaryDirectory(prefix='maa-daily-user-data-') as d:
  p=Path(d);(p/'Probe.swift').write_text(probe)
- cmd=['xcrun','swiftc','-parse-as-library']+[str(root/f) for f in ['MeoAsstMac/Model/InventoryTarget.swift','MeoAsstMac/Utils/HGCalendar.swift','MeoAsstMac/Model/DepotHistoryStore.swift','MeoAsstMac/Model/OperBoxHistoryStore.swift','MeoAsstMac/Model/UserDataUpdateRun.swift','MeoAsstMac/Task Configurations/UserDataUpdateConfiguration.swift','MeoAsstMac/RunHooks/RunContext.swift','MeoAsstMac/RunHooks/DailyRunProfilePatch.swift']]+[str(p/'Probe.swift'),'-o',str(p/'tests')]
+ cmd=['xcrun','swiftc','-parse-as-library']+[str(root/f) for f in ['MeoAsstMac/Model/InventoryTarget.swift','MeoAsstMac/Utils/HGCalendar.swift','MeoAsstMac/Model/DepotHistoryStore.swift','MeoAsstMac/Model/OperBoxHistoryStore.swift','MeoAsstMac/Model/YituliuOperBoxService.swift','MeoAsstMac/Model/UserDataUpdateRun.swift','MeoAsstMac/Task Configurations/UserDataUpdateConfiguration.swift','MeoAsstMac/RunHooks/RunContext.swift','MeoAsstMac/RunHooks/DailyRunProfilePatch.swift']]+[str(p/'Probe.swift'),'-o',str(p/'tests')]
  subprocess.run(cmd,check=True);subprocess.run([str(p/'tests')],check=True,timeout=30)

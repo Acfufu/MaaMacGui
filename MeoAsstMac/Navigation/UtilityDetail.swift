@@ -161,6 +161,9 @@ private struct UserDataHistorySummary: View {
                 }
                 Text("Token 只保存在本机偏好设置且不进入日志；导入数据按当前账号/区服隔离，未绑定或为空时保留本地快照。")
                     .font(.caption).foregroundStyle(.secondary)
+                Toggle("日常更新资料的干员识别改用一图流", isOn: $viewModel.yituliuOperBoxForDaily)
+                Text("开启后每日更新资料不再为干员部分启动模拟器识别；Token 为空时该次运行失败，其余失败按条目记录，不影响仓库识别。")
+                    .font(.caption).foregroundStyle(.secondary)
                 if let message = viewModel.yituliuImportMessage {
                     Text(message).font(.caption).foregroundStyle(.secondary)
                 }
