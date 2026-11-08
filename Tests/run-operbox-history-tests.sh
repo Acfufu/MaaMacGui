@@ -4,5 +4,5 @@ cd "$(dirname "$0")/.."
 test_dir=$(mktemp -d "${TMPDIR:-/tmp}/maa-oper-history.XXXXXX")
 trap 'rm -rf "$test_dir"' EXIT
 cp Tests/OperBoxHistoryStoreTests.swift "$test_dir/main.swift"
-xcrun swiftc MeoAsstMac/Model/InventoryTarget.swift MeoAsstMac/Model/DepotHistoryStore.swift MeoAsstMac/Model/OperBoxHistoryStore.swift MeoAsstMac/Model/YituliuOperBoxService.swift "$test_dir/main.swift" -o "$test_dir/tests"
+xcrun swiftc MeoAsstMac/Model/InventoryTarget.swift MeoAsstMac/Model/DepotHistoryStore.swift MeoAsstMac/Model/OperBoxHistoryStore.swift MeoAsstMac/Model/OperBoxHistoryPayload.swift MeoAsstMac/Model/YituliuOperBoxService.swift "$test_dir/main.swift" -o "$test_dir/tests"
 "$test_dir/tests"

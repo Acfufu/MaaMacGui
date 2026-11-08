@@ -62,6 +62,11 @@ struct CopilotConfiguration: Codable, Hashable {
 
     var support_unit_usage = SupportUnitUsage.none
     var support_unit_name = ""
+
+    /// C11 干员资料辅助编队：Core `OperBoxData.load` 消费的数据文件路径，
+    /// 空/nil = 禁用（Core `use_operbox = !path.empty()`）。仅普通作业任务
+    /// 下发（SSS/悖论任务不消费）。
+    var operbox_data_path: String?
 }
 
 extension CopilotConfiguration.SupportUnitUsage: Identifiable {
@@ -325,6 +330,12 @@ enum CopilotCategory: String, CaseIterable {
     @Defaults("CopilotEnableUserAdditional")
     var enableUserAdditional = false
 
+    /// C11 干员资料辅助编队开关（WPF EnableOperBoxAssist 同构，GUI 侧；路径
+    /// 在开始作业时由会话/历史快照写出后进参数）。
+    @ObservationIgnored
+    @Defaults("CopilotEnableOperBoxAssist")
+    var enableOperBoxAssist = false
+
     init() {
         config = CopilotPersistence.loadConfiguration() ?? CopilotConfiguration()
     }
@@ -430,6 +441,22 @@ enum CopilotCategory: String, CaseIterable {
             return
         }
         copilotList.swapAt(index, index + delta)
+    }
+
+    /// C12 评价入口：当前选中的单个外部下载作业（文件名为纯数字，即作业站
+    /// id）；列表模式与内置/本地文件返回 nil（WPF CouldLikeWebJson = id>0 同构）。
+    var currentRateableCopilotID: Int? {
+        guard category != .list, case .copilot(let url, _, _) = content,
+            url.deletingLastPathComponent().standardizedFileURL
+                == URL.externalCopilotDirectory.standardizedFileURL
+        else {
+            return nil
+        }
+        let stem = url.deletingPathExtension().lastPathComponent
+        guard !stem.isEmpty, stem.allSatisfy({ $0.isASCII && $0.isNumber }), let id = Int(stem) else {
+            return nil
+        }
+        return id
     }
 }
 

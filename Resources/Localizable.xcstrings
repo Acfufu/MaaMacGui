@@ -131,6 +131,50 @@
         }
       }
     },
+    "出现错误，评价失败 : <" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An error occurred, the like failed. : <"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오류가 발생하여 평가에 실패했습니다. : <"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出现错误，评价失败 : <"
+          }
+        }
+      }
+    },
+    "使用一图流数据辅助编队" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assist formation with Yituliu data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu 데이터로 편성 지원"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用一图流数据辅助编队"
+          }
+        }
+      }
+    },
     "导入预设" : {
       "localizations" : {
         "en" : {
@@ -185,6 +229,28 @@
         }
       }
     },
+    "干员资料写盘失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to write operator data: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 데이터 쓰기 실패: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "干员资料写盘失败：%@"
+          }
+        }
+      }
+    },
     "开局干员职业重复，请调整顺位配置。" : {
       "localizations" : {
         "en" : {
@@ -197,6 +263,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "시작 오퍼레이터의 직업이 중복됩니다. 순위 설정을 변경하세요."
+          }
+        }
+      }
+    },
+    "感谢评价！\n网页已经开放评论区，欢迎前往留下你的评论！" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thanks for the likes!\nThe comment section is already open on the web page, please feel free to leave your comment!"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "감사합니다!\n웹사이트에 댓글을 남길 수도 있으니 의견을 남겨 주세요!"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "感谢评价！\n网页已经开放评论区，欢迎前往留下你的评论！"
+          }
+        }
+      }
+    },
+    "当前没有可用的一图流干员数据，无法辅助编队。请先从一图流获取干员数据，或关闭「使用一图流数据辅助编队」。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Yituliu operator data is available for formation assist. Fetch operator data from Yituliu first, or disable ｢Assist formation with Yituliu data｣."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용 가능한 Yituliu 오퍼레이터 데이터가 없어 편성을 지원할 수 없습니다. 먼저 Yituliu에서 오퍼레이터 데이터를 가져오거나 ｢Yituliu 데이터로 편성 지원｣을 끄세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前没有可用的一图流干员数据，无法辅助编队。请先从一图流获取干员数据，或关闭「使用一图流数据辅助编队」。"
           }
         }
       }
@@ -251,6 +361,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "두 번째 및 세 번째 시작 오퍼레이터 지정"
+          }
+        }
+      }
+    },
+    "点踩" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dislike"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "싫어요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点踩"
+          }
+        }
+      }
+    },
+    "点赞" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Like"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "좋아요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点赞"
           }
         }
       }
@@ -317,6 +471,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "添加干员"
+          }
+        }
+      }
+    },
+    "自动编队前，按一图流干员练度数据（含技能与模组信息）预匹配作业编队。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Before auto formation, pre-matches the copilot formation against Yituliu operator training data (including skills and modules)."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 편성 전에 Yituliu 오퍼레이터 육성 데이터(스킬 및 모듈 포함)로 작업 편성을 미리 매칭합니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动编队前，按一图流干员练度数据（含技能与模组信息）预匹配作业编队。"
           }
         }
       }

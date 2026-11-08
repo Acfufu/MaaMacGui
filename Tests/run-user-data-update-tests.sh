@@ -18,5 +18,5 @@ method=s[start:end+1]
 test=Path('Tests/UserDataUpdateTests.swift').read_text();assert test.count('// NATIVE_APPEND')==1
 Path(sys.argv[1]).write_text(test.replace('// NATIVE_APPEND',method))
 PYTEST
-xcrun swiftc MeoAsstMac/Model/InventoryTarget.swift MeoAsstMac/Utils/HGCalendar.swift MeoAsstMac/Model/DepotHistoryStore.swift MeoAsstMac/Model/OperBoxHistoryStore.swift MeoAsstMac/Model/UserDataUpdateRun.swift 'MeoAsstMac/Task Configurations/UserDataUpdateConfiguration.swift' "$test_dir/main.swift" -o "$test_dir/tests"
+xcrun swiftc MeoAsstMac/Model/InventoryTarget.swift MeoAsstMac/Utils/HGCalendar.swift MeoAsstMac/Model/DepotHistoryStore.swift MeoAsstMac/Model/OperBoxHistoryStore.swift MeoAsstMac/Model/OperBoxHistoryPayload.swift MeoAsstMac/Model/UserDataUpdateRun.swift 'MeoAsstMac/Task Configurations/UserDataUpdateConfiguration.swift' "$test_dir/main.swift" -o "$test_dir/tests"
 "$test_dir/tests"

@@ -291,6 +291,68 @@ struct CopilotPersistenceTests {
         check(parseCode("99999999999999999999999") == nil, "overflowing id rejects instead of crashing")
         check(parseCode("not-a-code") == nil, "non-numeric input rejects")
 
+        // MARK: - I. C11 operbox assist export and params passthrough
+
+        let exportDir = FileManager.default.temporaryDirectory
+            .appending(path: "operbox-assist-export-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: exportDir) }
+        OperBoxAssistExport.overrideDirectory = exportDir
+        defer { OperBoxAssistExport.overrideDirectory = nil }
+
+        let skilled = OperBoxHistoryPayload.OwnedOperator(
+            id: "char_002_amiya", own: true, name: "阿米娅", rarity: 5, elite: 2, level: 80,
+            potential: 5, mainSkillLevel: 7, skills: [.init(id: "skchr_amiya_1", level: 3)])
+        let unskilled = OperBoxHistoryPayload.OwnedOperator(
+            id: "char_001_boom", own: true, name: "克洛丝", rarity: 3, elite: 1, level: 40, potential: 1)
+        let assistPayload = OperBoxHistoryPayload(
+            done: true,
+            allOperators: [.init(id: "char_002_amiya", own: true, name: "阿米娅", rarity: 5)],
+            ownedOperators: [skilled, unskilled])
+        check(OperBoxAssistExport.isAssistUsable(assistPayload), "payload with any skills is assist-usable")
+        check(
+            !OperBoxAssistExport.isAssistUsable(
+                OperBoxHistoryPayload(
+                    done: true, allOperators: assistPayload.allOperators,
+                    ownedOperators: [unskilled])),
+            "payload without any skills is not assist-usable")
+
+        let exportedURL = try OperBoxAssistExport.write(
+            assistPayload, source: "yituliu", syncTime: Date(timeIntervalSince1970: 1_700_000_000))
+        let exported = try JSONSerialization.jsonObject(with: Data(contentsOf: exportedURL)) as! [String: Any]
+        check(exported["done"] as? Bool == true && exported["source"] as? String == "yituliu", "export carries done/source")
+        check(exported["syncTime"] != nil, "export carries ISO8601 syncTime")
+        let opers = exported["own_opers"] as! [[String: Any]]
+        check(opers.count == 2, "export writes every owned operator")
+        check(opers[0]["skills"] != nil && opers[0]["mainSkillLevel"] != nil, "skilled operator carries skills/mainSkillLevel")
+        check(opers[1]["skills"] == nil && opers[1]["mainSkillLevel"] == nil, "nil fields are omitted instead of null")
+
+        // Single-file compilation checks the file on disk; provide a real one.
+        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        try Data(regularJSON.utf8).write(to: base.appending(path: "101.json"))
+
+        var assistConfig = CopilotConfiguration()
+        assistConfig.operbox_data_path = "/tmp/maa-assist/OperBoxData.json"
+        var assistOutputs: [CopilotCompiler.Output] = []
+        if case .success(let outputs) = CopilotCompiler.compile(
+            .init(selection: .single(url: base.appending(path: "101.json"), kind: .regular), config: assistConfig))
+        {
+            assistOutputs = outputs
+        }
+        check(!assistOutputs.isEmpty, "assist compile succeeds")
+        check(
+            assistOutputs.first?.config.operbox_data_path == "/tmp/maa-assist/OperBoxData.json",
+            "operbox path passes through compilation")
+
+        var plainOutputs: [CopilotCompiler.Output] = []
+        if case .success(let outputs) = CopilotCompiler.compile(
+            .init(selection: .single(url: base.appending(path: "101.json"), kind: .regular)))
+        {
+            plainOutputs = outputs
+        }
+        check(
+            plainOutputs.first?.config.operbox_data_path == nil,
+            "operbox path stays absent when not configured")
+
         if failures.isEmpty {
             print("ALL \(checkIndex) CHECKS PASSED")
         } else {

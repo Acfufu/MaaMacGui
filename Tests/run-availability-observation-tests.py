@@ -42,11 +42,15 @@ struct CopilotConfiguration {
  struct Item { var filename: String; var nav_name_override: String?; var is_raid: Bool }
  var filename: String?
  var copilot_list: [Item] = []
+ // C11 边界面：P14.1 起 startCopilot 桥按任务类型清写该参数。
+ var operbox_data_path: String?
  func jsonString() throws -> String { "{}" }
 }
 struct CopilotContext {
  var config = CopilotConfiguration()
  var category = CopilotCategory.bundled
+ // C11 边界面：开关仅作 startCopilot 桥读取面。
+ var enableOperBoxAssist = false
  var copilotSet: CopilotSet? = CopilotSet()
  var copilotList = [CopilotItem]()
  var content = CopilotContent.copilot(URL(filePath:"/fixture.json"), .regular, false)
@@ -96,6 +100,10 @@ enum CopilotCompiler {
  func appendLog(_ entry: MAALog) { logs.append(entry) }
  @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 '''+block(bridge,r'^    @MainActor var status:')+'\n'+block(bridge,r'^    @MainActor var canStartTasks:')+'''
+ func prepareOperBoxAssistFile() async -> String? {
+  // C11 边界桩：探针走默认关闭路径，不触达真实写盘。
+  return nil
+ }
  @MainActor init(parent: MAAViewModel) {
   self.parent=parent
 '''+subscriptions+'''

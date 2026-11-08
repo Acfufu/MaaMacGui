@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 import Observation
+import os
 
 // TODO: Mirgrate all bridges
 @Observable final class NewViewModel {
@@ -59,6 +60,13 @@ import Observation
     @ObservationIgnored var fightReport: FightReport?
     @ObservationIgnored var stoneUsedTimes = 0
     @ObservationIgnored var recruitConfirmTimes = 0
+    /// C12 会话内已评价的作业站 id（WPF _recentlyRatedCopilotId 同构）。
+    @ObservationIgnored private var recentlyRatedCopilotIDsBacking =
+        OSAllocatedUnfairLock<Set<Int>>(initialState: [])
+    private var recentlyRatedCopilotIDs: Set<Int> {
+        get { recentlyRatedCopilotIDsBacking.withLock { $0 } }
+        set { recentlyRatedCopilotIDsBacking.withLock { $0 = newValue } }
+    }
 
     // MARK: - Recognition
 
@@ -158,11 +166,27 @@ extension NewViewModel {
             appendLog(.init(date: .now, content: error.logMessage, color: .error))
             return
         case .success(let outputs):
+            // C11 资料辅助：仅普通作业任务消费 operbox_data_path；开关开启而
+            // 当前作用域无可用快照时按 WPF ValidateStartAsync 同构阻断启动。
+            var configs = outputs.map(\.config)
+            if copilot.enableOperBoxAssist, outputs.contains(where: { $0.type == .Copilot }) {
+                guard let assistPath = await prepareOperBoxAssistFile() else {
+                    return
+                }
+                for index in configs.indices {
+                    configs[index].operbox_data_path = assistPath
+                }
+            }
+
             // 一次性序列化全部任务后走批量入口：占用/启动各一次，避免逐项
             // start 让第二个任务撞上「任务正在运行」的 idle 守卫。
             var tasks = [(type: MAATaskType, params: String)]()
-            for output in outputs {
-                guard let params = try? output.config.jsonString() else {
+            for index in outputs.indices {
+                if outputs[index].type != .Copilot {
+                    // SSS/悖论任务不消费该参数，不随行下发。
+                    configs[index].operbox_data_path = nil
+                }
+                guard let params = try? configs[index].jsonString() else {
                     appendLog(
                         .init(
                             date: .now,
@@ -170,11 +194,44 @@ extension NewViewModel {
                             color: .error))
                     return
                 }
-                tasks.append((type: output.type, params: params))
+                tasks.append((type: outputs[index].type, params: params))
             }
 
             try await parent.startCopilot(tasks: tasks)
             copilotStartToken = UUID()
+        }
+    }
+
+    /// C11：把当前作用域的最新干员快照落盘为 Core 可读文件，返回路径。
+    /// 不可用（无快照/无技能数据）按 WPF ValidateStartAsync 记错误并 nil。
+    @MainActor private func prepareOperBoxAssistFile() -> String? {
+        let scope = parent.inventoryScope
+        guard let snapshot = try? parent.operBoxHistoryStore.load(scope: scope),
+            OperBoxAssistExport.isAssistUsable(snapshot.operators)
+        else {
+            appendLog(
+                .init(
+                    date: .now,
+                    content: String(
+                        localized:
+                            "当前没有可用的一图流干员数据，无法辅助编队。请先从一图流获取干员数据，或关闭「使用一图流数据辅助编队」。"
+                    ),
+                    color: .error))
+            return nil
+        }
+        do {
+            let url = try OperBoxAssistExport.write(
+                snapshot.operators,
+                source: snapshot.source ?? "recognition",
+                syncTime: snapshot.capturedAt)
+            return url.path(percentEncoded: false)
+        } catch {
+            appendLog(
+                .init(
+                    date: .now,
+                    content: String(localized: "干员资料写盘失败：\(error.localizedDescription)"),
+                    color: .error))
+            return nil
         }
     }
 
@@ -205,6 +262,39 @@ extension NewViewModel {
 // MARK: - PRTS Copilot Downloader
 
 extension NewViewModel {
+    /// C12 作业站点赞/点踩：POST {id, rating: Like|Dislike}，HTTP 2xx 即成功
+    /// （WPF RateWebJsonAsync 同构；响应体不做状态解析）。成功后会话内去重。
+    nonisolated(nonsending) func rateCopilot(_ isLike: Bool) async {
+        guard let id = copilot.currentRateableCopilotID, id > 0 else { return }
+        guard !recentlyRatedCopilotIDs.contains(id) else { return }
+
+        var request = URLRequest(url: URL(string: "https://prts.maa.plus/copilot/rating")!)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(
+            withJSONObject: ["id": id, "rating": isLike ? "Like" : "Dislike"])
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+                throw URLError(.badServerResponse)
+            }
+            recentlyRatedCopilotIDs.insert(id)
+            appendLog(
+                .init(
+                    date: .now,
+                    content: String(
+                        localized: "感谢评价！\n网页已经开放评论区，欢迎前往留下你的评论！"),
+                    color: .info))
+        } catch {
+            appendLog(
+                .init(
+                    date: .now,
+                    content: String(localized: "出现错误，评价失败 : <"),
+                    color: .error))
+        }
+    }
+
     nonisolated(nonsending) func downloadCopilot(code: PRTSCode) async {
         let progress = Progress()
         copilotDownloadProgress = progress
