@@ -204,25 +204,41 @@ struct FightConfigurationTests {
             "PASS: F16/F17 report encode contract (penguin/yituliu always encoded; missing keys decode false/\\\"\\\"; explicit values round trip)"
         )
 
-        // §5-19：weeklyDays 解码值域 1...7（P08.1 变异测试发现——手编脏值剔除）。
+        // §5-19：weeklyDays 解码值域 0...6（HGCalendar.weekday 游戏日星期序号
+        // 0=周日…6=周六，两侧写入面 Array(0...6) 同口径；S5.1 曾误用 1...7，S5.2
+        // 订正——含空集语义与编码 round trip）。
         do {
             let junk = try JSONDecoder().decode(
                 FightConfiguration.self,
                 from: Data(#"{"weeklyDays":[0,3,9,-1]}"#.utf8)
             )
-            if junk.weeklyDays != [3] {
+            if junk.weeklyDays != [0, 3] {
                 failures.append("weeklyDays sanitize: got \(junk.weeklyDays.map(String.init) ?? "nil")")
             }
             let valid = try JSONDecoder().decode(
                 FightConfiguration.self,
                 from: Data(#"{"weeklyDays":[1,7]}"#.utf8)
             )
-            if valid.weeklyDays != [1, 7] {
+            if valid.weeklyDays != [1] {
                 failures.append("weeklyDays valid passthrough: got \(valid.weeklyDays.map(String.init) ?? "nil")")
             }
             let absent = try JSONDecoder().decode(FightConfiguration.self, from: Data("{}".utf8))
             if absent.weeklyDays != nil {
                 failures.append("weeklyDays absent decode: got \(absent.weeklyDays.map(String.init) ?? "non-nil")")
+            }
+            let empty = try JSONDecoder().decode(
+                FightConfiguration.self,
+                from: Data(#"{"weeklyDays":[]}"#.utf8)
+            )
+            if empty.weeklyDays != [] {
+                failures.append("weeklyDays empty-set semantics: got \(empty.weeklyDays.map(String.init) ?? "non-empty-array")")
+            }
+            let roundTrip = try JSONDecoder().decode(
+                FightConfiguration.self,
+                from: JSONEncoder().encode(junk)
+            )
+            if roundTrip.weeklyDays != [0, 3] {
+                failures.append("weeklyDays encode round trip: got \(roundTrip.weeklyDays.map(String.init) ?? "nil")")
             }
         } catch {
             failures.append("weeklyDays sanitize decode threw: \(error)")
@@ -230,6 +246,6 @@ struct FightConfigurationTests {
 
         for failure in failures { print("FAIL: \(failure)") }
         guard failures.isEmpty else { exit(1) }
-        print("PASS: §5-19 weeklyDays decode sanitizes to 1...7 (junk dropped, valid kept, absent nil)")
+        print("PASS: §5-19 weeklyDays decode sanitizes to 0...6 (junk dropped, valid kept, absent nil, empty set kept, round trip stable)")
     }
 }

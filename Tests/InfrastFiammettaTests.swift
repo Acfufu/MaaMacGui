@@ -97,6 +97,17 @@ check(gated.isScheduled(on: 1) && !gated.isScheduled(on: 2))
 let gatedRoundtrip = try PropertyListDecoder().decode(
     InfrastConfiguration.self, from: PropertyListEncoder().encode(gated))
 check(gatedRoundtrip == gated && gatedRoundtrip.weeklyDays == [1])
+// §5-19（S5.2，双类型登记的 infrast 残余侧）：解码值域 0...6——手编脏值剔除
+// （8/-1 丢弃）、合法端点 0/6 直通、空集语义保持。
+let junkDays = try JSONDecoder().decode(
+    InfrastConfiguration.self, from: JSONSerialization.data(withJSONObject: ["mode": 0, "facility": ["Mfg"], "drones": "_NotUse", "weeklyDays": [8, -1, 5]]))
+check(junkDays.weeklyDays == [5])
+let endpointDays = try JSONDecoder().decode(
+    InfrastConfiguration.self, from: JSONSerialization.data(withJSONObject: ["mode": 0, "facility": ["Mfg"], "drones": "_NotUse", "weeklyDays": [0, 6]]))
+check(endpointDays.weeklyDays == [0, 6])
+let emptyDays = try JSONDecoder().decode(
+    InfrastConfiguration.self, from: JSONSerialization.data(withJSONObject: ["mode": 0, "facility": ["Mfg"], "drones": "_NotUse", "weeklyDays": []]))
+check(emptyDays.weeklyDays == [] && !emptyDays.isScheduled(on: 0) && !emptyDays.isScheduled(on: 6))
 // B02: the WPF room domain extends the facility list with Recycle and
 // AssistantChange, and both dispatch verbatim through the facility array.
 var expanded = absentConfig

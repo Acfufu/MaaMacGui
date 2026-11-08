@@ -105,7 +105,10 @@ enum DailyRunOnceSemantics {
     /// whose append failed mid-run is still inside the snapshot scope and did
     /// not execute, yet it still counts toward consumption under the current
     /// semantics ("append-failure stays eligible"); tightening this to
-    /// actually-executed ids is deferred (WPF P03.2 shares the same shape).
+    /// actually-executed ids is deferred. WPF has no task-granularity
+    /// once-consumption mechanism at all (its task-level append failure aborts
+    /// the whole run); the only same-shape surface is depot-plan granularity
+    /// continue-on-failure (divergence P12-[k]).
     static func consumeOnceTasks(tasks: [DailyTask], outcome: DailyRunOutcome,
                                  eligibleIDs: Set<UUID>? = nil) -> [DailyTask] {
         guard outcome == .completed else { return tasks }

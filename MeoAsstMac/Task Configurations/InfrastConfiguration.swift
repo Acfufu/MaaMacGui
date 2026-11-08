@@ -355,7 +355,12 @@ extension InfrastConfiguration {
             try container.decodeIfPresent(Bool.self, forKey: .use_perception_information) ?? false
         self.use_worldly_plight = try container.decodeIfPresent(Bool.self, forKey: .use_worldly_plight) ?? false
         self.use_abyssal_hunter = try container.decodeIfPresent(Bool.self, forKey: .use_abyssal_hunter) ?? false
+        // §5-19（P08.1 登记「后续一并钳制」的双类型残余侧）：手编脏值剔除至
+        // 合法域 0...6——weeklyDays 语义=HGCalendar.weekday(for:) 游戏日星期
+        // 序号（0=周日…6=周六），与 InfrastSettingsView 写入面（Array(0...6)）
+        // 同口径。空集=启用但无执行日的既有语义保持（isScheduled 对全周 false）。
         self.weeklyDays = try container.decodeIfPresent([Int].self, forKey: .weeklyDays)
+            .map { $0.filter { (0...6).contains($0) } }
         let preferences = try FiammettaPreferences(from: decoder)
         self.fiammetta_targets = Self.normalizedFiammettaTargets(
             preferences.targets ?? Self.defaultFiammettaTargets)

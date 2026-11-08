@@ -311,6 +311,9 @@ struct ProfileStore {
         if let data = try? Data(contentsOf: indexURL) {
             if let decoded = try? PropertyListDecoder().decode(Index.self, from: data) {
                 if decoded.formatVersion > Self.currentFormatVersion {
+                    // §5-⑨（S5.2）：启动期 index 版本漂移此前静默吞（活跃指针/
+                    // 身份表 try? 面），排障零线索——源头补日志（Int 无路径面）。
+                    logger.error("Profile index format version unsupported: \(decoded.formatVersion)")
                     throw ProfileError.unsupportedIndexVersion(decoded.formatVersion)
                 }
                 if decoded.formatVersion < Self.currentFormatVersion {
@@ -329,6 +332,7 @@ struct ProfileStore {
                 // but still names its version. Refuse it here, or the
                 // corrupt-index fallback below would rewrite the file to
                 // this build's format and destroy the newer metadata.
+                logger.error("Profile index raw format version unsupported: \(raw)")
                 throw ProfileError.unsupportedIndexVersion(raw)
             }
         }

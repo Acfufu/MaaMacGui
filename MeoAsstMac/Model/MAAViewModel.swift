@@ -680,16 +680,19 @@ private let profileLoadLogger = Logger(subsystem: "com.hguandl.MeoAsstMac", cate
             Task { await localNotifications.requestIfNecessary() }
         }
         // P03.2: 注册表的活跃指针在启动时是权威的（Q04 的 --config 在本类
-        // 构造前已写入指针）；AppStorage 仅作 UI 侧缓存同步。
+        // 构造前已写入指针）；AppStorage 仅作 UI 侧缓存同步。§5-⑨：loadIndex
+        // 失败（含 unsupportedIndexVersion）由 ProfileStore 源头日志（S5.2——
+        // 此处 try? 静默应用与否不影响排障线索）。
         if let active = try? profileStore.activeProfileID(), active != dailyTaskProfile {
             dailyTaskProfile = active
         }
         do {
             tasks = try DailyTaskProfileStore(profileURL: tasksURL).load()
         } catch {
-            // §5-⑨（P29 补日志方向）：启动装载失败补日志——unsupportedIndexVersion
-            // 等可诊断失败此前与目录损坏同路径静默恢复，排障缺线索。
-            profileLoadLogger.error("Daily task profile load failed: \(String(describing: error), privacy: .public)")
+            // §5-⑨（P29 补日志方向）：tasks plist I/O/解码失败此前无日志
+            // （缺省 privacy——I/O NSError 描述可能内嵌 home 路径，沿 Store
+            // :60-62 纪律；S5.1 误用 .public，S5.2 订正）。
+            profileLoadLogger.error("Daily task profile load failed: \(String(describing: error))")
             var isDirectory: ObjCBool = false
             let exists = FileManager.default.fileExists(atPath: tasksDirectory.path, isDirectory: &isDirectory)
             switch (exists, isDirectory.boolValue) {
@@ -1153,8 +1156,9 @@ extension MAAViewModel {
         guard terminal.outcome == .completed,
               dailyRunCoordinator.active == nil,
               dailyRunCoordinator.lastTerminal?.id == terminal.id else { return }
-        // 冻结快照（dailyRunTasks）此刻仍指向刚收口的运行；其 enabled id
-        // 集合即"本次真正执行过"的任务范围。
+        // 冻结快照（dailyRunTasks）此刻仍指向刚收口的运行；其 enabled id 集合
+        // 即"本次冻结快照内 enabled"的范围（§5-⑩/S5.2 口径对齐：不追踪 Core
+        // 追加结果——追加失败的任务同样计入，见 DailyRunProfilePatch.consumeOnceTasks 注记）。
         let eligibleIDs = Set(dailyRunTasks?.filter(\.enabled).map(\.id) ?? [])
         let isCurrentProfile = terminal.profileID == dailyTaskProfile
         do {
@@ -2309,6 +2313,7 @@ extension MAAViewModel {
     }
 
     private func reloadProfileIdentities() {
+        // §5-⑨：index 装载失败由 ProfileStore.loadIndex 源头日志（S5.2）。
         profileIdentities = (try? profileStore.list()) ?? []
     }
 }
