@@ -93,12 +93,39 @@ enum DiagnosticsReport {
         return removed
     }
 
-    /// U14: 界面语言独立选择（WPF 语言设置同位；AppleLanguages 重启生效）。
+    /// U14: 界面语言独立选择（语义=重启生效，AppleLanguages 写/清；切换热切面
+    /// 差异入台账 P29-[a]）。生产接线点：DiagnosticsSettingsView 的 onChange
+    /// （高1/P29-1-R3——此前 applyAppLanguage 生产零调用，语言选择永不生效）
+    /// 与 MeoAsstMacApp 启动同步（syncAppLanguageAtLaunch）。
     static func applyAppLanguage(_ language: String, defaults: UserDefaults = .standard) {
-        if language.isEmpty {
-            defaults.removeObject(forKey: "AppleLanguages")
-        } else {
-            defaults.set([language], forKey: "AppleLanguages")
+        switch languagePersistencePath(language) {
+        case .write(let languages): defaults.set(languages, forKey: "AppleLanguages")
+        case .clear: defaults.removeObject(forKey: "AppleLanguages")
         }
+    }
+
+    /// U14 支持的显式语言档（中1/P29-1-R3：zh-Hant 摘档——Mac 无繁中资源，
+    /// preferredLocalizations 探针实证选 zh-Hant 解析为 en，死档比无效更具
+    /// 误导性；WPF zh-tw.xaml 2329 条全翻译为补齐长期面，台账 P29-[b]）。
+    static let supportedLanguages = ["zh-Hans", "en", "ko"]
+
+    /// U14 语言持久化路径（复验建议的提取纯函数）：choice→AppleLanguages 动作。
+    /// 空=跟随系统（清 override）；非支持档（含已摘档 zh-Hant 的存量残留）=
+    /// 清 override 回跟随系统。
+    enum LanguagePersistenceAction: Equatable {
+        case write([String])
+        case clear
+    }
+
+    static func languagePersistencePath(_ choice: String) -> LanguagePersistenceAction {
+        guard supportedLanguages.contains(choice) else { return .clear }
+        return .write([choice])
+    }
+
+    /// U14 启动同步（高1/P29-1-R3）：以 MAAAppLanguage 为单一事实源在启动面
+    /// 复写 AppleLanguages——承接接线前已选择过语言的存量用户（键有值而
+    /// AppleLanguages 未接），并清洗死档残留；跟随系统选择此处等价于清 override。
+    static func syncAppLanguageAtLaunch(defaults: UserDefaults = .standard) {
+        applyAppLanguage(defaults.string(forKey: "MAAAppLanguage") ?? "", defaults: defaults)
     }
 }

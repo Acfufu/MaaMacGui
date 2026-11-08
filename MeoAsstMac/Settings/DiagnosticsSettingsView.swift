@@ -61,10 +61,16 @@ struct DiagnosticsSettingsView: View {
                 Picker("界面语言", selection: $appLanguage) {
                     Text("跟随系统").tag("")
                     Text("简体中文").tag("zh-Hans")
-                    Text("繁體中文").tag("zh-Hant")
                     Text("English").tag("en")
                     Text("한국어").tag("ko")
                 }
+                // 高1（P29-1-R3）：选择→AppleLanguages 的生产接线点（此前
+                // applyAppLanguage 生产零调用，重启语言永不变化——假承诺）。
+                .onChange(of: appLanguage) { _, newValue in
+                    DiagnosticsReport.applyAppLanguage(newValue)
+                }
+                // 中1（P29-1-R3）：zh-Hant 摘档——Mac 无繁中资源，选繁中重启
+                // 会解析为英文（preferredLocalizations 探针实证）；台账 P29-[b]。
                 Text("切换后重启应用生效。干员名语言跟随资源区服，暂无独立选项。")
                     .font(.caption).foregroundStyle(.secondary)
             }

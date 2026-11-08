@@ -2302,10 +2302,10 @@ extension MAAViewModel {
     /// Generalized in P02.2: the same refresh points now also rederive the
     /// full `coreCapabilities` snapshot. `secretFrontUnavailableReason` keeps
     /// its original semantics for the startup gate copy (its bool equivalent
-    /// is `coreCapabilities.secretFrontAvailable`). Core version source is
-    /// nil for now: Maa.swift exposes no AsstGetVersion wrapper (the C symbol
-    /// exists in MaaCore's AsstCaller.h); wire it there first to lift
-    /// `minimumCoreVersionMet`/recycle gating.
+    /// is `coreCapabilities.secretFrontAvailable`). Core version source stays
+    /// nil on this path: Maa.swift has exposed `MAAHandle.coreVersion()`
+    /// (P29.1), but this load path is not wired yet (ledger P29-[e]) — wiring
+    /// it here would lift `minimumCoreVersionMet`/recycle gating.
     private func refreshCoreCapabilities() {
         let baseRoot = secretFrontResourceRoot()
         // R2-1：series/recycle 判据改用覆盖层感知根（与 FightSettingsView

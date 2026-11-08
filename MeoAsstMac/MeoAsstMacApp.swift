@@ -23,6 +23,10 @@ struct MeoAsstMacApp: App {
 
     init() {
         Self.applyConfigArgument()
+        // U14（高1/P29-1-R3）：启动面以 MAAAppLanguage 为单一事实源同步
+        // AppleLanguages——承接接线前已选择语言的存量用户并清洗死档残留；
+        // 日常写入面在 DiagnosticsSettingsView 的 onChange。
+        DiagnosticsReport.syncAppLanguageAtLaunch()
         let viewModel = MAAViewModel()
         let newModel = NewViewModel(parent: viewModel)
         _appViewModel = StateObject(wrappedValue: viewModel)

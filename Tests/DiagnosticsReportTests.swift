@@ -79,6 +79,22 @@ import Foundation
         let persisted = domain?["AppleLanguages"]
         check(persisted == nil, "system language clears override")
 
+        // --- U14 高1（P29-1-R3）：语言持久化路径纯函数——空/非支持档（含已摘档
+        // zh-Hant 死档与无资源档位）清洗回跟随系统；生产接线点=设置页 onChange +
+        // 启动同步 syncAppLanguageAtLaunch（接线点为代码审阅面，真机 GUI 生效单列）。
+        check(DiagnosticsReport.languagePersistencePath("") == .clear, "empty choice clears override")
+        check(DiagnosticsReport.languagePersistencePath("zh-Hans") == .write(["zh-Hans"]), "supported choice writes override")
+        check(DiagnosticsReport.languagePersistencePath("en") == .write(["en"]), "en supported")
+        check(DiagnosticsReport.languagePersistencePath("ko") == .write(["ko"]), "ko supported")
+        check(DiagnosticsReport.languagePersistencePath("zh-Hant") == .clear,
+              "removed zh-Hant dead option clears override")
+        check(DiagnosticsReport.languagePersistencePath("ja") == .clear, "unsupported language clears")
+        check(DiagnosticsReport.supportedLanguages == ["zh-Hans", "en", "ko"],
+              "picker language set matches shipped resources")
+        DiagnosticsReport.applyAppLanguage("zh-Hant", defaults: langDefaults)
+        check(langDefaults.persistentDomain(forName: langSuite)?["AppleLanguages"] == nil,
+              "applyAppLanguage sanitizes removed dead option instead of writing it")
+
         print("DiagnosticsReportTests: \(count) assertions passed")
     }
 }
