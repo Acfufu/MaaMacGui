@@ -81,6 +81,22 @@
         }
       }
     },
+    "从一图流导入干员练度" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import operator data from Yituliu"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류에서 오퍼레이터 데이터 가져오기"
+          }
+        }
+      }
+    },
     "从所选班次开始，每次成功完成后切换到下一班次。" : {
       "localizations" : {
         "en" : {
@@ -6559,6 +6575,22 @@
         }
       }
     },
+    "Token 只保存在本机偏好设置且不进入日志；导入数据按当前账号/区服隔离，未绑定或为空时保留本地快照。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The token is stored in local preferences only and never enters logs; imported data is isolated per account and server, and the local snapshot is kept when unbound or empty."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "토큰은 로컬 환경설정에만 저장되며 로그에 기록되지 않습니다. 가져온 데이터는 계정/서버별로 격리되며, 미연동 또는 빈 데이터 시 로컬 스냅샷을 유지합니다."
+          }
+        }
+      }
+    },
     "TotalDrop" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6772,6 +6804,70 @@
         }
       }
     },
+    "一图流 OpenAPI Token" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu OpenAPI Token"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 OpenAPI 토큰"
+          }
+        }
+      }
+    },
+    "一图流 Token 为空" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu token is empty"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 토큰이 비어 있습니다"
+          }
+        }
+      }
+    },
+    "一图流 Token 只有写入权限，无法读取练度" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu token has write-only permission and cannot read operator data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 토큰이 쓰기 전용 권한이라 오퍼레이터 데이터를 읽을 수 없습니다"
+          }
+        }
+      }
+    },
+    "一图流 Token 无效或已失效" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu token is invalid or expired"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 토큰이 유효하지 않거나 만료되었습니다"
+          }
+        }
+      }
+    },
     "一图流汇报ID" : {
       "localizations" : {
         "en" : {
@@ -6784,6 +6880,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yituliu 보고 ID"
+          }
+        }
+      }
+    },
+    "一图流网络请求失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu network request failed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 네트워크 요청 실패"
+          }
+        }
+      }
+    },
+    "一图流账号未绑定或未导入练度，已保留本地数据" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu account is unbound or has no imported operator data; local snapshot kept"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 계정이 연동되지 않았거나 연습도가 가져와지지 않아 로컬 데이터를 유지합니다"
           }
         }
       }
@@ -14545,6 +14673,22 @@
       }
     },
     "红票-5" : {},
+    "练度快照保存失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to save operator snapshot: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연습도 스냅샷 저장 실패: %@"
+          }
+        }
+      }
+    },
     "组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口。无需输入监控权限。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -17058,6 +17202,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "주간 일정에 오늘 요일이 체크되지 않아 \"%@\"을(를) 건너뛰었습니다"
+          }
+        }
+      }
+    },
+    "已导入 %lld 名干员练度" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imported %lld operators from Yituliu"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류에서 %lld명의 오퍼레이터를 가져왔습니다"
           }
         }
       }

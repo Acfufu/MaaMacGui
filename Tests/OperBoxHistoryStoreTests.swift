@@ -39,3 +39,112 @@ do{_ = try store.load(scope:scope);preconditionFailure("Corrupt data accepted")}
 let blocked=directory.appendingPathComponent("blocked");try Data().write(to:blocked)
 do{try OperBoxHistoryStore(directory:blocked).save(valid,scope:scope);preconditionFailure("Write failure ignored")}catch{checks+=1}
 print("PASS \(checks) historical operator storage assertions")
+
+// MARK: - I04 一图流只读练度导入
+
+func yituliuCheck(_ value:@autoclosure () -> Bool,_ message:String){checks+=1;precondition(value(),message)}
+
+// 业务码 → 验证结论：200 成功、20010 仅写入、20027/未知码无效（WPF ParseValidationResult 同构）。
+yituliuCheck(YituliuOperBoxService.parseValidation(.init(code:200,msg:nil,data:nil)) == .valid,"200 maps to valid")
+yituliuCheck(YituliuOperBoxService.parseValidation(.init(code:20010,msg:"w",data:nil)) == .writeOnly,"20010 maps to writeOnly")
+yituliuCheck(YituliuOperBoxService.parseValidation(.init(code:20027,msg:"bad",data:nil)) == .invalid,"20027 maps to invalid")
+yituliuCheck(YituliuOperBoxService.parseValidation(.init(code:999,msg:nil,data:nil)) == .invalid,"unknown code maps to invalid")
+yituliuCheck(YituliuOperBoxService.parseValidation(nil) == .invalid,"unparsable body maps to invalid")
+
+// 目录加载：合成 battle_data.json，各语言名字段与缺省回退。
+let resourceDir=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory:true)
+try FileManager.default.createDirectory(at:resourceDir,withIntermediateDirectories:true)
+defer{try? FileManager.default.removeItem(at:resourceDir)}
+let battleData:[String:Any]=["chars":[
+  "char_002_amiya":["name":"阿米娅","name_en":"Amiya","name_jp":"アーミヤ","name_kr":"아미야","name_tw":"阿米婭","rarity":5],
+  "char_143_ghost":["name":"幽灵鲨","name_en":"Specter","rarity":5],
+  "char_999_old":["name":"过时干员","rarity":3]]]
+try JSONSerialization.data(withJSONObject:battleData).write(to:resourceDir.appendingPathComponent("battle_data.json"))
+let zh=OperatorCatalog.load(resourceDirectory:resourceDir,localeIdentifier:"zh-Hans")
+yituliuCheck(zh.operators["char_002_amiya"]?.name=="阿米娅" && zh.operators["char_002_amiya"]?.rarity==5,"zh falls back to name")
+yituliuCheck(OperatorCatalog.load(resourceDirectory:resourceDir,localeIdentifier:"en").operators["char_002_amiya"]?.name=="Amiya","en uses name_en")
+yituliuCheck(OperatorCatalog.load(resourceDirectory:resourceDir,localeIdentifier:"ko").operators["char_002_amiya"]?.name=="아미야","ko uses name_kr")
+yituliuCheck(OperatorCatalog.load(resourceDirectory:resourceDir,localeIdentifier:"zh-Hant").operators["char_002_amiya"]?.name=="阿米婭","zh-Hant uses name_tw")
+yituliuCheck(OperatorCatalog.load(resourceDirectory:resourceDir,localeIdentifier:"ja").operators["char_143_ghost"]?.name=="幽灵鲨","missing locale field falls back to name")
+yituliuCheck(OperatorCatalog.load(resourceDirectory:FileManager.default.temporaryDirectory,localeIdentifier:"en").operators.isEmpty,"missing battle_data yields empty catalog")
+yituliuCheck(OperatorCatalog.load(resourceDirectory:nil,localeIdentifier:"en").operators.isEmpty,"nil directory yields empty catalog")
+
+// 转换：本地表补名/星级，未知名跳过，越界行跳过，去重保留首个，skills/equips 丢弃。
+let rows:[YituliuOperBoxService.OperatorInfo]=[
+  .init(id:"char_002_amiya",level:60,evolvePhase:2,mainSkillLevel:7,potentialRank:6,skills:[.init(id:"skchr_amiya_2",level:3)],equips:[.init(id:"equip_002_amiya",type:"X")]),
+  .init(id:"char_999_unknown",level:1,evolvePhase:0,mainSkillLevel:1,potentialRank:1,skills:nil,equips:nil),
+  .init(id:"char_143_ghost",level:50,evolvePhase:1,mainSkillLevel:6,potentialRank:2,skills:nil,equips:nil),
+  .init(id:"char_002_amiya",level:1,evolvePhase:0,mainSkillLevel:1,potentialRank:1,skills:nil,equips:nil),
+  .init(id:"char_999_bad",level:-1,evolvePhase:0,mainSkillLevel:1,potentialRank:1,skills:nil,equips:nil),
+  .init(id:"char_999_bad2",level:1,evolvePhase:3,mainSkillLevel:1,potentialRank:1,skills:nil,equips:nil),
+  .init(id:"char_999_bad3",level:1,evolvePhase:0,mainSkillLevel:1,potentialRank:0,skills:nil,equips:nil),
+]
+let payload=YituliuOperBoxService.convert(rows,catalog:zh)
+yituliuCheck(payload.done && payload.ownedOperators.count==2,"done with only usable rows")
+yituliuCheck(payload.ownedOperators[0]==OperBoxHistoryPayload.OwnedOperator(id:"char_002_amiya",own:true,name:"阿米娅",rarity:5,elite:2,level:60,potential:6),"evolvePhase/potentialRank map onto elite/potential")
+yituliuCheck(payload.ownedOperators[1].name=="幽灵鲨" && payload.ownedOperators[1].elite==1 && payload.ownedOperators[1].potential==2,"unknown/out-of-range rows skipped")
+yituliuCheck(payload.isValid,"converted payload passes snapshot validity")
+let encodedOper=try! JSONSerialization.jsonObject(with:JSONEncoder().encode(payload.ownedOperators[0])) as! [String:Any]
+yituliuCheck(Set(encodedOper.keys)==Set(["id","own","name","rarity","elite","level","potential"]),"yituliu skills/equips are dropped from the snapshot face")
+yituliuCheck(YituliuOperBoxService.convert(rows,catalog:OperatorCatalog(operators:[:])).ownedOperators.isEmpty,"empty catalog converts to empty payload (noData path)")
+yituliuCheck(YituliuOperBoxService.convert([],catalog:zh).ownedOperators.isEmpty,"empty yituliu data converts to empty payload (noData path)")
+
+// 落盘等价：转换结果可直接经既有快照存储往返。
+try store.save(payload,scope:scope,now:fixed)
+yituliuCheck(try! store.load(scope:scope)!.operators==payload,"yituliu payload round-trips through OperBoxHistoryStore")
+print("PASS: yituliu validation codes, catalog locales, conversion skips and store equivalence (\(checks) total checks)")
+
+// MARK: - I04 fetch 路径（URLProtocol 桩，离线验证真实客户端语义）
+
+final class StubYituliuProtocol: URLProtocol {
+  nonisolated(unsafe) static var handler: ((URLRequest) -> (Int, Data))?
+  override class func canInit(with request: URLRequest) -> Bool { true }
+  override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+  override func startLoading() {
+    let (status, data) = Self.handler!(request)
+    let http = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
+    client?.urlProtocol(self, didReceive: http, cacheStoragePolicy: .notAllowed)
+    client?.urlProtocol(self, didLoad: data)
+    client?.urlProtocolDidFinishLoading(self)
+  }
+  override func stopLoading() {}
+}
+
+let stubbedSession: URLSession = {
+  let config = URLSessionConfiguration.ephemeral
+  config.protocolClasses = [StubYituliuProtocol.self]
+  return URLSession(configuration: config)
+}()
+let service = YituliuOperBoxService()
+
+func fetchAwait(_ token: String) async -> (YituliuOperBoxService.TokenValidationResult, [YituliuOperBoxService.OperatorInfo]?) {
+  await service.fetchOperatorInfo(token: token, session: stubbedSession, url: URL(string: "https://stub.local/operator/info")!)
+}
+
+// 200：携带 Authorization 头并解析 data 列表。
+var capturedHeader: String?
+StubYituliuProtocol.handler = { request in
+  capturedHeader = request.value(forHTTPHeaderField: "Authorization")
+  return (200, try! JSONSerialization.data(withJSONObject: ["code":200,"msg":"","data":[["id":"char_002_amiya","level":60,"evolvePhase":2,"mainSkillLevel":7,"potentialRank":3]]]))
+}
+let (validVerdict, validData) = await fetchAwait("token-abc")
+yituliuCheck(validVerdict == .valid && capturedHeader == "token-abc", "fetch sends Authorization header")
+yituliuCheck(validData?.count == 1 && validData?[0].id == "char_002_amiya", "fetch parses operator list")
+
+// 业务码照实映射；data 不外泄。
+for (code, expected) in [(20010, YituliuOperBoxService.TokenValidationResult.writeOnly), (20027, .invalid), (7, .invalid)] {
+  StubYituliuProtocol.handler = { _ in (200, try! JSONSerialization.data(withJSONObject: ["code":code,"msg":"x"])) }
+  let (verdict, data) = await fetchAwait("t")
+  yituliuCheck(verdict == expected && data == nil, "code \(code) maps without leaking data")
+}
+
+// HTTP 500 与连接失败 → networkError；200 坏 JSON → 业务码缺失按 invalid。
+StubYituliuProtocol.handler = { _ in (500, Data()) }
+let (http500Verdict, _) = await fetchAwait("t")
+yituliuCheck(http500Verdict == .networkError, "HTTP 500 maps to networkError")
+let (badVerdict, _) = await service.fetchOperatorInfo(token: "t", session: stubbedSession, url: URL(string: "https://unreachable.invalid/api")!)
+yituliuCheck(badVerdict == .networkError, "connection failure maps to networkError")
+StubYituliuProtocol.handler = { _ in (200, Data("not-json".utf8)) }
+let (malformedVerdict, _) = await fetchAwait("t")
+yituliuCheck(malformedVerdict == .invalid, "malformed body maps to invalid")
+print("PASS: yituliu fetch path offline semantics (\(checks) total checks)")

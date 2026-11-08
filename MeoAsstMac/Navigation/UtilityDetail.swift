@@ -92,6 +92,7 @@ private struct UtilityTitle: ToolbarContent {
 private struct UserDataHistorySummary: View {
     let showsOperators: Bool
     @EnvironmentObject private var viewModel: MAAViewModel
+    @Environment(\.locale) private var locale
     @State private var history: DepotHistoryStore.Snapshot?
     @State private var operatorHistory: OperBoxHistoryStore.Snapshot?
     @State private var loadFailed = false
@@ -144,6 +145,25 @@ private struct UserDataHistorySummary: View {
                 }
                 Text("干员识别结果不包含技能、专精与模组信息，历史快照不会补造这些字段。")
                     .font(.caption).foregroundStyle(.secondary)
+            }
+            if showsOperators {
+                // I04 只读练度导入：不发 Core 任务；与识别按钮互不影响（WPF 用设置项切换
+                // 同一入口，Mac 保留识别路径不变、独立导入按钮，差异入档）。
+                SecureField("一图流 OpenAPI Token", text: $viewModel.yituliuOpenApiToken)
+                HStack {
+                    Button("从一图流导入干员练度") {
+                        Task { await viewModel.importOperBoxFromYituliu(localeIdentifier: locale.identifier) }
+                    }
+                    .disabled(viewModel.yituliuImportInFlight)
+                    if viewModel.yituliuImportInFlight {
+                        ProgressView().controlSize(.small)
+                    }
+                }
+                Text("Token 只保存在本机偏好设置且不进入日志；导入数据按当前账号/区服隔离，未绑定或为空时保留本地快照。")
+                    .font(.caption).foregroundStyle(.secondary)
+                if let message = viewModel.yituliuImportMessage {
+                    Text(message).font(.caption).foregroundStyle(.secondary)
+                }
             }
             if loadFailed { Text("历史资料读取失败；请重新识别。").foregroundStyle(.red) }
         }

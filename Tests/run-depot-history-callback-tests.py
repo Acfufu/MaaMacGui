@@ -52,6 +52,10 @@ final class MAAViewModel {
  var inventoryDepotTaskID:Int32?=42
  var inventoryDepotScope:InventoryScope?
  var pendingInventoryDepot:MAADepot?
+ var yituliuOpenApiToken=""
+ var yituliuImportInFlight=false
+ var yituliuImportMessage:String?
+ var recruitResourceDirectory:URL?
  var errors=[String]()
  var logStore:TestRecognitionStore?=TestRecognitionStore()
  func receiveDailyDepot(_ value:MAADepot?,coreID:Int32?) -> Bool {false}
@@ -150,5 +154,5 @@ with tempfile.TemporaryDirectory(prefix='maa-depot-history-callback-') as d:
     if depth==0:return model[start:end+1]
   raise RuntimeError(marker)
  (p/'Integration.swift').write_text('import Foundation\n'+extension_at('// MARK: - Depot history integration')+'\n'+extension_at('// MARK: - Operator history integration'))
- subprocess.run(['xcrun','swiftc',str(root/'MeoAsstMac/Model/InventoryTarget.swift'),str(root/'MeoAsstMac/Model/DepotHistoryStore.swift'),str(root/'MeoAsstMac/Model/OperBoxHistoryStore.swift'),str(p/'Integration.swift'),str(p/'main.swift'),'-o',str(p/'tests')],check=True)
+ subprocess.run(['xcrun','swiftc',str(root/'MeoAsstMac/Model/InventoryTarget.swift'),str(root/'MeoAsstMac/Model/DepotHistoryStore.swift'),str(root/'MeoAsstMac/Model/OperBoxHistoryStore.swift'),str(root/'MeoAsstMac/Model/YituliuOperBoxService.swift'),str(p/'Integration.swift'),str(p/'main.swift'),'-o',str(p/'tests')],check=True)
  subprocess.run([str(p/'tests')],check=True)

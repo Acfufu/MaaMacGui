@@ -179,6 +179,12 @@ import SwiftUI
         didSet { if userDataAccount != oldValue { invalidateInventory() } }
     }
 
+    /// 一图流 OpenAPI token（I04 只读练度导入）。明文存 UserDefaults：WPF 为 DPAPI 加密，
+    /// Keychain 迁移待正式签名环境（P28/P29 批次）；token 不进日志与支持包。
+    @AppStorage("MAAYituliuOpenApiToken") var yituliuOpenApiToken = ""
+    @Published private(set) var yituliuImportInFlight = false
+    @Published private(set) var yituliuImportMessage: String?
+
     var inventoryScope: InventoryScope {
         InventoryScope(connection: "\(connectionAddress)|\(touchMode.rawValue)|\(toolsMode.rawValue)|\(useGzip)|\(useAdbLite)",
                        server: clientChannel.rawValue, profile: dailyTaskProfile, account: userDataAccount)
@@ -2200,6 +2206,44 @@ extension MAAViewModel {
             try operBoxHistoryStore.save(payload, scope: scope)
             operBoxHistoryRevision = UUID()
         } catch { logError("干员历史快照保存失败。") }
+    }
+
+    /// I04 一图流只读练度导入：不发 Core 任务，不受任务运行互斥限制（WPF 同为免检路径）。
+    /// 失败保留既有快照；空数据（未绑定/未导入/全部跳过）不落盘覆盖；成功按当前
+    /// InventoryScope 落盘并广播 revision。token 不进任何日志。
+    func importOperBoxFromYituliu(localeIdentifier: String) async {
+        guard !yituliuImportInFlight else { return }
+        let token = yituliuOpenApiToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !token.isEmpty else {
+            yituliuImportMessage = String(localized: "一图流 Token 为空")
+            return
+        }
+        yituliuImportInFlight = true
+        defer { yituliuImportInFlight = false }
+        let (verdict, data) = await YituliuOperBoxService().fetchOperatorInfo(token: token)
+        switch verdict {
+        case .valid:
+            let catalog = OperatorCatalog.load(
+                resourceDirectory: recruitResourceDirectory, localeIdentifier: localeIdentifier)
+            let payload = YituliuOperBoxService.convert(data ?? [], catalog: catalog)
+            guard !payload.ownedOperators.isEmpty else {
+                yituliuImportMessage = String(localized: "一图流账号未绑定或未导入练度，已保留本地数据")
+                return
+            }
+            do {
+                try operBoxHistoryStore.save(payload, scope: inventoryScope)
+                operBoxHistoryRevision = UUID()
+                yituliuImportMessage = String(localized: "已导入 \(payload.ownedOperators.count) 名干员练度")
+            } catch {
+                yituliuImportMessage = String(localized: "练度快照保存失败：\(error.localizedDescription)")
+            }
+        case .writeOnly:
+            yituliuImportMessage = String(localized: "一图流 Token 只有写入权限，无法读取练度")
+        case .invalid:
+            yituliuImportMessage = String(localized: "一图流 Token 无效或已失效")
+        case .networkError:
+            yituliuImportMessage = String(localized: "一图流网络请求失败")
+        }
     }
 }
 

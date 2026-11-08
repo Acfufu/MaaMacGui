@@ -169,6 +169,7 @@
 		F11300000000000000000002 /* UserDataUpdateConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11300000000000000000001 /* UserDataUpdateConfiguration.swift */; };
 		F11300000000000000000102 /* UserDataUpdateSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11300000000000000000101 /* UserDataUpdateSettingsView.swift */; };
 		F11300000000000000000202 /* UserDataUpdateRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11300000000000000000201 /* UserDataUpdateRun.swift */; };
+		F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11400000000000000000001 /* YituliuOperBoxService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -367,6 +368,7 @@
 		F11300000000000000000001 /* UserDataUpdateConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataUpdateConfiguration.swift; sourceTree = "<group>"; };
 		F11300000000000000000101 /* UserDataUpdateSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataUpdateSettingsView.swift; sourceTree = "<group>"; };
 		F11300000000000000000201 /* UserDataUpdateRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataUpdateRun.swift; sourceTree = "<group>"; };
+		F11400000000000000000001 /* YituliuOperBoxService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YituliuOperBoxService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -640,6 +642,7 @@
 				C70000000000000000000001 /* InventoryTarget.swift */,
 				F11000000000000000000001 /* DepotHistoryStore.swift */,
 				F11200000000000000000001 /* OperBoxHistoryStore.swift */,
+				F11400000000000000000001 /* YituliuOperBoxService.swift */,
 				F11300000000000000000201 /* UserDataUpdateRun.swift */,
 				C80000000000000000000001 /* AchievementDefinition.swift */,
 				C80000000000000000000002 /* AchievementEngine.swift */,
@@ -899,6 +902,7 @@
 				C70000000000000000000002 /* InventoryTarget.swift in Sources */,
 				F11000000000000000000002 /* DepotHistoryStore.swift in Sources */,
 				F11200000000000000000002 /* OperBoxHistoryStore.swift in Sources */,
+				F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */,
 				F11300000000000000000202 /* UserDataUpdateRun.swift in Sources */,
 				C81000000000000000000001 /* AchievementDefinition.swift in Sources */,
 				C81000000000000000000002 /* AchievementEngine.swift in Sources */,
