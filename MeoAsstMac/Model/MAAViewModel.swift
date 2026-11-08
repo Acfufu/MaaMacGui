@@ -353,15 +353,17 @@ import SwiftUI
         }
     }
 
-    /// AllTasksCompleted：完成通知（按运行去重）+ 理智恢复定时提醒（同 id 覆盖旧计划）。
+    /// AllTasksCompleted：完成通知（按运行去重）+ 理智恢复定时提醒（同 id 覆盖旧计划）+ 外部通知。
     func notifyAllTasksCompleted(body: String) {
         let runID = dailyRunCoordinator.active?.id
         let recoveryTime = logStore?.sanityReport?.fullRecoveryTime()
+        let externalBody = body.isEmpty ? String(localized: "全部任务执行完毕") : body
+        notifyExternal(title: String(localized: "任务已完成"), body: externalBody)
         Task {
             await localNotifications.send(
                 id: "all-tasks-completed-\(runID?.uuidString ?? "unknown")",
                 title: String(localized: "任务已完成"),
-                body: body.isEmpty ? String(localized: "全部任务执行完毕") : body,
+                body: externalBody,
                 deduplicateSession: true
             )
             if let recoveryTime {
@@ -377,17 +379,20 @@ import SwiftUI
 
     /// 公招识别错误（WPF ToastNotification.ShowDirect(identifyTheMistakes) 同位）。
     func notifyRecruitRecognitionError() {
+        let externalBody = String(localized: "公招任务链出错，请查看日志")
+        notifyExternal(title: String(localized: .identifyTheMistakes), body: externalBody)
         Task {
             await localNotifications.send(
                 id: "recruit-error-\(UUID().uuidString)",
                 title: String(localized: .identifyTheMistakes),
-                body: String(localized: "公招任务链出错，请查看日志")
+                body: externalBody
             )
         }
     }
 
     /// 独立作业完成反馈（WPF runOwner==Copilot 的 TaskComplete 同位）。
     func notifyCopilotCompleted(chainName: String) {
+        notifyExternal(title: String(localized: "作业已完成"), body: chainName)
         Task {
             await localNotifications.send(
                 id: "copilot-completed-\(chainName)",
@@ -421,6 +426,30 @@ import SwiftUI
     @AppStorage("MAANotifyBeforeScheduledStart") var notifyBeforeScheduledStart = false
     /// S08: 提前分钟数（WPF ScheduledStartNotificationMinutes 缺省 5）。
     @AppStorage("MAAScheduledStartNotificationMinutes") var scheduledStartNotificationMinutes = 5
+
+    // MARK: - External Notifications (P24/E02+E06)
+
+    let externalNotificationSettings = ExternalNotificationSettingsStore()
+    let externalNotificationSender = ExternalNotificationSender()
+    /// WPF DeliverySettings.Enable 同位（缺省关零暗改）。
+    @AppStorage("MAAExternalNotificationEnabled") var externalNotificationEnabled = false
+
+    /// P24: 按启用配置逐渠道投递；触发过滤（完成/错误/停滞/日志匹配）归 P25，
+    /// 当前以本机通知同款三触发点直发（WPF Notify→SendExternal 简化面）。
+    func notifyExternal(title: String, body: String) {
+        guard externalNotificationEnabled, !externalNotificationSettings.configs.isEmpty else { return }
+        let configs = externalNotificationSettings.configs.filter(\.enabled)
+        guard !configs.isEmpty else { return }
+        Task { [sender = externalNotificationSender] in
+            for config in configs {
+                let result = await sender.send(config: config, title: title, content: body)
+                if !result.success {
+                    // 错误反馈不携带凭据（发送面已截断 key-in-path）。
+                    self.logError(verbatim: "外部通知(\(config.displayName))发送失败：\(result.detail)")
+                }
+            }
+        }
+    }
 
     // MARK: - Initializer
 

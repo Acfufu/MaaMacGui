@@ -184,6 +184,8 @@
 		F12600000000000000000002 /* MainWindowVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12600000000000000000001 /* MainWindowVisibility.swift */; };
 		F12700000000000000000002 /* LocalNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12700000000000000000001 /* LocalNotificationService.swift */; };
 		F12800000000000000000002 /* PostActionRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12800000000000000000001 /* PostActionRunner.swift */; };
+		F12900000000000000000002 /* ExternalNotificationProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12900000000000000000001 /* ExternalNotificationProviders.swift */; };
+		F13000000000000000000002 /* ExternalNotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13000000000000000000001 /* ExternalNotificationSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -397,6 +399,8 @@
 		F12600000000000000000001 /* MainWindowVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowVisibility.swift; sourceTree = "<group>"; };
 		F12700000000000000000001 /* LocalNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNotificationService.swift; sourceTree = "<group>"; };
 		F12800000000000000000001 /* PostActionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostActionRunner.swift; sourceTree = "<group>"; };
+		F12900000000000000000001 /* ExternalNotificationProviders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalNotificationProviders.swift; sourceTree = "<group>"; };
+		F13000000000000000000001 /* ExternalNotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalNotificationSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -679,6 +683,7 @@
 				F11200000000000000000001 /* OperBoxHistoryStore.swift */,
 				F12100000000000000000001 /* OperBoxHistoryPayload.swift */,
 				F12200000000000000000001 /* CopilotFileOperations.swift */,
+				F12900000000000000000001 /* ExternalNotificationProviders.swift */,
 				F12500000000000000000001 /* StartupAutoRun.swift */,
 				F11400000000000000000001 /* YituliuOperBoxService.swift */,
 				F11500000000000000000001 /* DataExport.swift */,
@@ -729,6 +734,8 @@
 				838FF82129FBB9E3000566A0 /* GameSettingsView.swift */,
 				83DD50B629BE385A000E84E7 /* UpdaterSettingsView.swift */,
 				92EB82862A0CD315006DD9D2 /* SystemSettingsView.swift */,
+				F13000000000000000000001 /* ExternalNotificationSettingsView.swift */,
+				F13000000000000000000001 /* ExternalNotificationSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -860,6 +867,8 @@
 				4EED5734D98847338FFE7732 /* HookSettingsView.swift in Sources */,
 				175E0E7F43434EA4845EFF97 /* HookRunner.swift in Sources */,
 				F12800000000000000000002 /* PostActionRunner.swift in Sources */,
+				F12900000000000000000002 /* ExternalNotificationProviders.swift in Sources */,
+				F13000000000000000000002 /* ExternalNotificationSettingsView.swift in Sources */,
 				7B1B36888B12496B9DA5C1DB /* HookConfiguration.swift in Sources */,
 				BCAD46240D494C047C5532E9 /* BackgroundScheduleSettingsView.swift in Sources */,
 				E2634018F76DBCBF1FAA3074 /* BackgroundScheduleService.swift in Sources */,

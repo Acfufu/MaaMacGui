@@ -6,6 +6,7 @@ struct SystemSettingsView: View {
 
     @State private var showHooks = false
     @State private var showHotkeys = false
+    @State private var showExternalNotifications = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -14,6 +15,7 @@ struct SystemSettingsView: View {
             Divider()
             Button("日常任务前后脚本…") { showHooks = true }
             Button("全局热键…") { showHotkeys = true }
+            Button("外部通知…") { showExternalNotifications = true }
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 10) {
@@ -96,6 +98,12 @@ struct SystemSettingsView: View {
         }
         .sheet(isPresented: $showHotkeys) {
             HotkeySettingsView(service: viewModel.globalHotkeys)
+        }
+        .sheet(isPresented: $showExternalNotifications) {
+            VStack {
+                ExternalNotificationSettingsView(store: viewModel.externalNotificationSettings)
+                Button("完成") { showExternalNotifications = false }.keyboardShortcut(.defaultAction).padding(.bottom)
+            }.environmentObject(viewModel)
         }
     }
 }
