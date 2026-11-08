@@ -139,7 +139,7 @@ struct CopilotContent: View {
                 context.selection = nil
             }
         }
-        .onDrop(of: [.json], isTargeted: .none, perform: addCopilots)
+        .onDrop(of: [.json, .movie], isTargeted: .none, perform: addCopilots)
     }
 
     // MARK: - Actions
@@ -151,15 +151,23 @@ struct CopilotContent: View {
     }
 
     private func addCopilots(_ providers: [NSItemProvider]) -> Bool {
-        let canLoadAll = providers.allSatisfy {
-            $0.hasItemConformingToTypeIdentifier(UTType.json.identifier)
+        // C13 触发面：拖入既接受作业 JSON 也接受视频，逐项按声明类型取 URL——
+        // json 走作业导入，movie 走 recognizeVideo（WPF 已移除视频识别面而 Mac 按
+        // CSV C13 有意恢复该面，divergence P15-[b]）。
+        let jsonTypeID = UTType.json.identifier
+        let movieTypeID = UTType.movie.identifier
+        let canLoadAll = providers.allSatisfy { provider in
+            provider.hasItemConformingToTypeIdentifier(jsonTypeID)
+                || provider.hasItemConformingToTypeIdentifier(movieTypeID)
         }
         guard !providers.isEmpty, canLoadAll else { return false }
 
         let (stream, continuation) = AsyncStream<Result<URL, Error>>.makeStream()
 
         for provider in providers {
-            provider.loadItem(forTypeIdentifier: UTType.json.identifier) { item, error in
+            let typeID = provider.hasItemConformingToTypeIdentifier(jsonTypeID)
+                ? jsonTypeID : movieTypeID
+            provider.loadItem(forTypeIdentifier: typeID) { item, error in
                 if let error {
                     continuation.yield(.failure(error))
                 } else if let url = item as? URL {
