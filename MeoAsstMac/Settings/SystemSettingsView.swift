@@ -132,7 +132,8 @@ struct SystemSettingsView_Previews: PreviewProvider {
 }
 
 /// P23/E01: 通知权限状态行。拒绝时提供系统设置跳转；授权后才允许测试投递。
-@MainActor struct NotificationStatusView: View {    @ObservedObject var service: LocalNotificationService
+@MainActor struct NotificationStatusView: View {
+    @ObservedObject var service: LocalNotificationService
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {

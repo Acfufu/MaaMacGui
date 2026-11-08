@@ -33,7 +33,9 @@ enum PostActionPlanner {
     }
 
     /// WPF RunPostActionsCoreAsync 同构：回首页 → 关游戏 → 退模拟器 →
-    /// 退 MAA（仅当不执行锁屏/睡眠/关机）→ 锁屏 → 关机 → 睡眠。
+    /// 退 MAA（仅当不执行锁屏/睡眠/关机）→ 锁屏 → 关机 → 睡眠 →
+    /// 退 MAA（有系统级动作时延后到尾部，中4/P22-1-R3——WPF :608-610
+    /// 尾部无条件 ExitSelf，系统动作完成后应用仍退出）。
     static func plannedActions(config: PostActionConfiguration, hasError: Bool, policyAllows: Bool) -> [Action] {
         guard config.anyEnabled, policyAllows else { return [] }
         if config.skipOnError, hasError { return [] }
@@ -41,13 +43,32 @@ enum PostActionPlanner {
         if config.backToAndroidHome { actions.append(.backToAndroidHome) }
         if config.exitArknights { actions.append(.exitArknights) }
         if config.exitEmulator { actions.append(.exitEmulator) }
-        if config.exitSelf, !(config.lockScreen || config.sleep || config.shutdown) {
+        let hasSystemAction = config.lockScreen || config.sleep || config.shutdown
+        if config.exitSelf, !hasSystemAction {
             actions.append(.exitSelf)
         }
         if config.lockScreen { actions.append(.lockScreen) }
         if config.shutdown { actions.append(.shutdown) }
         if config.sleep { actions.append(.sleep) }
+        if config.exitSelf, hasSystemAction {
+            actions.append(.exitSelf)
+        }
         return actions
+    }
+}
+
+/// 高2（P22-1-R3）：收尾动作触发门——WPF 仅两路放行：CheckAfterCompleted
+/// （AllTasksCompleted 自然完成回调；任务链曾失败的运行完成后同样到达该回调，
+/// skipOnError 照常门控）与 RunPostActionsAfterManualStopAsync（仅时长上限
+/// 到点调用，TaskQueueViewModel.cs:484-513）；StopManuallyAsync 通吃的手动
+/// 语义入口（手动停止/热键/远控急停，:2808-2856）不触发。纯函数以便真值表
+/// 回归（Tests/PostActionTests）。
+enum PostActionGate {
+    static func shouldRunPostActions(naturalCompletion: Bool, isDurationLimitStop: Bool,
+                                     isManualStopFinish: Bool, durationLimitPolicyAllows: Bool) -> Bool {
+        if isDurationLimitStop { return durationLimitPolicyAllows }
+        if isManualStopFinish { return false }
+        return naturalCompletion
     }
 }
 
@@ -61,11 +82,12 @@ enum RunDurationLimit {
     }
 }
 
-/// 收尾动作外部命令的非零退出。
+/// 收尾动作外部命令的非零退出/超时（低1/P22-1-R3：超时兜底可区分记因）。
 struct PostActionCommandError: LocalizedError {
     let path: String
     let code: Int32
-    var errorDescription: String? { "\(path) exit \(code)" }
+    var timedOut = false
+    var errorDescription: String? { timedOut ? "\(path) timed out" : "\(path) exit \(code)" }
 }
 
 @MainActor

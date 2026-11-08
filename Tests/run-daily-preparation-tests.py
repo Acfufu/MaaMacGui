@@ -35,7 +35,11 @@ def declaration(source,pattern):
 parts=[declaration(model,r'^    enum Status:'),declaration(model,r'^    enum TaskStartResult:')]
 for pattern in [r'^    private var dailyCompletionTask: .*$', r'^    private var dailyFinishAttemptedRunID: .*$', r'^    @Published private\(set\) var status = .*$',r'^    @Published private\(set\) var isStartStopInFlight = .*$',r'^    private var taskCompletionGeneration = .*$', r'^    @Published var activeRunHasRoguelike = .*$',
  r'^    @Published var roguelikeInCombat = .*$', r'^    @Published var roguelikeWaitingForCombat = .*$',
- r'^    private var roguelikeCombatWaitAborted = .*$']:
+ r'^    private var roguelikeCombatWaitAborted = .*$',
+ # P22.2（P22-1-R3 高2/中6）：stop() 新增收尾门控与作业归属标记引用，同步提取。
+ r'^    private var stopInitiatedByDurationLimit = .*$',
+ r'^    private var postActionsSuppressedByStop = .*$',
+ r'^    @Published private\(set\) var activeRunIsCopilot = .*$']:
  parts.append(re.search(pattern,model,re.M)[0])
 for name in ['canStartTasks','canStopTasks','beginTaskOperation','handleEarlyReturn','startCoreTasks','startDailyTasks','startTasks','stop','finishDailyRunIfStopped','reconcileDailyRunStatus','discardPreparedDailyTasks','resetStatus','waitForDailyRunCompletion','forceRecoveryEligibility','requestStopRun','requestDailyRun','miniGame','prepareForTermination']:
  pattern=rf'^    (?:private )?(?:func|var) {name}\b'
