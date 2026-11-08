@@ -8779,6 +8779,22 @@
         }
       }
     },
+    "刷新仓库与干员资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh depot and operator data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "창고 및 오퍼레이터 자료 새로고침"
+          }
+        }
+      }
+    },
     "刷新商店（指路鳞）" : {
       "localizations" : {
         "ko" : {
@@ -9024,6 +9040,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "과거 창고 스냅샷"
+          }
+        }
+      }
+    },
+    "历史干员快照" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historical operator snapshot"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 오퍼레이터 스냅샷"
+          }
+        }
+      }
+    },
+    "历史资料读取失败；请重新识别。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not read historical data. Recognize again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 자료를 읽지 못했습니다. 다시 인식하세요."
           }
         }
       }
@@ -10602,6 +10650,22 @@
         }
       }
     },
+    "干员历史快照保存失败。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not save the historical operator snapshot."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 오퍼레이터 스냅샷을 저장하지 못했습니다."
+          }
+        }
+      }
+    },
     "干员名称" : {},
     "干员寻访" : {
       "localizations" : {
@@ -10619,6 +10683,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "오퍼레이터 인식"
+          }
+        }
+      }
+    },
+    "干员识别结果不包含技能、专精与模组信息，历史快照不会补造这些字段。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operator recognition does not include skill, mastery or module data. History does not invent these fields."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 인식 결과에는 스킬, 특화 및 모듈 정보가 포함되지 않습니다. 과거 스냅샷은 이 필드를 임의로 생성하지 않습니다."
           }
         }
       }
@@ -12351,6 +12431,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "과거 창고 스냅샷 보기"
+          }
+        }
+      }
+    },
+    "查看历史干员快照" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View historical operator snapshot"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 오퍼레이터 스냅샷 보기"
           }
         }
       }

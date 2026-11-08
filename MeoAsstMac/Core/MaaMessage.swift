@@ -412,7 +412,18 @@ extension MAAViewModel {
                 pendingInventoryDepot = nil
             }
         }
-        if message.code == .TaskChainStart, info.taskchain != "Fight", info.taskchain != "Depot" {
+        if info.taskchain == "OperBox", info.taskid == operBoxHistoryTaskID {
+            if message.code == .TaskChainCompleted, let payload = pendingOperBoxHistory,
+               let scope = operBoxHistoryScope, scope == inventoryScope {
+                persistOperBoxHistory(payload, scope: scope)
+            }
+            if message.code == .TaskChainCompleted || message.code == .TaskChainError {
+                operBoxHistoryTaskID = nil
+                operBoxHistoryScope = nil
+                pendingOperBoxHistory = nil
+            }
+        }
+        if message.code == .TaskChainStart, info.taskchain != "Fight", info.taskchain != "Depot", info.taskchain != "OperBox" {
             invalidateInventory()
         }
 
@@ -1039,7 +1050,9 @@ extension MAAViewModel {
             break
 
         case "Depot":
-            // TODO: (Persistence) Persist Depot recognition results and synchronization metadata.
+            guard let ownedID = inventoryDepotTaskID, info.taskid == ownedID,
+                  inventoryDepotScope == inventoryScope else { break }
+            // Persist only after the owned chain completes, below the partial UI updates.
             let depot = MAADepot(json: info.details, context: "Depot")
             logStore?.setDepot(depot)
             if info.what == "DepotInfo", info.taskid == inventoryDepotTaskID {
@@ -1047,8 +1060,13 @@ extension MAAViewModel {
             }
 
         case "OperBox":
-            // TODO: (Persistence) Persist OperBox recognition results and synchronization metadata.
-            logStore?.setOperBox(.init(json: info.details, context: "OperBox"))
+            guard let ownedID = operBoxHistoryTaskID, info.taskid == ownedID,
+                  operBoxHistoryScope == inventoryScope else { break }
+            let operators = MAAOperBox(json: info.details, context: "OperBox")
+            logStore?.setOperBox(operators)
+            if info.what == "OperBoxInfo", info.taskid == operBoxHistoryTaskID {
+                pendingOperBoxHistory = operators?.historyPayload
+            }
 
         default:
             break

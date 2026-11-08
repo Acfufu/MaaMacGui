@@ -62,10 +62,18 @@ struct TestLogger { func debug(_ message: String) {} }
 let logger = TestLogger()
 enum TestLog { case accountSwitch(to: String) }
 
+struct TestRecognitionStore {
+    func setDepot(_ value: Int?) {}
+    func setOperBox(_ value: Int?) {}
+}
 final class Probe {
+    var logStore: TestRecognitionStore?
     var userDataAccount = "previous-account"
     var inventory = InventorySnapshotAdapter()
     let inventoryScope = InventoryScope(connection: "adb", server: "CN", profile: "Default")
+    var operBoxHistoryTaskID: Int32?
+    var operBoxHistoryScope: InventoryScope?
+    var pendingOperBoxHistory: Int?
     var inventoryDepotTaskID: Int32?
     var inventoryDepotScope: InventoryScope?
     var pendingInventoryDepot: [String: Int]?

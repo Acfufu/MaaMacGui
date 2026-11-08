@@ -21,8 +21,7 @@ struct DepotHistoryStore {
               items.values.allSatisfy({ $0 >= 0 }) else { throw StoreError.invalidSnapshot }
         let record = Snapshot(schemaVersion: 1, scope: scope, capturedAt: now, items: items)
         let bytes = try JSONEncoder().encode(record)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        try bytes.write(to: fileURL(scope: scope), options: .atomic)
+        try HistoryFileIO.write(bytes, scope: scope, directory: directory)
     }
 
     func load(scope: InventoryScope) throws -> Snapshot? {
@@ -37,9 +36,20 @@ struct DepotHistoryStore {
     }
 
     func fileURL(scope: InventoryScope) throws -> URL {
+        try HistoryFileIO.fileURL(scope: scope, directory: directory)
+    }
+}
+
+enum HistoryFileIO {
+    static func fileURL(scope: InventoryScope, directory: URL) throws -> URL {
         let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
         let hash = SHA256.hash(data: try encoder.encode(scope)).map { String(format: "%02x", $0) }.joined()
         return directory.appendingPathComponent(hash).appendingPathExtension("json")
+    }
+
+    static func write(_ bytes: Data, scope: InventoryScope, directory: URL) throws {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try bytes.write(to: fileURL(scope: scope, directory: directory), options: .atomic)
     }
 }
 

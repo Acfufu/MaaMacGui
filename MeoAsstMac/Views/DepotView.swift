@@ -26,7 +26,11 @@ struct DepotView: View {
                 Text("\(item.name)：\(item.have)")
             }
             .task(id: viewModel.depot?.items) {
-                guard let items = viewModel.depot?.items else { return }
+                guard let items = viewModel.depot?.items else {
+                    self.items = []
+                    nameTaskToken = nil
+                    return
+                }
                 let token = UUID()
                 nameTaskToken = token
                 let names = await MAAProvider.shared.itemNames(for: items.keys)

@@ -165,6 +165,7 @@
 		83C75A112DD9000100000011 /* CustomConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C75A102DD9000100000010 /* CustomConfiguration.swift */; };
 		83C75A212DD9000100000021 /* CustomSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C75A202DD9000100000020 /* CustomSettingsView.swift */; };
 		F11000000000000000000002 /* DepotHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11000000000000000000001 /* DepotHistoryStore.swift */; };
+		F11200000000000000000002 /* OperBoxHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11200000000000000000001 /* OperBoxHistoryStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -359,6 +360,7 @@
 		83C75A102DD9000100000010 /* CustomConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomConfiguration.swift; sourceTree = "<group>"; };
 		83C75A202DD9000100000020 /* CustomSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSettingsView.swift; sourceTree = "<group>"; };
 		F11000000000000000000001 /* DepotHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepotHistoryStore.swift; sourceTree = "<group>"; };
+		F11200000000000000000001 /* OperBoxHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperBoxHistoryStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -629,6 +631,7 @@
 				832985B529EF1890009F7ED5 /* MAADepot.swift */,
 				C70000000000000000000001 /* InventoryTarget.swift */,
 				F11000000000000000000001 /* DepotHistoryStore.swift */,
+				F11200000000000000000001 /* OperBoxHistoryStore.swift */,
 				C80000000000000000000001 /* AchievementDefinition.swift */,
 				C80000000000000000000002 /* AchievementEngine.swift */,
 				C80000000000000000000003 /* AchievementEventAdapter.swift */,
@@ -886,6 +889,7 @@
 				832985B629EF1890009F7ED5 /* MAADepot.swift in Sources */,
 				C70000000000000000000002 /* InventoryTarget.swift in Sources */,
 				F11000000000000000000002 /* DepotHistoryStore.swift in Sources */,
+				F11200000000000000000002 /* OperBoxHistoryStore.swift in Sources */,
 				C81000000000000000000001 /* AchievementDefinition.swift in Sources */,
 				C81000000000000000000002 /* AchievementEngine.swift in Sources */,
 				C81000000000000000000003 /* AchievementEventAdapter.swift in Sources */,

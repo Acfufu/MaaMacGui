@@ -43,7 +43,7 @@ struct UtilityDetail: View {
 
     var body: some View {
         VStack {
-            if entry == .depot { DepotHistorySummary() }
+            if entry == .depot || entry == .oper { UserDataHistorySummary(showsOperators: entry == .oper) }
             content
         }
         .padding()
@@ -89,9 +89,11 @@ private struct UtilityTitle: ToolbarContent {
 }
 
 
-private struct DepotHistorySummary: View {
+private struct UserDataHistorySummary: View {
+    let showsOperators: Bool
     @EnvironmentObject private var viewModel: MAAViewModel
     @State private var history: DepotHistoryStore.Snapshot?
+    @State private var operatorHistory: OperBoxHistoryStore.Snapshot?
     @State private var loadFailed = false
 
     var body: some View {
@@ -101,7 +103,13 @@ private struct DepotHistorySummary: View {
             Text("请按游戏账号分别命名；此标识不验证登录身份。游戏切换账号后将清空绑定。历史快照仅供查看，重启后仍须重新识别库存。")
                 .font(.caption).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            if let history {
+            Button("刷新仓库与干员资料") {
+                Task {
+                    do { try await viewModel.refreshUserData() }
+                    catch { viewModel.logError(verbatim: error.localizedDescription) }
+                }
+            }.disabled(!viewModel.canStartTasks)
+            if !showsOperators, let history {
                 HStack {
                     Text("历史仓库快照")
                     Text(history.capturedAt, style: .date)
@@ -118,15 +126,41 @@ private struct DepotHistorySummary: View {
                     }.frame(maxHeight: 160)
                 }
             }
-            if loadFailed { Text("仓库历史快照读取失败；请重新识别。").foregroundStyle(.red) }
+            if showsOperators, let operatorHistory {
+                HStack {
+                    Text("历史干员快照")
+                    Text(operatorHistory.capturedAt, style: .date)
+                    Text(operatorHistory.capturedAt, style: .time)
+                    Text(verbatim: operatorHistory.scope.server)
+                }.font(.caption).foregroundStyle(.secondary)
+                DisclosureGroup("查看历史干员快照") {
+                    ScrollView {
+                        LazyVStack(alignment: .leading) {
+                            ForEach(operatorHistory.operators.ownedOperators.sorted { $0.id < $1.id }) { oper in
+                                Text(verbatim: "\(oper.name) · E\(oper.elite) Lv\(oper.level) · P\(oper.potential)")
+                            }
+                        }
+                    }.frame(maxHeight: 160)
+                }
+                Text("干员识别结果不包含技能、专精与模组信息，历史快照不会补造这些字段。")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if loadFailed { Text("历史资料读取失败；请重新识别。").foregroundStyle(.red) }
         }
         .task(id: viewModel.inventoryScope) { reload() }
+        .onChange(of: showsOperators) { _, _ in reload() }
         .onChange(of: viewModel.inventory.snapshot?.generation) { _, _ in reload() }
+        .onChange(of: viewModel.operBoxHistoryRevision) { _, _ in reload() }
     }
 
     private func reload() {
-        history = nil; loadFailed = false
-        do { history = try viewModel.depotHistoryStore.load(scope: viewModel.inventoryScope) }
-        catch { loadFailed = true }
+        history = nil; operatorHistory = nil; loadFailed = false
+        do {
+            if showsOperators {
+                operatorHistory = try viewModel.operBoxHistoryStore.load(scope: viewModel.inventoryScope)
+            } else {
+                history = try viewModel.depotHistoryStore.load(scope: viewModel.inventoryScope)
+            }
+        } catch { loadFailed = true }
     }
 }

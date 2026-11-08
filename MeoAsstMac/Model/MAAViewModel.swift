@@ -169,6 +169,10 @@ import SwiftUI
     var inventoryDepotTaskID: Int32?
     var pendingInventoryDepot: MAADepot?
     var inventoryDepotScope: InventoryScope?
+    var operBoxHistoryTaskID: Int32?
+    var operBoxHistoryScope: InventoryScope?
+    var pendingOperBoxHistory: OperBoxHistoryPayload?
+    @Published var operBoxHistoryRevision = UUID()
 
     /// A local label explicitly bound by the user, never inferred from a task profile.
     @AppStorage("MAAUserDataAccount") var userDataAccount = "" {
@@ -187,6 +191,11 @@ import SwiftUI
         inventoryDepotTaskID = nil
         inventoryDepotScope = nil
         pendingInventoryDepot = nil
+        operBoxHistoryTaskID = nil
+        operBoxHistoryScope = nil
+        pendingOperBoxHistory = nil
+        logStore?.setDepot(nil)
+        logStore?.setOperBox(nil)
     }
 
     enum TaskStatus: Equatable {
@@ -475,6 +484,9 @@ extension MAAViewModel {
         }
         try await beginTaskOperation(requiresIdle: false, logsConflict: logsConflict)
         defer { isStartStopInFlight = false }
+        // Revoke recognition ownership before awaiting native stop: late complete
+        // callbacks cannot publish or persist a refresh the user cancelled.
+        invalidateInventory()
         let achievementWasRunning = await handle?.running == true
         let achievementRunID = dailyRunCoordinator.active?.id
 
@@ -1885,17 +1897,61 @@ extension MAAViewModel {
     }
 
     func recognizeDepot() async throws {
+        try await recognizeUserData(includeDepot: true, includeOperators: false)
+    }
+
+    /// One reservation and one Core start for both read-only recognition chains.
+    func refreshUserData() async throws {
+        try await recognizeUserData(includeDepot: true, includeOperators: true)
+    }
+
+    private func recognizeUserData(includeDepot: Bool, includeOperators: Bool) async throws {
         try await beginTaskOperation()
         defer { isStartStopInFlight = false }
-
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
+        let scope = inventoryScope
         try await ensureHandle()
-        inventoryDepotScope = inventoryScope
-        inventoryDepotTaskID = try await handle?.appendTask(type: .Depot, params: "")
-        if let id = inventoryDepotTaskID { achievementEvents.register(taskID: id, type: MAATaskType.Depot.rawValue) }
-        try await startCoreTasks()
+        try Task.checkCancellation()
+        guard inventoryScope == scope else { throw InventoryTargetError.stalePreparation }
+        invalidateInventory()
+        var appended = false
+        do {
+            if includeDepot {
+                guard let id = try await handle?.appendTask(type: .Depot, params: "") else {
+                    throw MaaCoreError.appendTaskFailed
+                }
+                appended = true
+                inventoryDepotScope = scope
+                inventoryDepotTaskID = id
+                achievementEvents.register(taskID: id, type: MAATaskType.Depot.rawValue)
+            }
+            if includeOperators {
+                guard let id = try await handle?.appendTask(type: .OperBox, params: "") else {
+                    throw MaaCoreError.appendTaskFailed
+                }
+                appended = true
+                operBoxHistoryScope = scope
+                operBoxHistoryTaskID = id
+                achievementEvents.register(taskID: id, type: MAATaskType.OperBox.rawValue)
+            }
+            try Task.checkCancellation()
+            guard inventoryScope == scope else { throw InventoryTargetError.stalePreparation }
+            try await startCoreTasks()
+        } catch {
+            invalidateInventory()
+            if appended {
+                do { try await handle?.stop() }
+                catch {
+                    messageTask?.cancel()
+                    messageTask = nil
+                    handle = nil
+                    throw PreparationCleanupFailure()
+                }
+            }
+            throw error
+        }
     }
 
     func recognizeVideo(video url: URL) async throws {
@@ -1916,15 +1972,7 @@ extension MAAViewModel {
     }
 
     func recognizeOperBox() async throws {
-        try await beginTaskOperation()
-        defer { isStartStopInFlight = false }
-
-        status = .pending
-        defer { handleEarlyReturn(backTo: .idle) }
-
-        try await ensureHandle()
-        try await appendTrackedTask(type: .OperBox, params: "")
-        try await startCoreTasks()
+        try await recognizeUserData(includeDepot: false, includeOperators: true)
     }
 
     func gachaPoll(once: Bool) async throws {
@@ -2108,5 +2156,22 @@ extension MAAViewModel {
         guard scope == inventoryScope, !scope.account.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         do { try depotHistoryStore.save(items: items, complete: true, scope: scope) }
         catch { logError("仓库历史快照保存失败。") }
+    }
+}
+
+
+// MARK: - Operator history integration
+
+extension MAAViewModel {
+    var operBoxHistoryStore: OperBoxHistoryStore {
+        .init(directory: Self.userDirectory.appendingPathComponent("UserData/OperBoxHistory", isDirectory: true))
+    }
+
+    func persistOperBoxHistory(_ payload: OperBoxHistoryPayload, scope: InventoryScope) {
+        guard scope == inventoryScope, !scope.account.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        do {
+            try operBoxHistoryStore.save(payload, scope: scope)
+            operBoxHistoryRevision = UUID()
+        } catch { logError("干员历史快照保存失败。") }
     }
 }
