@@ -42,7 +42,9 @@ struct ContentView: View {
         )
         .task {
             // S18: Dock 点击/显隐热键在主窗口被 SwiftUI 释放后可经此重建。
-            MainWindowTracker.shared.reopenHandler = { openWindow(id: "main") }
+            // 高1（P20-1-R3）：openWindow 只能寻址显式声明该 id 的 scene——
+            // id 单源 MainWindowScene.id，与主 WindowGroup 同源。
+            MainWindowTracker.shared.reopenHandler = { openWindow(id: MainWindowScene.id) }
             do {
                 try await viewModel.initialize()
                 // Core initialization/errors own the first window. Announcements load afterward without blocking it.

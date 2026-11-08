@@ -55,7 +55,7 @@ final class GlobalHotkeyService: ObservableObject {
     func save(_ candidate: HotkeyConfiguration) -> Bool {
         guard !isRecording else { return false }
         guard candidate.isValid else {
-            errorMessage = String(localized: "热键须包含 Command 或 Control，开始和停止不能使用同一组合")
+            errorMessage = String(localized: "热键须包含 Command 或 Control，且不能与保留组合冲突")
             return false
         }
         // Reject before unregistering so a reserved chord keeps current bindings.

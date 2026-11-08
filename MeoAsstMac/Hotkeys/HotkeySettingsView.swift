@@ -40,7 +40,7 @@ struct HotkeySettingsView: View {
                     }
                     let chord = HotkeyChord(event: event)
                     guard chord.isValid else {
-                        recordingError = String(localized: "热键须包含 Command 或 Control，开始和停止不能使用同一组合")
+                        recordingError = String(localized: "热键须包含 Command 或 Control，且不能与保留组合冲突")
                         return
                     }
                     guard !chord.isSystemReserved else {

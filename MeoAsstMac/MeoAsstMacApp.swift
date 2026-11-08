@@ -43,7 +43,7 @@ struct MeoAsstMacApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: MainWindowScene.id) {
             ContentView()
                 .overlay(alignment: .topTrailing) { AchievementUnlockHint() }
                 .environmentObject(appViewModel)
@@ -142,7 +142,13 @@ final class MaaUpdaterDelegate: NSObject, SPUUpdaterDelegate {
     // --skip-startup-auto-run 的更新重启链语义（受 SkipStartupAutoRunAfterUpdate 门控）。
     func updaterWillRelaunchApplication(_ updater: SPUUpdater) {
         guard StartupAutoRunPolicy.skipAfterUpdateEnabled() else { return }
-        try? StartupAutoRunMarker.write()
+        do {
+            try StartupAutoRunMarker.write()
+        } catch {
+            // 低4/P20-1-R3：写入失败不再静默（更新重启后自动运行将意外执行，
+            // 有 10s 反悔窗兜底；OSLog 面，delegate 无 VM 引用）。
+            appLogger.error("启动自动运行跳过标记写入失败：\(error.localizedDescription)")
+        }
     }
 }
 

@@ -96,7 +96,12 @@ import AppKit
         tracker.reopenHandler = { reopened += 1 }
         tracker.window = nil
         MainWindowVisibility.reopen(tracker: tracker)
+        // 高1（P20-1-R3）：openWindow 只能寻址显式声明 id 的 scene——生产
+        // reopenHandler 的窗口真实重建经 bundle 探针验证（P1=1→关窗 0→toggle
+        // 重建 1，无显式 id 对照 0→0；证据 p20-2-fix/probe-*），本断言只钉
+        // 兜底链被走到。
         check(reopened == 1, "reopen falls back to SwiftUI openWindow when window released")
+        check(MainWindowScene.id == "main", "main scene id is the single openWindow source")
         MainWindowVisibility.toggle(tracker: tracker)
         check(reopened == 2, "toggle falls back to reopen handler without window")
         tracker.window = window

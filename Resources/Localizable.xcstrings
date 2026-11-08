@@ -18444,24 +18444,24 @@
         }
       }
     },
-    "热键须包含 Command 或 Control，开始和停止不能使用同一组合" : {
+    "热键须包含 Command 或 Control，且不能与保留组合冲突" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "热键须包含 Command 或 Control，开始和停止不能使用同一组合"
+            "value" : "热键须包含 Command 或 Control，且不能与保留组合冲突"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Include Command or Control. Start and Stop must use different shortcuts."
+            "value" : "Include Command or Control, and avoid conflicts with reserved shortcuts."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Command 또는 Control을 포함하고 시작과 중지에 다른 단축키를 사용하세요."
+            "value" : "Command 또는 Control을 포함하고 예약된 단축키와 충돌하지 않아야 합니다."
           }
         }
       }

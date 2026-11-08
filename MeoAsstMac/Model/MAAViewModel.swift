@@ -735,6 +735,13 @@ import SwiftUI
 
 extension MAAViewModel {
     func initialize() async throws {
+        // 中1（P20-1-R3）：S18 关窗驻留后窗口重建令 ContentView `.task` 重入——
+        // 初始化每进程一次（isCoreInitialized 此前只写不读）。无闸门的重入会把
+        // 运行中会话 status 翻 .pending→.idle，经 $status sink 触发 disableAwake()
+        // 释放运行中任务的电源断言（系统可中途睡眠——恰是 S03/S04 要防的面），
+        // 且 loadResource 会在忙 Core 上重复装载。闸门在成功处置位：初始化失败
+        // 后仍允许下次窗口重建重试。
+        guard !isCoreInitialized else { return }
         status = .pending
         try await MAAProvider.shared.setUserDirectory(path: Self.userDirectory.path)
         try await loadResource(channel: clientChannel)
