@@ -3208,7 +3208,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Peep.FpsReduced %lld"
+            "value" : "截图耗时过长，目标帧率已降至 %lld。"
           }
         }
       }
@@ -3230,7 +3230,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Peep.FpsStatus %lld %lld"
+            "value" : "目标 %lld FPS · 实测 %lld FPS"
           }
         }
       }
@@ -3252,7 +3252,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Peep.TargetFps %lld"
+            "value" : "目标帧率：%lld"
           }
         }
       }
@@ -9302,19 +9302,19 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自动刷新（1 秒）"
+            "value" : "自动刷新（按目标帧率）"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Auto refresh (1 second)"
+            "value" : "Auto refresh (at target FPS)"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "자동 새로 고침 (1초)"
+            "value" : "자동 새로 고침 (목표 FPS 기준)"
           }
         }
       }
