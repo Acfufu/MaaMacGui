@@ -287,6 +287,28 @@ struct FightConfigurationTests {
             }
         }
 
+        // P01.1（健壮性 backlog ⑤，2026-11-09）：超限倍率下发钳制——nil/-1/0
+        // 与上限内值透传；仅越界值钳到上限且 clamped=true（下发值钳制、保存值
+        // 语义由调用方保持）。
+        do {
+            let cases: [(Int?, Int, Int?, Bool)] = [
+                (nil, 6, nil, false),
+                (-1, 6, -1, false),
+                (0, 6, 0, false),
+                (3, 6, 3, false),
+                (6, 6, 6, false),
+                (7, 6, 6, true),
+                (10, 6, 6, true),
+                (10, 10, 10, false),
+            ]
+            for (stored, bound, expected, expectClamped) in cases {
+                let got = FightConfiguration.dispatchSeries(stored, upperBound: bound)
+                if got.series != expected || got.clamped != expectClamped {
+                    failures.append("P01.1 dispatchSeries \(String(describing: stored))/\(bound): got (\(String(describing: got.series)), \(got.clamped))")
+                }
+            }
+        }
+
         for failure in failures { print("FAIL: \(failure)") }
         guard failures.isEmpty else { exit(1) }
         print("PASS: §5-19 weeklyDays decode sanitizes to 0...6 (junk dropped, valid kept, absent nil, empty set kept, round trip stable)")

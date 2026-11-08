@@ -639,6 +639,22 @@
         }
       }
     },
+    "资源倍率上限为 %lld，「%@」倍率已临时钳制下发，保存值不变" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resource series cap is %lld; \"%@\" was dispatched with a temporarily clamped series; the saved value is unchanged"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자원 배율 상한은 %lld입니다. \"%@\"의 배율을 임시 조정하여 전달했습니다. 저장값은 변경되지 않습니다"
+          }
+        }
+      }
+    },
     "版本过低" : {
       "localizations" : {
         "en" : {

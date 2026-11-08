@@ -159,6 +159,29 @@ struct FightConfiguration: MAATaskConfiguration {
         return 10
     }
 
+    /// P01.1（健壮性 backlog ⑤，2026-11-09）：旧资源下超限存量值的**下发拦截**。
+    /// 新资源（上限 10）保存的 series 7-10 在旧资源树（上限 6）越界，Core
+    /// m_series 行为未定义。仅钳制下发值——stored 不动（升级资源后原意图自动
+    /// 恢复）；-1（保留当前）/0（AUTO）与 ≤ 上限值原样透传。clamped=true 时
+    /// 调用方补可见日志。
+    ///
+    /// 上限来源：`liveSeriesUpperBound` 由能力快照刷新点（MAAViewModel
+    /// coreCapabilities derive）写入——经静态注入而非 VM 属性直引，使
+    /// medicine-log/daily-prep/inventory-prep 三个提取套件的 verbatim 切片
+    /// 无需 VM 环境即可编译（URL.externalCopilotDirectoryOverride 先例）。
+    /// nil（套件/能力未就绪）= 保守 10（缺 tasks 定义按新 UI 处理，同
+    /// CoreCapabilities.conservativeDefault 论证）。
+    nonisolated(unsafe) static var liveSeriesUpperBound: Int?
+
+    static func effectiveDispatchSeriesUpperBound() -> Int {
+        liveSeriesUpperBound ?? 10
+    }
+
+    static func dispatchSeries(_ stored: Int?, upperBound: Int) -> (series: Int?, clamped: Bool) {
+        guard let stored, stored > upperBound else { return (stored, false) }
+        return (upperBound, true)
+    }
+
     var params: Params {
         var config = self
         config.stage = Self.normalizedStage(config.stage)

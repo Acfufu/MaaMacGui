@@ -161,6 +161,8 @@ struct StageCatalog {
 struct FightConfiguration: Equatable {
     var stage: String = "1-7"
     var subtitle: String { stage.isEmpty ? "当前/上次" : stage }
+    // P01.1 strip 同步：生产面倍率字段（套件内恒 nil=无钳制路径）。
+    var series: Int? = nil
     var useActivityMedicine = false
     var inventoryTarget: InventoryTarget? = nil
     var weeklyDays: [Int]? = nil
@@ -181,6 +183,14 @@ struct FightConfiguration: Equatable {
     }
     func params(at date: Date, stageActivity: StageActivityContext) -> Params { Params() }
     static func normalizedStage(_ stage: String) -> String { stage }
+    // P01.1 strip 同步：下发钳制三成员（生产面见 FightConfiguration.swift）——
+    // 套件环境走缺省 10（nil 注入=保守新 UI 口径），钳制路径在套件内不触发。
+    nonisolated(unsafe) static var liveSeriesUpperBound: Int?
+    static func effectiveDispatchSeriesUpperBound() -> Int { liveSeriesUpperBound ?? 10 }
+    static func dispatchSeries(_ stored: Int?, upperBound: Int) -> (series: Int?, clamped: Bool) {
+        guard let stored, stored > upperBound else { return (stored, false) }
+        return (upperBound, true)
+    }
     @MainActor static func initDropItems(_ language: String) throws {}
     @MainActor static var inventoryDropItems: [(id: String, item: DropItemStub)] { [] }
     func preparingInventoryTarget(_ plan: InventoryTargetPlan) -> FightConfiguration { self }

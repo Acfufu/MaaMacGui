@@ -1952,6 +1952,18 @@ extension MAAViewModel {
                         }
                         var dispatchConfig = config
                         dispatchConfig.stage = resetFrom != nil ? "" : resolvedStage
+                        // P01.1（健壮性 backlog ⑤，2026-11-09）：旧资源（上限 6）
+                        // 下超限存量值下发拦截——新资源保存的 7-10 在旧资源树越界。
+                        // 仅钳制下发（保存值不动，资源更新后自动恢复原意图）；
+                        // 上限经 FightConfiguration.liveSeriesUpperBound 静态注入
+                        // （提取套件 verbatim 切片无 VM 环境，见该注记）。
+                        let dispatchSeriesBound = FightConfiguration.effectiveDispatchSeriesUpperBound()
+                        let (cappedSeries, seriesClamped) = FightConfiguration.dispatchSeries(
+                            dispatchConfig.series, upperBound: dispatchSeriesBound)
+                        if seriesClamped {
+                            dispatchConfig.series = cappedSeries
+                            logWarn("资源倍率上限为 \(dispatchSeriesBound)，「\(config.subtitle)」倍率已临时钳制下发，保存值不变")
+                        }
                         let params = dispatchConfig.params(at: now, stageActivity: context)
                         coreID = try await handle?.appendTask(type: .Fight, params: params.jsonString())
                         if let coreID {
@@ -2367,6 +2379,9 @@ extension MAAViewModel {
             channel: clientChannel,
             tasksResourceRoot: tasksRoot
         )
+        // P01.1：能力快照刷新同步写入下发钳制上限（静态注入——提取套件切片
+        // 无 VM 环境，见 FightConfiguration.liveSeriesUpperBound 注记）。
+        FightConfiguration.liveSeriesUpperBound = coreCapabilities.seriesUpperBound
         secretFrontUnavailableReason = SecretFrontConfiguration.unavailableReason(
             isGlobalChannel: clientChannel.isGlobal,
             resourceRoot: { baseRoot }
