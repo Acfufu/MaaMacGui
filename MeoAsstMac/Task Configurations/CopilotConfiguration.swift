@@ -310,6 +310,27 @@ enum CopilotCategory: String, CaseIterable {
     case list
 }
 
+/// C03-C07/C06/C11 开始作业分派条件面（P14.2：P14-1-R3 中1/中2 修复——条件矩阵
+/// 以纯函数钉死，生产 startCopilot 经此下发）。
+enum CopilotDispatchPolicy {
+    /// C11 资料辅助对单个任务是否生效（P14-[d]）：WPF EffectiveOperBoxAssist
+    /// = EnableOperBoxAssist && Form（CopilotViewModel.cs:570-573）——编队关闭时
+    /// 不写盘下发、不预检、不阻断（开关 @Defaults 存续但 WPF 同状态 operbox_data_path
+    /// =""；Core CopilotTask.cpp:81-91 use_operbox 独立于 formation 生效，必须门控在参数面）。
+    /// 任务类型域（仅普通作业消费，SSS/悖论不携带）由调用面按输出类型过滤。
+    static func assistEffective(enableOperBoxAssist: Bool, formation: Bool) -> Bool {
+        enableOperBoxAssist && formation
+    }
+
+    /// C06 吃理智药参数面（P14-[e]）：列表模式按用户值逐项下发（WPF :2291
+    /// `UseSanityPotion = UseSanityPotion`）；单文件模式 WPF 组装硬编码 false
+    /// （:2347）且复选框仅列表模式可见（CopilotView.xaml:503）——单文件强制
+    /// false 同构（Core CopilotTask.cpp:71/200 单文件真实消费该值）。
+    static func sanityPotionValue(listMode: Bool, configured: Bool) -> Bool {
+        listMode && configured
+    }
+}
+
 @Observable final class CopilotContext {
     var config: CopilotConfiguration {
         didSet {

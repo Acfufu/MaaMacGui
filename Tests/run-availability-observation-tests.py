@@ -21,6 +21,8 @@ subscriptions='\n'.join(re.findall(r'        parent\.(?:\$\w+|objectWillChange)\
 wiring=re.search(r'^        dailyRunCoordinator\.didChange = .*$',model,re.M)[0]
 # TO-4: the production startCopilot bridge verbatim; token semantics preserved.
 copilot_bridge=block(bridge,r'^    nonisolated\(nonsending\) func startCopilot\(')
+# P14.2: the production dispatch condition matrix verbatim (bridge references it).
+copilot_policy=block((root/'MeoAsstMac/Task Configurations/CopilotConfiguration.swift').read_text(),r'^enum CopilotDispatchPolicy')
 support='''import Foundation
 import Combine
 import Observation
@@ -44,6 +46,9 @@ struct CopilotConfiguration {
  var copilot_list: [Item] = []
  // C11 边界面：P14.1 起 startCopilot 桥按任务类型清写该参数。
  var operbox_data_path: String?
+ // P14.2 边界面：条件矩阵读取面（真实 CopilotDispatchPolicy verbatim 注入）。
+ var formation = true
+ var use_sanity_potion = false
  func jsonString() throws -> String { "{}" }
 }
 struct CopilotContext {
@@ -110,6 +115,7 @@ enum CopilotCompiler {
  }
 '''+copilot_bridge+'''
 }
+'''+copilot_policy+'''
 final class Flag: @unchecked Sendable {
  private let lock=NSLock();private var changed=false
  func set() { lock.lock();defer { lock.unlock() };changed=true }

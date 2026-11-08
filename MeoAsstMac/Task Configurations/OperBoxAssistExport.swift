@@ -24,8 +24,11 @@ enum OperBoxAssistExport {
             .appending(path: "OperBoxData.json")
     }
 
-    /// WPF `CheckData` 同构：有 own_opers 且至少一名干员带技能数据才算可用
-    /// （Core 预检按 usage.skill 查技能，快照全无技能时预检必然失败）。
+    /// 可用性判定（P14-1-R3 记录1 措辞如实化）：谓词面=own_opers 非空且至少一名
+    /// 干员带技能数据——与 WPF `CheckData`（OperBoxAssistHelper.cs:76-79：source
+    /// =="yituliu" **且** own_opers 非空 **且** 任一 skills 非空）的差异在 source 检查：
+    /// Mac 不查 source，等价性靠「识别回调快照永不携带 skills」的间接不变量收敛
+    /// （见 P14-[b] 台账），非逐字同构。
     static func isAssistUsable(_ payload: OperBoxHistoryPayload) -> Bool {
         guard !payload.ownedOperators.isEmpty else { return false }
         return payload.ownedOperators.contains { oper in

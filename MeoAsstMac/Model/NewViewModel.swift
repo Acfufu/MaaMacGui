@@ -166,16 +166,38 @@ extension NewViewModel {
             appendLog(.init(date: .now, content: error.logMessage, color: .error))
             return
         case .success(let outputs):
-            // C11 资料辅助：仅普通作业任务消费 operbox_data_path；开关开启而
-            // 当前作用域无可用快照时按 WPF ValidateStartAsync 同构阻断启动。
+            // C11 资料辅助：仅普通作业任务消费 operbox_data_path；生效条件面
+            // = CopilotDispatchPolicy.assistEffective（P14-[d]：WPF EffectiveOperBoxAssist
+            // 同构——开关 && 该作业 formation）。存在生效任务而当前作用域无可用
+            // 快照时按 WPF ValidateStartAsync 同构阻断启动（formation 全关时
+            // WPF 同状态不预检，不阻断）。
             var configs = outputs.map(\.config)
-            if copilot.enableOperBoxAssist, outputs.contains(where: { $0.type == .Copilot }) {
+            if zip(outputs, configs).contains(where: { output, config in
+                output.type == .Copilot
+                    && CopilotDispatchPolicy.assistEffective(
+                        enableOperBoxAssist: copilot.enableOperBoxAssist,
+                        formation: config.formation)
+            }) {
                 guard let assistPath = await prepareOperBoxAssistFile() else {
                     return
                 }
                 for index in configs.indices {
-                    configs[index].operbox_data_path = assistPath
+                    if outputs[index].type == .Copilot,
+                        CopilotDispatchPolicy.assistEffective(
+                            enableOperBoxAssist: copilot.enableOperBoxAssist,
+                            formation: configs[index].formation)
+                    {
+                        configs[index].operbox_data_path = assistPath
+                    }
                 }
+            }
+
+            // C06 吃药参数面（P14-[e]）：单文件模式 WPF 组装硬编码 false 且复选框
+            // 仅列表模式可见——同构对齐为强制 false（Core 单文件真实消费该值）。
+            let listMode = copilot.category == .list
+            for index in configs.indices {
+                configs[index].use_sanity_potion = CopilotDispatchPolicy.sanityPotionValue(
+                    listMode: listMode, configured: configs[index].use_sanity_potion)
             }
 
             // 一次性序列化全部任务后走批量入口：占用/启动各一次，避免逐项

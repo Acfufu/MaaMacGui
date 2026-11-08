@@ -27,7 +27,7 @@ struct CopilotView: View {
                 switch context.wrappedValue.content {
                 case .copilot(_, let kind, let copilot):
                     CopilotConfigView(
-                        kind: kind, config: context.config,
+                        kind: kind, config: context.config, listMode: true,
                         userAdditionalEnabled: context.enableUserAdditional,
                         operBoxAssistEnabled: context.enableOperBoxAssist
                     ) {
@@ -39,7 +39,7 @@ struct CopilotView: View {
                     ProgressView().controlSize(.small)
                 default:
                     CopilotConfigView(
-                        kind: set.kind, config: context.config,
+                        kind: set.kind, config: context.config, listMode: true,
                         userAdditionalEnabled: context.enableUserAdditional,
                         operBoxAssistEnabled: context.enableOperBoxAssist
                     ) {
@@ -53,7 +53,7 @@ struct CopilotView: View {
             switch context.wrappedValue.content {
             case .copilot(_, let kind, let copilot):
                 CopilotConfigView(
-                    kind: kind, config: context.config,
+                    kind: kind, config: context.config, listMode: false,
                     userAdditionalEnabled: context.enableUserAdditional,
                     operBoxAssistEnabled: context.enableOperBoxAssist
                 ) {
@@ -123,18 +123,22 @@ private struct CopilotConfigView<D: View>: View {
     let kind: MAACopilot.Kind
 
     @Binding var config: CopilotConfiguration
+    /// P14-[e]：吃理智药复选框仅列表模式可见（WPF CopilotView.xaml:503
+    /// `UseCopilotList and CopilotTabIndex == 0` 同构——单文件模式组装硬编码 false）。
+    let listMode: Bool
     @Binding var userAdditionalEnabled: Bool
     @Binding var operBoxAssistEnabled: Bool
 
     let description: D
 
     init(
-        kind: MAACopilot.Kind, config: Binding<CopilotConfiguration>,
+        kind: MAACopilot.Kind, config: Binding<CopilotConfiguration>, listMode: Bool,
         userAdditionalEnabled: Binding<Bool>, operBoxAssistEnabled: Binding<Bool>,
         @ViewBuilder description: () -> D
     ) {
         self.kind = kind
         self._config = config
+        self.listMode = listMode
         self._userAdditionalEnabled = userAdditionalEnabled
         self._operBoxAssistEnabled = operBoxAssistEnabled
         self.description = description()
@@ -145,7 +149,8 @@ private struct CopilotConfigView<D: View>: View {
             switch kind {
             case .regular:
                 RegularCopilotConfigView(
-                    config: $config, userAdditionalEnabled: $userAdditionalEnabled,
+                    config: $config, listMode: listMode,
+                    userAdditionalEnabled: $userAdditionalEnabled,
                     operBoxAssistEnabled: $operBoxAssistEnabled)
                 Divider()
             case .sss:
@@ -167,13 +172,16 @@ private struct CopilotConfigView<D: View>: View {
 
 private struct RegularCopilotConfigView: View {
     @Binding var config: CopilotConfiguration
+    let listMode: Bool
     @Binding var userAdditionalEnabled: Bool
     @Binding var operBoxAssistEnabled: Bool
 
     var body: some View {
         HStack {
             Toggle("自动编队", isOn: $config.formation)
-            Toggle("吃理智药", isOn: $config.use_sanity_potion)
+            if listMode {
+                Toggle("吃理智药", isOn: $config.use_sanity_potion)
+            }
         }
         if config.formation {
             HStack {

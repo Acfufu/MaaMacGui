@@ -431,6 +431,60 @@ struct CopilotPersistenceTests {
             plainOutputs.first?.config.operbox_data_path == nil,
             "operbox path stays absent when not configured")
 
+        // MARK: - J. C03-C07/C06/C11 dispatch condition matrix (P14.2：P14-1-R3 中1/中2)
+
+        // P14-[d] assist gate truth table（WPF EffectiveOperBoxAssist = EnableOperBoxAssist && Form，
+        // CopilotViewModel.cs:570-573——formation 关=不写盘下发/不预检不阻断）。
+        check(
+            CopilotDispatchPolicy.assistEffective(enableOperBoxAssist: false, formation: true) == false,
+            "assist off → ineffective even with formation on")
+        check(
+            CopilotDispatchPolicy.assistEffective(enableOperBoxAssist: true, formation: false) == false,
+            "formation off → ineffective (P14-[d] core case：@Defaults 开关存续不再生效)")
+        check(
+            CopilotDispatchPolicy.assistEffective(enableOperBoxAssist: true, formation: true) == true,
+            "assist + formation on → effective")
+        check(
+            CopilotDispatchPolicy.assistEffective(enableOperBoxAssist: false, formation: false) == false,
+            "both off → ineffective")
+
+        // P14-[e] sanity potion truth table（WPF 列表 :2291 逐项直传 / 单文件 :2347 硬编码 false，
+        // CopilotView.xaml:503 复选框仅列表模式可见——Core CopilotTask.cpp:71/200 单文件真实消费）。
+        check(
+            CopilotDispatchPolicy.sanityPotionValue(listMode: true, configured: true) == true,
+            "list mode keeps user value on")
+        check(
+            CopilotDispatchPolicy.sanityPotionValue(listMode: true, configured: false) == false,
+            "list mode keeps user value off")
+        check(
+            CopilotDispatchPolicy.sanityPotionValue(listMode: false, configured: true) == false,
+            "single-file mode forces false regardless of configured (P14-[e] core case)")
+        check(
+            CopilotDispatchPolicy.sanityPotionValue(listMode: false, configured: false) == false,
+            "single-file mode off stays off")
+
+        // 混合列表：formation 关的成员不携带路径（分派循环逐项过滤面同构）。
+        var mixedOn = CopilotConfiguration()
+        mixedOn.formation = true
+        var mixedOff = CopilotConfiguration()
+        mixedOff.formation = false
+        var mixed = [mixedOn, mixedOff]
+        let enableAssist = true
+        for index in mixed.indices where !CopilotDispatchPolicy.assistEffective(
+            enableOperBoxAssist: enableAssist, formation: mixed[index].formation)
+        {
+            mixed[index].operbox_data_path = nil
+        }
+        for index in mixed.indices where CopilotDispatchPolicy.assistEffective(
+            enableOperBoxAssist: enableAssist, formation: mixed[index].formation)
+        {
+            mixed[index].operbox_data_path = "/tmp/maa-assist/OperBoxData.json"
+        }
+        check(
+            mixed[0].operbox_data_path == "/tmp/maa-assist/OperBoxData.json"
+                && mixed[1].operbox_data_path == nil,
+            "mixed list dispatches path only to formation-on members")
+
         if failures.isEmpty {
             print("ALL \(checkIndex) CHECKS PASSED")
         } else {
