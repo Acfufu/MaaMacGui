@@ -281,13 +281,21 @@ enum CopilotCategory: String, CaseIterable {
 }
 
 @Observable final class CopilotContext {
-    var config = CopilotConfiguration()
+    var config: CopilotConfiguration {
+        didSet {
+            guard oldValue != config else {
+                return
+            }
+            CopilotPersistence.saveConfiguration(config)
+        }
+    }
 
     @ObservationIgnored
     @Defaults("CopilotContentCategory")
     var category = CopilotCategory.bundled
 
     init() {
+        config = CopilotPersistence.loadConfiguration() ?? CopilotConfiguration()
     }
 
     struct ItemID: Hashable {
@@ -330,16 +338,37 @@ enum CopilotCategory: String, CaseIterable {
     struct CopilotSet {
         let kind: MAACopilot.Kind
         let data: CopilotSetData
+        let url: URL
     }
 
     private(set) var copilotSet: CopilotSet?
 
+    /// 本会话是否已尝试过列表恢复（C09 跨启动恢复的一次性闸门；UI 侧用它在
+    /// 恢复完成前不把空的列表分类自动切走）。
+    @ObservationIgnored private(set) var restoreAttempted = false
+
     struct ListItem: Identifiable {
         let url: URL
         let stageCode: String
+        /// 持久化键：`copilotID#派生难度行`（0=常态行, 1=突袭/磨难行）。
+        /// 同文件双行（集合 difficulty 3）靠后缀区分；行内 isRaid 编辑不改键。
+        var memberID: String
         var isRaid: Bool?
-
         var isOn = false
+        /// 单行导航识别名覆盖（C10）；nil = 不覆盖。
+        var navOverride: String?
+
+        init(
+            url: URL, stageCode: String, memberID: String? = nil, isRaid: Bool? = nil,
+            isOn: Bool = false, navOverride: String? = nil
+        ) {
+            self.url = url
+            self.stageCode = stageCode
+            self.memberID = memberID ?? url.lastPathComponent
+            self.isRaid = isRaid
+            self.isOn = isOn
+            self.navOverride = navOverride
+        }
 
         var id: ItemID {
             .init(url: url, isRaid: isRaid)
@@ -351,18 +380,39 @@ enum CopilotCategory: String, CaseIterable {
             if copilotList.isEmpty {
                 copilotSet = nil
             }
+            CopilotPersistence.saveListState(
+                CopilotPersistence.capture(items: copilotList, setURL: copilotSet?.url))
         }
+    }
+
+    func canMoveRow(of id: ItemID, by delta: Int) -> Bool {
+        guard let index = copilotList.firstIndex(where: { $0.id == id }) else {
+            return false
+        }
+        return copilotList.indices.contains(index + delta)
+    }
+
+    func moveRow(of id: ItemID, by delta: Int) {
+        guard canMoveRow(of: id, by: delta),
+            let index = copilotList.firstIndex(where: { $0.id == id })
+        else {
+            return
+        }
+        copilotList.swapAt(index, index + delta)
     }
 }
 
 extension CopilotContext {
-    nonisolated(nonsending) func updateSet(at url: URL, set: CopilotSetData) async {
-        guard let (kind, list) = await set.copilotList(at: url) else {
-            return
+    /// 激活作业集；返回派生清单（含逐成员跳过原因），nil = 集合不可派生。
+    @discardableResult
+    nonisolated(nonsending) func updateSet(at url: URL, set: CopilotSetData) async -> CopilotSetData.SetListing? {
+        guard let listing = await set.copilotList(at: url) else {
+            return nil
         }
 
-        self.copilotSet = .init(kind: kind, data: set)
-        self.copilotList = list
+        self.copilotSet = .init(kind: listing.kind, data: set, url: url)
+        self.copilotList = listing.items
+        return listing
     }
 
     nonisolated(nonsending) func updateSet(at url: URL) async {
@@ -370,6 +420,35 @@ extension CopilotContext {
             return
         }
         await updateSet(at: url, set: set)
+    }
+
+    /// C09 跨启动恢复：重建上次激活的作业集并套用持久化的行状态与顺序。
+    /// 一次性（`restoreAttempted` 闸门）；用户已手工激活时不覆盖现场。
+    @discardableResult
+    nonisolated(nonsending) func restorePersistedList() async -> CopilotRestoreOutcome {
+        guard !restoreAttempted else {
+            return .none
+        }
+        restoreAttempted = true
+
+        guard copilotList.isEmpty else {
+            return .none
+        }
+        guard let state = CopilotPersistence.loadListState(), let setPath = state.setPath else {
+            return .none
+        }
+
+        let url = URL(fileURLWithPath: setPath)
+        guard let setData = CopilotSetData(atDirectory: url),
+            let listing = await setData.copilotList(at: url)
+        else {
+            return .failed(.setUnreadable)
+        }
+
+        copilotSet = .init(kind: listing.kind, data: setData, url: url)
+        let applied = CopilotPersistence.apply(state, to: listing.items)
+        copilotList = applied
+        return .restored(active: applied.filter(\.isOn).count, skipped: listing.skipped)
     }
 }
 
@@ -393,19 +472,35 @@ extension CopilotContext.Content {
 }
 
 extension CopilotSetData {
-    func copilotList(at url: URL) async -> (MAACopilot.Kind, [CopilotContext.ListItem])? {
+    /// 派生结果：集合类型 + 行清单 + 逐成员跳过原因（C09 损坏恢复——单个
+    /// 成员缺失/损坏/映射失败只跳过该成员，不再让整个集合激活失败）。
+    struct SetListing {
+        let kind: MAACopilot.Kind
+        let items: [CopilotContext.ListItem]
+        let skipped: [String]
+    }
+
+    func copilotList(at url: URL) async -> SetListing? {
         guard url.isDirectory else { return nil }
 
         var copilotList = [CopilotContext.ListItem]()
+        var skipped = [String]()
 
         var lastCopilotKind: MAACopilot.Kind?
 
         for copilotID in copilot_ids {
-            let url = url.appending(path: "\(copilotID).json")
-            guard let copilot = MAACopilot(url: url),
-                let code = await MAAProvider.shared.mapLevelCode(matching: copilot.stage_name)
-            else {
-                return nil
+            let memberURL = url.appending(path: "\(copilotID).json")
+            guard let copilot = MAACopilot(url: memberURL) else {
+                let reason = FileManager.default.fileExists(atPath: memberURL.path(percentEncoded: false))
+                    ? String(localized: "文件损坏")
+                    : String(localized: "文件缺失")
+                skipped.append("\(copilotID).json（\(reason)）")
+                continue
+            }
+            guard let code = await MAAProvider.shared.mapLevelCode(matching: copilot.stage_name) else {
+                skipped.append(
+                    "\(copilotID).json（\(String(localized: "导航名映射失败"))）")
+                continue
             }
 
             let kind = copilot.kind(code: code)
@@ -418,20 +513,38 @@ extension CopilotSetData {
 
             switch copilot.difficulty {
             case nil, 0:
-                copilotList.append(.init(url: url, stageCode: code, isOn: true))
+                copilotList.append(
+                    .init(url: memberURL, stageCode: code, memberID: "\(copilotID)#0", isOn: true))
             case 1:
-                copilotList.append(.init(url: url, stageCode: code, isRaid: false, isOn: true))
+                copilotList.append(
+                    .init(
+                        url: memberURL, stageCode: code, memberID: "\(copilotID)#0",
+                        isRaid: false, isOn: true))
             case 2:
-                copilotList.append(.init(url: url, stageCode: code, isRaid: true, isOn: true))
+                copilotList.append(
+                    .init(
+                        url: memberURL, stageCode: code, memberID: "\(copilotID)#1",
+                        isRaid: true, isOn: true))
             case 3:
-                copilotList.append(.init(url: url, stageCode: code, isRaid: false, isOn: true))
-                copilotList.append(.init(url: url, stageCode: code, isRaid: true, isOn: true))
+                copilotList.append(
+                    .init(
+                        url: memberURL, stageCode: code, memberID: "\(copilotID)#0",
+                        isRaid: false, isOn: true))
+                copilotList.append(
+                    .init(
+                        url: memberURL, stageCode: code, memberID: "\(copilotID)#1",
+                        isRaid: true, isOn: true))
             default:
                 continue
             }
         }
 
-        return (lastCopilotKind ?? .regular, copilotList)
+        // 空集合清单沿用旧的 regular 缺省；成员全灭（有 id 但无一可解析）视为
+        // 集合不可用，与旧行为一致。
+        if !copilot_ids.isEmpty && copilotList.isEmpty {
+            return nil
+        }
+        return SetListing(kind: lastCopilotKind ?? .regular, items: copilotList, skipped: skipped)
     }
 }
 

@@ -40,6 +40,7 @@ EOF
 
 xcrun swiftc -parse-as-library -module-cache-path "$test_build_dir/module-cache" \
     "$repo_dir/MeoAsstMac/Task Configurations/CopilotConfiguration.swift" \
+    "$repo_dir/MeoAsstMac/Task Configurations/CopilotPersistence.swift" \
     "$repo_dir/MeoAsstMac/Model/MAACopilot.swift" \
     "$repo_dir/MeoAsstMac/Utils/Codeable+JSON.swift" \
     "$repo_dir/MeoAsstMac/Utils/URL+contentType.swift" \

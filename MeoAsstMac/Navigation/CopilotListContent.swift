@@ -13,6 +13,16 @@ struct CopilotListContent: View {
     var body: some View {
         ForEach($context.copilotList) { $item in
             Toggle(item.description, isOn: $item.isOn)
+                .contextMenu {
+                    Button("上移") {
+                        context.moveRow(of: item.id, by: -1)
+                    }
+                    .disabled(!context.canMoveRow(of: item.id, by: -1))
+                    Button("下移") {
+                        context.moveRow(of: item.id, by: 1)
+                    }
+                    .disabled(!context.canMoveRow(of: item.id, by: 1))
+                }
         }
     }
 }

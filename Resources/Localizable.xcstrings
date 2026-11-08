@@ -7524,6 +7524,28 @@
         }
       }
     },
+    "上次激活的作业集无法恢复：目录被移动或作业集清单损坏，已重置列表。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The previously activated copilot set could not be restored: the directory was moved or the set manifest is corrupted. The list has been reset."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전에 활성화한 작업 세트를 복원할 수 없습니다: 디렉터리가 이동되었거나 작업 세트 목록이 손상되어 목록을 초기화했습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次激活的作业集无法恢复：目录被移动或作业集清单损坏，已重置列表。"
+          }
+        }
+      }
+    },
     "上次结果未知" : {
       "localizations" : {
         "zh-Hans" : {
@@ -7568,6 +7590,28 @@
         }
       }
     },
+    "上移" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Up"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "위로 이동"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上移"
+          }
+        }
+      }
+    },
     "上移奖励" : {
       "localizations" : {
         "en" : {
@@ -7608,6 +7652,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "上移标签"
+          }
+        }
+      }
+    },
+    "下移" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Down"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아래로 이동"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下移"
           }
         }
       }
@@ -8327,6 +8393,28 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "作业启动失败：%@"
+          }
+        }
+      }
+    },
+    "作业集已恢复，部分成员无法加载：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copilot set restored, but some members could not be loaded: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 세트가 복원되었지만 일부 항목을 불러올 수 없습니다: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作业集已恢复，部分成员无法加载：%@"
           }
         }
       }
@@ -11093,6 +11181,28 @@
         }
       }
     },
+    "导航名映射失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navigation name mapping failed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내비게이션 이름 매핑 실패"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导航名映射失败"
+          }
+        }
+      }
+    },
     "将删除无法读取的定时记录文件并重建空记录；刚触发过且仍在触发窗口内的定时可能再执行一次。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -12536,12 +12646,56 @@
         }
       }
     },
+    "文件损坏" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File corrupted"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "파일 손상"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件损坏"
+          }
+        }
+      }
+    },
     "文件格式错误" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "파일 형식 오류"
+          }
+        }
+      }
+    },
+    "文件缺失" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File missing"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "파일 없음"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件缺失"
           }
         }
       }

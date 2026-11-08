@@ -181,6 +181,25 @@ extension NewViewModel {
     nonisolated(nonsending) func recognizeVideo(url: URL) async throws {
         try await parent.recognizeVideo(video: url)
     }
+
+    /// C09 跨启动恢复入口（作业页首次出现时调用）：完整恢复静默，部分成员
+    /// 跳过告警，集合不可用报错。
+    nonisolated(nonsending) func restoreCopilotList() async {
+        switch await copilot.restorePersistedList() {
+        case .none:
+            break
+        case .restored(_, let skipped):
+            guard !skipped.isEmpty else { return }
+            appendLog(
+                .init(
+                    date: .now,
+                    content: String(
+                        localized: "作业集已恢复，部分成员无法加载：\(skipped.joined(separator: "、"))"),
+                    color: .warning))
+        case .failed(let failure):
+            appendLog(.init(date: .now, content: failure.logMessage, color: .error))
+        }
+    }
 }
 
 // MARK: - PRTS Copilot Downloader

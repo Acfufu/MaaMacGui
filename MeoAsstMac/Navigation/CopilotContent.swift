@@ -92,6 +92,10 @@ struct CopilotContent: View {
                 break
             }
         }
+        .task {
+            // C09 跨启动恢复：进作业页即尝试一次性恢复（内部有闸门）。
+            await newModel.restoreCopilotList()
+        }
         .task(id: newModel.lastImportedCopilot) {
             guard let url = newModel.lastImportedCopilot else {
                 return
@@ -109,7 +113,9 @@ struct CopilotContent: View {
             }
         }
         .onChange(of: context.copilotList.isEmpty, initial: true) {
-            if $1, context.category == .list {
+            // 恢复闸门：跨启动恢复尚未尝试（restoreAttempted == false）时列表
+            // 的短暂为空不触发分类回退，避免恢复被 UI 抢先切走。
+            if $1, context.category == .list, context.restoreAttempted {
                 context.category = .external
                 context.selection = nil
             }
