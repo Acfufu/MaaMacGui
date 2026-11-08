@@ -179,6 +179,7 @@
 		F12100000000000000000002 /* OperBoxHistoryPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12100000000000000000001 /* OperBoxHistoryPayload.swift */; };
 		F12200000000000000000002 /* CopilotFileOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12200000000000000000001 /* CopilotFileOperations.swift */; };
 		F12300000000000000000002 /* VideoRecognitionImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12300000000000000000001 /* VideoRecognitionImport.swift */; };
+		F12400000000000000000002 /* MiniGameLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12400000000000000000001 /* MiniGameLaunch.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -387,6 +388,7 @@
 		F12100000000000000000001 /* OperBoxHistoryPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperBoxHistoryPayload.swift; sourceTree = "<group>"; };
 		F12200000000000000000001 /* CopilotFileOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotFileOperations.swift; sourceTree = "<group>"; };
 		F12300000000000000000001 /* VideoRecognitionImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecognitionImport.swift; sourceTree = "<group>"; };
+		F12400000000000000000001 /* MiniGameLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniGameLaunch.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -484,6 +486,7 @@
 				F11900000000000000000001 /* CopilotPersistence.swift */,
 				F12000000000000000000001 /* OperBoxAssistExport.swift */,
 				F12300000000000000000001 /* VideoRecognitionImport.swift */,
+				F12400000000000000000001 /* MiniGameLaunch.swift */,
 				832985AF29EEF483009F7ED5 /* ReclamationConfiguration.swift */,
 				83782A2A2CFFAF2900A32BDD /* LegacyConfigurations.swift */,
 			);
@@ -932,6 +935,7 @@
 				F12100000000000000000002 /* OperBoxHistoryPayload.swift in Sources */,
 				F12200000000000000000002 /* CopilotFileOperations.swift in Sources */,
 				F12300000000000000000002 /* VideoRecognitionImport.swift in Sources */,
+				F12400000000000000000002 /* MiniGameLaunch.swift in Sources */,
 				F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */,
 				F11500000000000000000002 /* DataExport.swift in Sources */,
 				F11600000000000000000002 /* DepotMaintainConfiguration.swift in Sources */,

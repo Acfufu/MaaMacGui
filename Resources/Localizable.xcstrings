@@ -17,6 +17,28 @@
         }
       }
     },
+    "不足时消耗普通信物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use normal tokens when insufficient"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부족할 때 일반 증표 사용"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不足时消耗普通信物"
+          }
+        }
+      }
+    },
     "仓库历史快照保存失败。" : {
       "localizations" : {
         "en" : {
@@ -131,6 +153,28 @@
         }
       }
     },
+    "像素画" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pixel art"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "픽셀 아트"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "像素画"
+          }
+        }
+      }
+    },
     "出现错误，评价失败 : <" : {
       "localizations" : {
         "en" : {
@@ -171,6 +215,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用一图流数据辅助编队"
+          }
+        }
+      }
+    },
+    "刷分结束后清空商店：" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear the store after grinding:"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "점수 획득 후 상점 비우기:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷分结束后清空商店："
+          }
+        }
+      }
+    },
+    "导入图片并预览后开始绘制，绘制过程中可随时停止。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import an image, preview it, then start painting. Painting can be stopped at any time."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이미지를 가져와 미리 보고 그리기를 시작하세요. 그리는 중에도 언제든지 중지할 수 있습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入图片并预览后开始绘制，绘制过程中可随时停止。"
+          }
+        }
+      }
+    },
+    "商品黑名单" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Item blacklist"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "상품 블랙리스트"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "商品黑名单"
           }
         }
       }
@@ -475,6 +585,50 @@
         }
       }
     },
+    "缺口材料合成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Material synthesis"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재료 합성"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺口材料合成"
+          }
+        }
+      }
+    },
+    "自动提升潜能" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto raise potential"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 잠재력 상승"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动提升潜能"
+          }
+        }
+      }
+    },
     "自动编队前，按一图流干员练度数据（含技能与模组信息）预匹配作业编队。" : {
       "localizations" : {
         "en" : {
@@ -559,6 +713,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "识别产物不是有效的作业文件，已丢弃。"
+          }
+        }
+      }
+    },
+    "请在合成站页面开始。任务会按缺口自动合成所需材料。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start on the synthesis workshop screen. The task synthesizes the required materials automatically."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "합성소 화면에서 시작하세요. 작업이 부족한 재료를 자동으로 합성합니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在合成站页面开始。任务会按缺口自动合成所需材料。"
+          }
+        }
+      }
+    },
+    "请进入干员潜能提升界面。中控信物不足时默认放弃提升，可开启「不足时消耗普通信物」改用普通信物。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the operator potential screen. By default the promotion is abandoned when mid tokens are insufficient; enable ｢Use normal tokens when insufficient｣ to spend normal tokens instead."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 잠재력 상승 화면으로 이동하세요. 중간 증표가 부족하면 기본적으로 상승을 포기하며, ｢부족할 때 일반 증표 사용｣을 켜면 일반 증표를 소모합니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请进入干员潜能提升界面。中控信物不足时默认放弃提升，可开启「不足时消耗普通信物」改用普通信物。"
           }
         }
       }

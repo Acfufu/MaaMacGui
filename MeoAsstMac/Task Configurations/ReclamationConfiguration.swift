@@ -15,6 +15,9 @@ struct ReclamationConfiguration: MAATaskConfiguration {
     var tools_to_craft: [String]
     var increment_mode: Int
     var num_craft_batches: Int
+    /// T03：Tales 无存档（mode 0）刷分结束后是否清空商店。Core 仅在该分支
+    /// 消费（ReclamationTask.cpp `clear_store`）；其余主题/模式忽略。
+    var clear_store = false
 
     var modes: [Int: String] {
         switch theme {
@@ -137,6 +140,7 @@ extension ReclamationConfiguration {
         self.tools_to_craft = try container.decodeIfPresent([String].self, forKey: .tools_to_craft) ?? ["荧光棒"]
         self.increment_mode = try container.decodeIfPresent(Int.self, forKey: .increment_mode) ?? 0
         self.num_craft_batches = try container.decodeIfPresent(Int.self, forKey: .num_craft_batches) ?? 16
+        self.clear_store = try container.decodeIfPresent(Bool.self, forKey: .clear_store) ?? false
 
         if self.theme == .relaunch && rawMode < 1 << 4 {
             self.mode = rawMode == 1 ? (2 << 4) : (1 << 4)
