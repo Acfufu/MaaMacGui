@@ -402,7 +402,10 @@ extension FightConfiguration {
         self.stage = try container.decodeIfPresent(String.self, forKey: .stage) ?? ""
         self.useOptionalStage = try container.decodeIfPresent(Bool.self, forKey: .useOptionalStage) ?? false
         self.optionalStages = try container.decodeIfPresent([String].self, forKey: .optionalStages) ?? []
+        // §5-19（P08.1 变异测试发现）：1...7 之外的手编脏值剔除——有效值语义
+        // 不变；空集=启用但无执行日的既有语义保持（isScheduled 对全周 false）。
         self.weeklyDays = try container.decodeIfPresent([Int].self, forKey: .weeklyDays)
+            .map { $0.filter { (1...7).contains($0) } }
         self.stageResetMode = try container.decodeIfPresent(FightStageResetMode.self, forKey: .stageResetMode) ?? .ignore
         self.medicine = try container.decodeIfPresent(Int.self, forKey: .medicine)
         self.medicineOnce = try container.decodeIfPresent(Bool.self, forKey: .medicineOnce) ?? false

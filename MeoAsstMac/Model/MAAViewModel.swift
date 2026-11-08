@@ -8,7 +8,12 @@
 import Combine
 import Darwin
 import IOKit.pwr_mgt
+import os
 import SwiftUI
+
+/// §5-⑨：启动期档案装载失败日志（与 DailyTaskProfileStore 的 logger 同一
+/// subsystem/category 家族）。
+private let profileLoadLogger = Logger(subsystem: "com.hguandl.MeoAsstMac", category: "MAAViewModel")
 
 @MainActor class MAAViewModel: ObservableObject {
     /// 追加队列的预备清理失败(队列内隔离已由内层完成);外层收口据此把
@@ -682,6 +687,9 @@ import SwiftUI
         do {
             tasks = try DailyTaskProfileStore(profileURL: tasksURL).load()
         } catch {
+            // §5-⑨（P29 补日志方向）：启动装载失败补日志——unsupportedIndexVersion
+            // 等可诊断失败此前与目录损坏同路径静默恢复，排障缺线索。
+            profileLoadLogger.error("Daily task profile load failed: \(String(describing: error), privacy: .public)")
             var isDirectory: ObjCBool = false
             let exists = FileManager.default.fileExists(atPath: tasksDirectory.path, isDirectory: &isDirectory)
             switch (exists, isDirectory.boolValue) {

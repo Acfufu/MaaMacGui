@@ -203,5 +203,33 @@ struct FightConfigurationTests {
         print(
             "PASS: F16/F17 report encode contract (penguin/yituliu always encoded; missing keys decode false/\\\"\\\"; explicit values round trip)"
         )
+
+        // §5-19：weeklyDays 解码值域 1...7（P08.1 变异测试发现——手编脏值剔除）。
+        do {
+            let junk = try JSONDecoder().decode(
+                FightConfiguration.self,
+                from: Data(#"{"weeklyDays":[0,3,9,-1]}"#.utf8)
+            )
+            if junk.weeklyDays != [3] {
+                failures.append("weeklyDays sanitize: got \(junk.weeklyDays.map(String.init) ?? "nil")")
+            }
+            let valid = try JSONDecoder().decode(
+                FightConfiguration.self,
+                from: Data(#"{"weeklyDays":[1,7]}"#.utf8)
+            )
+            if valid.weeklyDays != [1, 7] {
+                failures.append("weeklyDays valid passthrough: got \(valid.weeklyDays.map(String.init) ?? "nil")")
+            }
+            let absent = try JSONDecoder().decode(FightConfiguration.self, from: Data("{}".utf8))
+            if absent.weeklyDays != nil {
+                failures.append("weeklyDays absent decode: got \(absent.weeklyDays.map(String.init) ?? "non-nil")")
+            }
+        } catch {
+            failures.append("weeklyDays sanitize decode threw: \(error)")
+        }
+
+        for failure in failures { print("FAIL: \(failure)") }
+        guard failures.isEmpty else { exit(1) }
+        print("PASS: §5-19 weeklyDays decode sanitizes to 1...7 (junk dropped, valid kept, absent nil)")
     }
 }

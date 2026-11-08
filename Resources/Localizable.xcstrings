@@ -19925,18 +19925,24 @@
         }
       }
     },
-    "职业需使用 Core 标准名称，或省略以自动识别。" : {
+    "职业需使用 Core 标准名称；多职业干员不可省略职业（Core 将拒绝整队下发）。" : {
       "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "职业需使用 Core 标准名称；多职业干员不可省略职业（Core 将拒绝整队下发）。"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Use a canonical Core class name, or omit role for automatic detection."
+            "value" : "Use a canonical Core class name; multi-class operators cannot omit it (Core would reject the whole task queue)."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Core 표준 직업 이름을 사용하거나 role을 생략해 자동 인식하세요."
+            "value" : "Core 표준 직업 이름을 사용하세요. 다중 직업 오퍼레이터는 직업을 생략할 수 없습니다(생략 시 Core가 대열 전체를 거부합니다)."
           }
         }
       }

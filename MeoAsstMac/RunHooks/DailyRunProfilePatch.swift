@@ -97,10 +97,15 @@ enum DailyRunOnceSemantics {
     /// list unchanged so the next attempt stays armed. Already-consumed
     /// entries are untouched, making repeated calls idempotent.
     ///
-    /// P03.3 / N1: `eligibleIDs` scopes consumption to what the run actually
-    /// executed — the enabled ids of its frozen snapshot. Entries armed after
-    /// the snapshot froze never ran and stay armed. nil means "no snapshot
-    /// scope" (every enabled entry; the P03.2 pure semantics).
+    /// P03.3 / N1: `eligibleIDs` scopes consumption to the enabled ids of the
+    /// run's frozen snapshot. Entries armed after the snapshot froze never ran
+    /// and stay armed. nil means "no snapshot scope" (every enabled entry; the
+    /// P03.2 pure semantics).
+    /// §5-⑩ 口径注记: the snapshot does not track Core-append results — a task
+    /// whose append failed mid-run is still inside the snapshot scope and did
+    /// not execute, yet it still counts toward consumption under the current
+    /// semantics ("append-failure stays eligible"); tightening this to
+    /// actually-executed ids is deferred (WPF P03.2 shares the same shape).
     static func consumeOnceTasks(tasks: [DailyTask], outcome: DailyRunOutcome,
                                  eligibleIDs: Set<UUID>? = nil) -> [DailyTask] {
         guard outcome == .completed else { return tasks }

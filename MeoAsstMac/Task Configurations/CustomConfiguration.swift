@@ -133,8 +133,10 @@ struct OperProgressConfiguration: MAATaskConfiguration {
                 throw DailyPipelineError.invalid(String(localized: "请检查干员名和养成目标：精英化 1–2，技能 2–7，专精为三个 0–3 的整数。"))
             }
             // Use canonical Core role names; omit role for automatic lookup.
+            // §5/P10-[a]（P10-R3）：文案限定多职业干员边界——该类干员省略职业时
+            // Core append 拒绝阻塞整队（失败可见可恢复）；单职业干员省略仍自动识别。
             if let role, !["Pioneer", "Warrior", "Tank", "Sniper", "Caster", "Medic", "Support", "Special"].contains(role) {
-                throw DailyPipelineError.invalid(String(localized: "职业需使用 Core 标准名称，或省略以自动识别。"))
+                throw DailyPipelineError.invalid(String(localized: "职业需使用 Core 标准名称；多职业干员不可省略职业（Core 将拒绝整队下发）。"))
             }
         }
     }
