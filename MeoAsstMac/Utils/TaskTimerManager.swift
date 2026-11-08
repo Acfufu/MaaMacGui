@@ -69,6 +69,11 @@ import Foundation
         },
         report: { [weak self] occurrence, result, detail, runID in
             self?.record(occurrence, result: result, detail: detail, runID: runID)
+            // P21-[a]（P21.2）：触发终态后停用 one-shot（见 disableOneShotPlan）。
+            // .cancelled 保留用户编辑/手动取消后的计划状态（WPF 无对应窗口）。
+            if result != .cancelled {
+                self?.disableOneShotPlan(planID: occurrence.planID, revision: occurrence.revision)
+            }
         })
     }
 
@@ -213,22 +218,44 @@ import Foundation
             if let candidate = try BackgroundScheduleCheck.claimDue(plans: plans, now: .now,
                     calendar: .autoupdatingCurrent, grace: triggerGrace, ledger: store, source: "") {
                 let plan = candidate.0
-                // P21/S07: 每定时项档案触发前切换（WPF Timer.Config 同位）；切换
-                // 失败时 switchProfile 记错误并保留当前档案继续。
+                // P21/S07: 每定时项档案触发前切换（WPF Timer.Config 字段同位）。
+                // P21-[b]（P21.2）：强启档案切换失败→跳过本次启动（WPF
+                // TaskQueueViewModel.cs:1208-1216 强启配置不匹配跳过启动同构）——
+                // 原「错档继续」为行为性差异；时序（T-2min vs T-0）与全局
+                // CustomConfig 门控缺位入台账 P21-[b]。
+                var skippedByProfileSwitch = false
                 if let target = plan.profileID, target != viewModel.dailyTaskProfile {
                     viewModel.switchProfile(target)
+                    if plan.forceStart, viewModel.dailyTaskProfile != target {
+                        handoff?.report(candidate.1, .skipped, "profileSwitchFailed", nil)
+                        skippedByProfileSwitch = true
+                    }
                 }
-                let daily = DailyRunSnapshot(profileID: viewModel.dailyTaskProfile, tasks: viewModel.tasks)
-                let snapshot = ScheduleSnapshot(daily: daily, recoveryEligible: viewModel.forceRecoveryEligibility(snapshot: daily))
-                handoff?.submit(candidate.1, force: plan.forceStart, snapshot: snapshot)
-                // P21/S08: 一次性定时触发后自动停用（WPF IsEnabled 半选语义）。
-                if plan.oneShot, let index = viewModel.scheduledDailyTaskTimers.firstIndex(where: { $0.id == plan.id }) {
-                    viewModel.scheduledDailyTaskTimers[index].isEnabled = false
+                if !skippedByProfileSwitch {
+                    let daily = DailyRunSnapshot(profileID: viewModel.dailyTaskProfile, tasks: viewModel.tasks)
+                    let snapshot = ScheduleSnapshot(daily: daily, recoveryEligible: viewModel.forceRecoveryEligibility(snapshot: daily))
+                    handoff?.submit(candidate.1, force: plan.forceStart, snapshot: snapshot)
                 }
+                // P21/S08（P21-[a]，P21.2）：one-shot 停用移至 handoff 终态之后
+                // （WPF TaskQueueViewModel.cs:1188-1191 同序——先 await
+                // HandleScheduledStart 再 IsEnabled ??= false）。原实现停用写与
+                // submit 同栈：@Published sink 同步级联 invalidateIfNeeded→
+                // cancelPending，本次触发被自身停用杀死（dead-on-arrival）。
             }
             reloadRecords()
             if let end = viewModel.dailyRunCoordinator.lastTerminal { recordTerminal(end) }
         } catch { reportFailure(error) }
+    }
+
+    /// P21-[a]（P21.2）：one-shot 触发终态后自动停用（WPF IsEnabled 半选语义同构，
+    /// TaskQueueViewModel.cs:1191）。仅当计划未被用户同时编辑（revision 仍匹配）
+    /// 且仍为 oneShot 时执行；终态时 handoff pending 已清，停用写不再有可取消对象。
+    private func disableOneShotPlan(planID: UUID, revision: String) {
+        guard let viewModel,
+              let index = viewModel.scheduledDailyTaskTimers.firstIndex(where: { $0.id == planID }),
+              plans.contains(where: { $0.id == planID && $0.revision == revision && $0.oneShot })
+        else { return }
+        viewModel.scheduledDailyTaskTimers[index].isEnabled = false
     }
 
     private func record(_ occurrence: ScheduleOccurrence, result: ScheduleOccurrence.Result,

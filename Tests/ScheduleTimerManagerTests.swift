@@ -51,7 +51,12 @@ extension Notification.Name {
     var scheduledStartNotificationMinutes = 5
     let localNotifications = LocalNotificationService()
     var switchedProfiles: [String] = []
-    func switchProfile(_ profileID: String) { switchedProfiles.append(profileID) }
+    // P21-[b]（P21.2）提取桩：档案切换失败面（运行占用/加载失败）。
+    var profileSwitchShouldFail = false
+    func switchProfile(_ profileID: String) {
+        switchedProfiles.append(profileID)
+        if !profileSwitchShouldFail { dailyTaskProfile = profileID }
+    }
     // P25 提取桩：外部通知触发面。
     func notifyExternal(title: String, body: String, kind: ExternalNotificationEventKind) {}
     // 全局探针:任何实例的启动调用都会落账,weak 失效窗口内必须保持静默。
@@ -134,6 +139,79 @@ extension Notification.Name {
         check(manager.recentOccurrences.first?.result == .started
               && manager.recentOccurrences.first?.runID == revived.dailyRunCoordinator.active?.id,
               "the post-reconnect fire starts and records exactly one new run")
+        // 4-6. P21.2 场景：每场景独立 manager+账本——claimDueGroups 以 scheduledAt
+        //     （分钟槽）判重（previousWinner），同分钟内第二个计划一律 skipped
+        //     "simultaneousSchedule"；共享账本会让场景互相污染。
+        func freshHarness() throws -> (TaskTimerManager, MAAViewModel, String) {
+            let dir = FileManager.default.temporaryDirectory
+                .appendingPathComponent("maa-timer-manager-\(UUID().uuidString)")
+            let m = TaskTimerManager(directory: dir.appendingPathComponent("legacy"))
+            try m.configureSharedDirectory(dir)
+            m.setBackgroundSchedulingEnabled(true)
+            let vm = MAAViewModel()
+            m.connectToModel(viewModel: vm)
+            return (m, vm, dir.path)
+        }
+        // 4. P21-[a]（P21.2）：one-shot 计划到期→经 .schedule 正常启动且终态后
+        //    isEnabled 自动停用。停用写已移出 submit 同栈（P21-1-R3 高1：原实现
+        //    sink 同步级联 cancelPending，触发被自身停用杀死——评审探针复现
+        //    `cancelled scheduleChanged runID=none`）。
+        var oneShotPlan = plan(minutesAgo: 0)
+        oneShotPlan.oneShot = true
+        MAAViewModel.startOrigins = []
+        let (manager4, actor4, dir4) = try freshHarness()
+        defer { try? FileManager.default.removeItem(atPath: dir4) }
+        actor4.scheduledDailyTaskTimers = [oneShotPlan]
+        manager4.refreshRunningTimersIfNecessary() // 生产再入点（唤醒/时钟变化同路径）。
+        for _ in 0..<10000 {
+            if MAAViewModel.startOrigins.count == 1 { break }
+            await Task.yield()
+        }
+        check(MAAViewModel.startOrigins == [.schedule],
+              "a one-shot due plan routes through startDailyTasks(origin: .schedule) instead of self-cancelling")
+        for _ in 0..<10000 {
+            if !actor4.scheduledDailyTaskTimers[0].isEnabled { break }
+            await Task.yield()
+        }
+        check(!actor4.scheduledDailyTaskTimers[0].isEnabled,
+              "the one-shot plan auto-disables after the started terminal (WPF IsEnabled ??= false 同序)")
+        check(manager4.recentOccurrences.first?.result == .started,
+              "the one-shot occurrence is recorded as started, not cancelled")
+        // 5. P21-[b]（P21.2）：强启档案切换失败→跳过本次启动（WPF
+        //    TaskQueueViewModel.cs:1208-1216 强启配置不匹配跳过启动同构）。
+        var forcePlan = plan(minutesAgo: 0)
+        forcePlan.forceStart = true
+        forcePlan.profileID = "Target"
+        MAAViewModel.startOrigins = []
+        let (manager5, actor5, dir5) = try freshHarness()
+        defer { try? FileManager.default.removeItem(atPath: dir5) }
+        actor5.profileSwitchShouldFail = true
+        actor5.scheduledDailyTaskTimers = [forcePlan]
+        manager5.refreshRunningTimersIfNecessary()
+        for _ in 0..<10000 {
+            if manager5.recentOccurrences.first?.detail == "profileSwitchFailed" { break }
+            await Task.yield()
+        }
+        check(MAAViewModel.startOrigins.isEmpty,
+              "a force-start plan whose profile switch fails skips the start")
+        check(manager5.recentOccurrences.first?.result == .skipped
+              && manager5.recentOccurrences.first?.detail == "profileSwitchFailed",
+              "the skipped occurrence is recorded with profileSwitchFailed")
+        // 6. P21-[b] 对照：切换成功路径不受影响——照常强启且落在切换后档案。
+        MAAViewModel.startOrigins = []
+        let (manager6, actor6, dir6) = try freshHarness()
+        defer { try? FileManager.default.removeItem(atPath: dir6) }
+        var forcePlan2 = plan(minutesAgo: 0)
+        forcePlan2.forceStart = true
+        forcePlan2.profileID = "Target"
+        actor6.scheduledDailyTaskTimers = [forcePlan2]
+        manager6.refreshRunningTimersIfNecessary()
+        for _ in 0..<10000 {
+            if MAAViewModel.startOrigins.count == 1 { break }
+            await Task.yield()
+        }
+        check(MAAViewModel.startOrigins == [.schedule] && actor6.dailyTaskProfile == "Target",
+              "a force-start plan with a successful profile switch still starts on the switched profile")
         print("PASS: \(assertions) timer-manager weak-reference assertions")
     }
 }
