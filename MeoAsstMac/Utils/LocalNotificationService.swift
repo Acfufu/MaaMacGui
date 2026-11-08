@@ -133,6 +133,11 @@ struct SystemNotificationCenter: NotificationCentering {
         )
     }
 
+    /// P21/S08: 撤下待投递提醒（计划变更/停用/时刻已过）。
+    func cancelPending(id: String) {
+        center.removePending(withIdentifiers: [id])
+    }
+
     func openSystemSettings() {
         center.openSettings()
     }

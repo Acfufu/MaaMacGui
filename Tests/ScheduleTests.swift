@@ -34,6 +34,19 @@ import Foundation
         let edited = ScheduleCalendar.occurrence(for: editedRevision, on: date("2026-11-01T12:00:00Z"), calendar: cal)!
         check(edited.id == repeated.id, "revision not occurrence identity")
         check(edited.revision != repeated.revision, "revision changes")
+        // P21/S07+S08: profileID/oneShot 模型面——旧档案缺键解码缺省 + revision 纳入新字段。
+        let schedP21JSON = "{\"id\":\"\(id.uuidString)\",\"hour\":8,\"minute\":0,\"isEnabled\":true}"
+        let schedP21 = try JSONDecoder().decode(DailyTaskSchedule.self, from: Data(schedP21JSON.utf8))
+        check(schedP21.profileID == nil && schedP21.oneShot == false, "legacy schedule decodes without P21 fields")
+        check(schedP21.revision == "8:0:true:false:-:false", "revision carries P21 fields")
+        var withProfile = schedP21
+        withProfile.profileID = "p2"
+        check(withProfile.revision != schedP21.revision, "profile selection changes revision")
+        var withOneShot = schedP21
+        withOneShot.oneShot = true
+        check(withOneShot.revision != schedP21.revision, "one-shot changes revision")
+        let roundtrip = try JSONDecoder().decode(DailyTaskSchedule.self, from: try JSONEncoder().encode(withProfile))
+        check(roundtrip == withProfile, "P21 fields roundtrip")
         let next = ScheduleCalendar.nextDate(for: plan, after: date("2026-10-31T06:00:00Z"), calendar: cal)!
         check(next == date("2026-11-01T05:30:00Z"), "next first repeated time")
         plan.hour = -1

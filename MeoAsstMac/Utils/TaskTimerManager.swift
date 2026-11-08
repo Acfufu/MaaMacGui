@@ -151,6 +151,7 @@ import Foundation
         let now = Date()
         let calendar = Calendar.autoupdatingCurrent
         let next = plans.filter(\.isEnabled).compactMap { ScheduleCalendar.nextDate(for: $0, after: now, calendar: calendar) }.min()
+        rescheduleAdvanceNotification(next: next, now: now)
         let delay = min(15, max(0.1, next?.timeIntervalSince(now) ?? 15))
         let timer = Timer(timeInterval: delay, repeats: false) { [weak self] _ in
             Task { @MainActor in self?.checkDueSchedules() }
@@ -159,15 +160,47 @@ import Foundation
         pulse = timer
     }
 
+    /// P21/S08: 定时开始前的提前通知（WPF NotifyBeforeScheduledStart 同位，
+    /// 缺省 5 分钟）。计划变更/停用/时刻已过都会撤下待投递提醒。
+    private func rescheduleAdvanceNotification(next: Date?, now: Date) {
+        guard let viewModel else { return }
+        let id = "scheduled-start-advance"
+        guard viewModel.notifyBeforeScheduledStart, let next else {
+            viewModel.localNotifications.cancelPending(id: id)
+            return
+        }
+        let fireAt = next.addingTimeInterval(-TimeInterval(viewModel.scheduledStartNotificationMinutes * 60))
+        guard fireAt > now else {
+            viewModel.localNotifications.cancelPending(id: id)
+            return
+        }
+        Task { await viewModel.localNotifications.schedule(
+            id: id,
+            title: String(localized: "定时任务即将开始"),
+            body: String(localized: "MAA 将按计划开始日常任务"),
+            fireDate: fireAt, at: now)
+        }
+    }
+
     private func checkDueSchedules() {
         defer { scheduleNextCheck() }
         guard let viewModel, viewModel.isCoreInitialized else { return }
         do {
             if let candidate = try BackgroundScheduleCheck.claimDue(plans: plans, now: .now,
                     calendar: .autoupdatingCurrent, grace: triggerGrace, ledger: store, source: "") {
+                let plan = candidate.0
+                // P21/S07: 每定时项档案触发前切换（WPF Timer.Config 同位）；切换
+                // 失败时 switchProfile 记错误并保留当前档案继续。
+                if let target = plan.profileID, target != viewModel.dailyTaskProfile {
+                    viewModel.switchProfile(target)
+                }
                 let daily = DailyRunSnapshot(profileID: viewModel.dailyTaskProfile, tasks: viewModel.tasks)
                 let snapshot = ScheduleSnapshot(daily: daily, recoveryEligible: viewModel.forceRecoveryEligibility(snapshot: daily))
-                handoff?.submit(candidate.1, force: candidate.0.forceStart, snapshot: snapshot)
+                handoff?.submit(candidate.1, force: plan.forceStart, snapshot: snapshot)
+                // P21/S08: 一次性定时触发后自动停用（WPF IsEnabled 半选语义）。
+                if plan.oneShot, let index = viewModel.scheduledDailyTaskTimers.firstIndex(where: { $0.id == plan.id }) {
+                    viewModel.scheduledDailyTaskTimers[index].isEnabled = false
+                }
             }
             reloadRecords()
             if let end = viewModel.dailyRunCoordinator.lastTerminal { recordTerminal(end) }

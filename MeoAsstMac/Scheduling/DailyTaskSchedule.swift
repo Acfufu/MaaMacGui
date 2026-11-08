@@ -2,25 +2,32 @@ import Foundation
 
 /// Persisted daily wall-clock schedule. A revision validates an intent; it is
 /// deliberately separate from the occurrence ID used for deduplication.
+/// P21/S07: `profileID` 为每定时项档案（nil＝当前档案，触发前切换）；
+/// P21/S08: `oneShot` 为一次性启用（触发后自动停用，WPF IsEnabled 半选的显式化）。
 struct DailyTaskSchedule: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     var hour: Int
     var minute: Int
     var isEnabled: Bool
     var forceStart: Bool = false
+    var profileID: String?
+    var oneShot: Bool = false
 
-    var revision: String { "\(hour):\(minute):\(isEnabled):\(forceStart)" }
+    var revision: String { "\(hour):\(minute):\(isEnabled):\(forceStart):\(profileID ?? "-"):\(oneShot)" }
     var isValid: Bool { (0...23).contains(hour) && (0...59).contains(minute) }
 
-    init(id: UUID, hour: Int, minute: Int, isEnabled: Bool, forceStart: Bool = false) {
+    init(id: UUID, hour: Int, minute: Int, isEnabled: Bool, forceStart: Bool = false,
+         profileID: String? = nil, oneShot: Bool = false) {
         self.id = id
         self.hour = hour
         self.minute = minute
         self.isEnabled = isEnabled
         self.forceStart = forceStart
+        self.profileID = profileID
+        self.oneShot = oneShot
     }
 
-    private enum CodingKeys: String, CodingKey { case id, hour, minute, isEnabled, forceStart }
+    private enum CodingKeys: String, CodingKey { case id, hour, minute, isEnabled, forceStart, profileID, oneShot }
 
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
@@ -29,6 +36,8 @@ struct DailyTaskSchedule: Codable, Equatable, Identifiable, Sendable {
         minute = try values.decode(Int.self, forKey: .minute)
         isEnabled = try values.decode(Bool.self, forKey: .isEnabled)
         forceStart = try values.decodeIfPresent(Bool.self, forKey: .forceStart) ?? false
+        profileID = try values.decodeIfPresent(String.self, forKey: .profileID)
+        oneShot = try values.decodeIfPresent(Bool.self, forKey: .oneShot) ?? false
     }
 }
 

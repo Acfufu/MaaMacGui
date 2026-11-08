@@ -15,6 +15,12 @@ struct DailyTask {
     var enabled = true
 }
 
+// P21 提取桩：TaskTimerManager 的提前通知面引用本服务；此处仅收口签名。
+@MainActor final class LocalNotificationService {
+    func cancelPending(id: String) {}
+    func schedule(id: String, title: String, body: String, fireDate: Date, at now: Date = Date()) async {}
+}
+
 extension Notification.Name {
     static let MAAPreventSystemSleepingChanged = Notification.Name("MAAPreventSystemSleepingChanged")
 }
@@ -32,6 +38,12 @@ extension Notification.Name {
     var tasks = [DailyTask]()
     let dailyRunCoordinator = DailyRunCoordinator()
     var canStartTasks: Bool { status == .idle && !isStartStopInFlight && dailyRunCoordinator.active == nil }
+    // P21/S07+S08 提取桩：触发前切档与提前通知面（真实服务由 local-notification 套件覆盖）。
+    var notifyBeforeScheduledStart = false
+    var scheduledStartNotificationMinutes = 5
+    let localNotifications = LocalNotificationService()
+    var switchedProfiles: [String] = []
+    func switchProfile(_ profileID: String) { switchedProfiles.append(profileID) }
     // 全局探针:任何实例的启动调用都会落账,weak 失效窗口内必须保持静默。
     static var startOrigins: [DailyRunOrigin] = []
 

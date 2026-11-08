@@ -415,6 +415,13 @@ import SwiftUI
     /// 自然完成赛跑时只执行一次收尾动作。
     private var postActionsLaunchedRunID: UUID?
 
+    // MARK: - Scheduled Start (P21/S08)
+
+    /// S08: 定时开始前发送本机提醒（WPF NotifyBeforeScheduledStart 同位）。
+    @AppStorage("MAANotifyBeforeScheduledStart") var notifyBeforeScheduledStart = false
+    /// S08: 提前分钟数（WPF ScheduledStartNotificationMinutes 缺省 5）。
+    @AppStorage("MAAScheduledStartNotificationMinutes") var scheduledStartNotificationMinutes = 5
+
     // MARK: - Initializer
 
     init() {
