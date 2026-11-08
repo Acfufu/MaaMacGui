@@ -176,6 +176,36 @@ import Foundation
   check(toolRun.status == .busy && toolCore.startCount == 1 && toolCore.appendCount == 1 && !toolRun.canStartTasks, "a started tool run occupies the instance through the shared boundary")
   try? await toolRun.stop()
   check(toolRun.status == .idle && toolRun.canStartTasks && toolRun.dailyRunCoordinator.active == nil && toolCore.stopCount == 1, "stop clears a tool run and leaves no coordinator residue")
+  // G18 延迟停止:miniGame 不经 startTasks 入队,战斗态标志手工置位以驱动共享的
+  // stop() 边界;等待/放行语义归 daily 运行,此处只验证停止路径本身。
+  let g18=MAAViewModel(); let g18Core=g18.handle!
+  try! await g18.miniGame(name:"Fixture")
+  g18.activeRunHasRoguelike=true; g18.roguelikeInCombat=true
+  g18.roguelikeDelayAbortUntilCombatComplete=true
+  let g18Stop=Task { try? await g18.stop() }
+  try! await Task.sleep(for:.milliseconds(1200))
+  check(g18Core.stopCount == 0 && g18.roguelikeWaitingForCombat && g18.infos.contains("肉鸽战斗中：等待当前战斗结束后再停止（最长 10 分钟）。再次点击停止可立即停止。"), "delayed abort holds the stop until combat completes instead of touching Core")
+  try? await g18.stop()
+  check(g18.infos.contains("已请求立即停止，不再等待当前战斗结束。"), "second stop request aborts the combat wait")
+  for _ in 0..<50 { if g18Core.stopCount == 1 { break }; try! await Task.sleep(for:.milliseconds(100)) }
+  check(g18Core.stopCount == 1 && !g18.roguelikeWaitingForCombat && g18.status == .idle, "bypassed wait releases the pending stop immediately")
+  check(await g18Stop.value != nil, "the first stop flow returns after the bypass")
+  let g18wait=MAAViewModel(); let g18waitCore=g18wait.handle!
+  try! await g18wait.miniGame(name:"Fixture")
+  g18wait.activeRunHasRoguelike=true; g18wait.roguelikeInCombat=true
+  g18wait.roguelikeDelayAbortUntilCombatComplete=true
+  let waitStop=Task { try? await g18wait.stop() }
+  try! await Task.sleep(for:.milliseconds(300))
+  check(g18wait.roguelikeWaitingForCombat && g18waitCore.stopCount == 0, "wait holds while combat is live")
+  g18wait.roguelikeInCombat=false
+  for _ in 0..<50 { if g18waitCore.stopCount == 1 { break }; try! await Task.sleep(for:.milliseconds(100)) }
+  check(g18waitCore.stopCount == 1 && g18wait.status == .idle && !g18wait.roguelikeWaitingForCombat, "combat completion releases the pending stop")
+  check(await waitStop.value != nil, "combat-release wait flow returns normally")
+  let g18off=MAAViewModel(); let g18offCore=g18off.handle!
+  try! await g18off.miniGame(name:"Fixture")
+  g18off.activeRunHasRoguelike=true; g18off.roguelikeInCombat=true
+  try? await g18off.stop()
+  check(g18offCore.stopCount == 1 && !g18off.roguelikeWaitingForCombat && g18off.status == .idle, "disabled switch stops immediately even in combat")
   // P04 结果四态:准备期钩子超时按 .timedOut 落账;钩子脚本执行失败按 .failed
   // 落账(A 审 Q1:与"成功/失败/取消/超时"字面一致,不再混入 .cancelled)。
   // startDailyTasks 每次从 hookSettings 重载钩子配置,须在 store 上注入。

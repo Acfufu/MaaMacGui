@@ -29,13 +29,17 @@ config.blackflowFastFlight = true
 let flight = try params(config)
 expect(flight["squad"] as? String == "特勤分队", "Flight squad")
 expect(flight["roles"] as? String == "稳扎稳打", "Flight roles")
-expect(flight["core_char"] as? String == "机械师", "Flight operator")
-expect(flight["use_support"] as? Bool == false, "Flight support")
+let flightList = (flight["core_char_list"] as? [[String: Any]]) ?? []
+expect(flightList.count == 1 && flightList[0]["name"] as? String == "机械师"
+    && (flightList[0]["use_support"] as? Bool) == false, "Flight operator list")
+expect(flight["core_char"] == nil && flight["use_support"] == nil, "Legacy single-operator keys retired")
 expect(flight["use_nonfriend_support"] == nil, "No nonfriend support during flight")
 expect(flight["blackflow_strategy"] == nil && flight["fast_flight"] == nil, "Use Core inferred flight strategy")
 expect(config.squad == saved.squad && config.roles == saved.roles && config.core_char == saved.core_char && config.use_support, "Stored opening preserved")
 config.blackflowFastFlight = false
-expect(try! params(config)["core_char"] as? String == "用户干员", "Opening restored")
+let restored = ((try! params(config))["core_char_list"] as? [[String: Any]]) ?? []
+expect(restored.count == 1 && restored[0]["name"] as? String == "用户干员"
+    && (restored[0]["use_support"] as? Bool) == true, "Opening restored")
 for theme in RoguelikeConfiguration.Theme.allCases {
     for mode in theme.modes {
         config.theme = theme

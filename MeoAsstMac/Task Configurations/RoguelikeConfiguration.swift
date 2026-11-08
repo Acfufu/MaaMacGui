@@ -120,12 +120,60 @@ struct RoguelikeConfiguration: MAATaskConfiguration {
             if theme == .BlackFlow { investment_with_more_score = false }
         }
     }
+    /// 开局干员顺位，按数组顺序对应开局第 1、2、3 次招募（G03 三顺位）。
+    ///
+    /// 顺位 1 与旧版 `core_char`/`use_support` 等价；某位置未招募到指定干员
+    /// （自有与助战均未刷出）时由 Core 按默认优先级处理（顺位降级）。
+    struct StartingOper: Codable, Hashable, Sendable {
+        var name = ""
+        var useSupport = false
+
+        enum CodingKeys: String, CodingKey {
+            case name
+            case useSupport = "use_support"
+        }
+
+        init(name: String = "", useSupport: Bool = false) {
+            self.name = name
+            self.useSupport = useSupport
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+            useSupport = try container.decodeIfPresent(Bool.self, forKey: .useSupport) ?? false
+        }
+    }
+
+    var startingOpers: [StartingOper] = [.init()]
+    /// 启用第 2/3 顺位开局干员；关闭时仅顺位 1 参与下发（WPF UseAdditionalStartingOpers 同构）。
+    var useAdditionalStartingOpers = false
+
     var squad: String
     var roles: String
-    var core_char: String
+
+    /// 顺位 1 开局干员名的读写桥，保留旧版单干员入口的编译面（UI/摘要/迁移）。
+    var core_char: String {
+        get { startingOpers.first?.name ?? "" }
+        set {
+            if startingOpers.isEmpty {
+                startingOpers = [.init(name: newValue)]
+            } else {
+                startingOpers[0].name = newValue
+            }
+        }
+    }
+
+    /// 顺位 1 借助战标记的读写桥；开启时关闭凹直升（两者互斥，G04）。
     var use_support: Bool {
-        didSet {
-            if use_support { start_with_elite_two = false }
+        get { startingOpers.first?.useSupport ?? false }
+        set {
+            if startingOpers.isEmpty {
+                startingOpers = [.init(useSupport: newValue)]
+            } else {
+                startingOpers[0].useSupport = newValue
+            }
+            if newValue { start_with_elite_two = false }
         }
     }
     var use_nonfriend_support: Bool
@@ -258,6 +306,106 @@ struct RoguelikeConfiguration: MAATaskConfiguration {
             ].contains(squad)
     }
 
+    /// 当前主题的推荐开局配置说明（G17 常驻展示，文案逐字取自 WPF 六主题提示正本，
+    /// 与上游 MaaMacGui PR #138/#139 的数据层 commit 同源）。
+    var tip: String? {
+        switch theme {
+        case .Phantom:
+            return """
+                傀影推荐配置：
+
+                开局分队: 指挥分队 / 突击战术分队
+                开局职业组: 取长补短（近卫、辅助、医疗）
+                开局干员: 丰川祥子 / 棘刺
+
+                当前难度 ≥3 时，可能无法在开局招募 6★ 干员，导致出错或失败
+                """
+        case .Mizuki:
+            return """
+                水月推荐配置：
+
+                开局分队: 以人为本分队 / 心胜于物分队
+                开局职业组: 稳扎稳打（重装、术师、狙击）
+                开局干员: 维什戴尔
+
+                1. box 里强力 6★ 干员较多时推荐选择 ｢以人为本分队｣
+                2. 当前难度 ≥4 时，6★ 干员希望消耗 +1，使用部分分队时可能无法在开局招募 6★ 干员，导致出错或失败
+                """
+        case .Sami:
+            return """
+                萨米推荐配置：
+
+                开局分队: 特训分队 / 远程战术分队
+                开局职业组: 稳扎稳打（重装、术师、狙击）
+                开局干员: 维什戴尔
+
+                当前难度 ≥6 时，6★ 干员希望消耗 +1，使用部分分队时可能无法在开局招募 6★ 干员，导致出错或失败
+                """
+        case .Sarkaz:
+            return """
+                萨卡兹推荐配置：
+
+                开局分队: 蓝图测绘分队 / 远程战术分队
+                开局职业组: 稳扎稳打（重装、术师、狙击）
+                开局干员: 维什戴尔
+
+                1. 使用 ｢蓝图测绘分队｣ 时将完全采用避战策略，适合快速刷等级，不追求通关
+                2. 使用 ｢点刺成锭分队｣ 可提升刷源石锭效率，但需要注意策略选择为 ｢刷源石锭｣
+                3. 当前难度 ≥15 时，6★ 干员希望消耗 +1，使用部分分队时可能无法招募开局 6★ 干员，导致出错或失败
+                """
+        case .JieGarden:
+            return """
+                界园推荐配置：
+
+                开局分队: 指挥分队 / 远程战术分队
+                开局职业组: 稳扎稳打（重装、术师、狙击）
+                开局干员: 维什戴尔
+
+                1. 当策略选择 ｢刷源石锭｣，难度选择 ≥3 或 ｢MAX｣，开局分队选择 ｢指挥分队｣ 时将启用指挥避战策略
+                2. 使用指挥避战策略将大幅提高刷源石锭效率，也可用于快速刷等级（不追求通关），但需要注意策略选择为 ｢刷源石锭｣
+                3. 已解锁的最高难度 <3 或未解锁相关科技时，请不要使用指挥避战策略，否则会导致出错
+                4. 当前难度 ≥15 时，6★ 干员希望消耗 +1，使用部分分队时可能无法招募开局 6★ 干员，导致出错或失败
+                """
+        case .BlackFlow:
+            return """
+                黑流树海推荐配置：
+
+                开局干员: 机械师（必须精二并解锁 ｢招募精通 II｣ 天赋的 ｢效果提升 II｣ ）
+                开局分队: ｢特勤分队｣ / ｢堡垒战术分队｣
+                开局职业组: ｢稳扎稳打（重装、术师、狙击）｣ / ｢坚不可摧（重装、术师、医疗）｣
+
+                1. 目前没有专用战斗策略，作战由招募评分自动决策；
+                    刷源石锭、刷等级、刷襁褓动物目前全部围绕精二机械师的飞展开。
+                    本次肉鸽机制繁多，不按上述配置开局就只能使用默认寻路与战斗，大概率失败，
+                    招募到机械师后为保证效率不再检查精英化状态，直接按精二执行策略，
+                    所选机械师未精二会卡住甚至死循环，必须使用精二机械师；
+                    且通关一次前部分事件的选项会不同，遇到可能卡死；先通关一次 N1 即可同时满足精二与事件选项的前提，相对简单
+                2. 必须解锁 ｢招募精通 II｣ 天赋的 ｢效果提升 II｣ ，开局才会携带 ｢结构性原理｣ 零件（全图任意飞 3 次）；
+                    解锁很简单，精二后累计卖出 10 个零件即可
+                3. 刷等级时，机械师（必须精二）+ 上述分队与职业组 + 重装券，可以快速飞完三层
+                4. 没有精二机械师就不要选机械师，否则会卡住或死循环；不选机械师可以正常刷钱，但战斗大概率暴毙，其他策略待后续优化
+                5. 刷等级 + 不勾选 ｢投资源石锭｣，即可跳过商店
+                """
+        }
+    }
+
+    /// 显式键表：`core_char`/`use_support` 仅作旧档案回落键（已由 startingOpers 取代下发）。
+    enum CodingKeys: String, CodingKey {
+        case startingOpers, useAdditionalStartingOpers
+        case coreChar = "core_char"
+        case useSupport = "use_support"
+        case theme, mode, squad, roles, use_nonfriend_support, starts_count, difficulty
+        case stop_at_final_boss, stop_at_max_level
+        case investment_enabled, investments_count, stop_when_investment_full, investment_with_more_score
+        case start_with_elite_two, only_start_with_elite_two, refresh_trader_with_dice
+        case first_floor_foldartal, start_foldartal_list, use_foldartal, check_collapsal_paradigms
+        case expected_collapsal_paradigms
+        case monthly_squad_auto_iterate, monthly_squad_check_comms, deep_exploration_auto_iterate
+        case collectible_mode_shopping, collectible_mode_squad, collectible_mode_start_list
+        case jieFindPlaytimeTarget, blackflowEnding, blackflowFastFlight, blackflowStart
+        case seedEnabled, seed, blackflowCultivationTarget
+    }
+
     var title: String {
         type.description
     }
@@ -279,8 +427,10 @@ struct RoguelikeConfiguration: MAATaskConfiguration {
         let mode: Int?
         let squad: String?
         let roles: String?
-        let core_char: String?
-        let use_support: Bool?
+        /// 开局干员顺位（G03）。仅在有自选干员时下发；Core 同传时以本字段为准，
+        /// 不再下发旧版 `core_char`/`use_support`（WPF 同构，Core 51dac87 RoguelikeConfig
+        /// parse_start_opers 以 list 为准）。
+        let core_char_list: [StartingOper]?
         let use_nonfriend_support: Bool?
         let starts_count: Int?
         let difficulty: Int?
@@ -483,6 +633,25 @@ extension RoguelikeConfiguration {
         }
     }
 
+    /// 下发用的开局干员顺位：未启用第 2/3 顺位时截断到顺位 1，
+    /// 空白名顺位剔除（Core 端亦会跳过空名项），全空时不下发该字段。
+    fileprivate var checkedStartingOpers: [StartingOper]? {
+        let limit = useAdditionalStartingOpers ? 3 : 1
+        let opers = startingOpers.prefix(limit).map { oper in
+            StartingOper(
+                name: oper.name.trimmingCharacters(in: .whitespacesAndNewlines),
+                useSupport: oper.useSupport)
+        }.filter { !$0.name.isEmpty }
+        return opers.isEmpty ? nil : opers
+    }
+
+    /// 黑流准备局（模式 30003）的开局干员：使用准备局干员且不借助战，
+    /// 留空时不下发（Core 按练度自动选择，等价旧版 core_char ""）。
+    fileprivate var blackflowStartPreparationOpers: [StartingOper]? {
+        let name = blackflowStart.preparationOperator.trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? nil : [StartingOper(name: name)]
+    }
+
     fileprivate var checkedJiePlaytimeTarget: Int? {
         guard theme == .JieGarden, mode == .findPlaytime else { return nil }
         return jieFindPlaytimeTarget.rawValue
@@ -526,9 +695,14 @@ extension RoguelikeConfiguration.Params {
         let startPrep = startRun && !utopia && !fastFlight
         self.squad = fastFlight ? "特勤分队" : config.squad
         self.roles = fastFlight ? "稳扎稳打" : startPrep ? config.blackflowStart.preparationRoles : config.roles
-        self.core_char = fastFlight ? "机械师" : startPrep ? config.blackflowStart.preparationOperator : config.core_char
-        self.use_support = fastFlight || startPrep ? false : config.use_support
-        self.use_nonfriend_support = config.use_support && !fastFlight && !startPrep ? config.use_nonfriend_support : nil
+        let userStartOpers = config.checkedStartingOpers
+        self.core_char_list = fastFlight
+            ? [RoguelikeConfiguration.StartingOper(name: "机械师")]
+            : startPrep
+            ? config.blackflowStartPreparationOpers
+            : userStartOpers
+        self.use_nonfriend_support = fastFlight || startPrep ? nil
+            : userStartOpers?.contains(where: \.useSupport) == true ? config.use_nonfriend_support : nil
         self.starts_count = config.starts_count
         self.difficulty = config.difficulty.id
         self.stop_at_final_boss = config.mode == .exp && config.theme != .Phantom ? config.stop_at_final_boss : nil
@@ -568,8 +742,17 @@ extension RoguelikeConfiguration {
         self.mode = try container.decodeIfPresent(Mode.self, forKey: .mode) ?? .exp
         self.squad = try container.decodeIfPresent(String.self, forKey: .squad) ?? "指挥分队"
         self.roles = try container.decodeIfPresent(String.self, forKey: .roles) ?? "取长补短"
-        self.core_char = try container.decodeIfPresent(String.self, forKey: .core_char) ?? ""
-        self.use_support = try container.decodeIfPresent(Bool.self, forKey: .use_support) ?? false
+        // G03 迁移：新档案读三顺位列表；旧档案从 core_char/use_support 回落为顺位 1。
+        // 显式缺省零暗改：缺省为单空顺位，等价旧版 core_char ""（Core 按练度自动选择）。
+        if let opers = try container.decodeIfPresent([StartingOper].self, forKey: .startingOpers) {
+            self.startingOpers = opers.isEmpty ? [.init()] : opers
+        } else {
+            self.startingOpers = [.init(
+                name: try container.decodeIfPresent(String.self, forKey: .coreChar) ?? "",
+                useSupport: try container.decodeIfPresent(Bool.self, forKey: .useSupport) ?? false)]
+        }
+        self.useAdditionalStartingOpers =
+            try container.decodeIfPresent(Bool.self, forKey: .useAdditionalStartingOpers) ?? false
         self.use_nonfriend_support = try container.decodeIfPresent(Bool.self, forKey: .use_nonfriend_support) ?? false
         self.starts_count = try container.decodeIfPresent(Int.self, forKey: .starts_count) ?? 9_999_999
         self.difficulty = try container.decodeIfPresent(Difficulty.self, forKey: .difficulty) ?? .max
@@ -620,6 +803,48 @@ extension RoguelikeConfiguration {
         self.blackflowCultivationTarget =
             try container.decodeIfPresent(BlackflowCultivation.self, forKey: .blackflowCultivationTarget)
             ?? .swaddledCat
+    }
+
+    /// 显式编码：新档案只写三顺位键；旧键 `core_char`/`use_support` 不再落盘
+    /// （显式 CodingKeys 含旧键仅服务回落解码，合成 encode 会因无对应存储属性而失效）。
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(startingOpers, forKey: .startingOpers)
+        try container.encode(useAdditionalStartingOpers, forKey: .useAdditionalStartingOpers)
+        try container.encode(theme, forKey: .theme)
+        try container.encode(mode, forKey: .mode)
+        try container.encode(squad, forKey: .squad)
+        try container.encode(roles, forKey: .roles)
+        try container.encode(use_nonfriend_support, forKey: .use_nonfriend_support)
+        try container.encode(starts_count, forKey: .starts_count)
+        try container.encode(difficulty, forKey: .difficulty)
+        try container.encode(stop_at_final_boss, forKey: .stop_at_final_boss)
+        try container.encode(stop_at_max_level, forKey: .stop_at_max_level)
+        try container.encode(investment_enabled, forKey: .investment_enabled)
+        try container.encode(investments_count, forKey: .investments_count)
+        try container.encode(stop_when_investment_full, forKey: .stop_when_investment_full)
+        try container.encode(investment_with_more_score, forKey: .investment_with_more_score)
+        try container.encode(start_with_elite_two, forKey: .start_with_elite_two)
+        try container.encode(only_start_with_elite_two, forKey: .only_start_with_elite_two)
+        try container.encode(refresh_trader_with_dice, forKey: .refresh_trader_with_dice)
+        try container.encode(first_floor_foldartal, forKey: .first_floor_foldartal)
+        try container.encode(start_foldartal_list, forKey: .start_foldartal_list)
+        try container.encode(use_foldartal, forKey: .use_foldartal)
+        try container.encode(check_collapsal_paradigms, forKey: .check_collapsal_paradigms)
+        try container.encode(expected_collapsal_paradigms, forKey: .expected_collapsal_paradigms)
+        try container.encode(monthly_squad_auto_iterate, forKey: .monthly_squad_auto_iterate)
+        try container.encode(monthly_squad_check_comms, forKey: .monthly_squad_check_comms)
+        try container.encode(deep_exploration_auto_iterate, forKey: .deep_exploration_auto_iterate)
+        try container.encode(collectible_mode_shopping, forKey: .collectible_mode_shopping)
+        try container.encode(collectible_mode_squad, forKey: .collectible_mode_squad)
+        try container.encode(collectible_mode_start_list, forKey: .collectible_mode_start_list)
+        try container.encode(jieFindPlaytimeTarget, forKey: .jieFindPlaytimeTarget)
+        try container.encode(blackflowEnding, forKey: .blackflowEnding)
+        try container.encode(blackflowFastFlight, forKey: .blackflowFastFlight)
+        try container.encode(blackflowStart, forKey: .blackflowStart)
+        try container.encode(seedEnabled, forKey: .seedEnabled)
+        try container.encode(seed, forKey: .seed)
+        try container.encode(blackflowCultivationTarget, forKey: .blackflowCultivationTarget)
     }
 }
 

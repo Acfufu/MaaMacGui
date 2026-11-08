@@ -1217,7 +1217,11 @@ extension MAAViewModel {
             logTrace(.accountSwitch(to: accountName))
 
         case "StageInfo":
-            // TODO: (ViewState) Mark delayed Roguelike aborts as waiting for combat to finish.
+            // G18：肉鸽战斗节点开始，进入战斗态；限定本轮下发了肉鸽任务，
+            // 避免 Copilot 等其他战斗回调误触发等待语义。
+            if activeRunHasRoguelike {
+                roguelikeInCombat = true
+            }
             guard let name: String = try? info.details["name"] else {
                 return
             }
@@ -1391,8 +1395,8 @@ extension MAAViewModel {
             )
 
         case "RoguelikeCombatEnd":
-            // TODO: (ViewState) Clear the delayed-abort and in-combat state.
-            break
+            // G18：肉鸽战斗结束（无论成败），清除战斗态并放行等待中的停止请求。
+            roguelikeInCombat = false
 
         case "RoguelikeEvent":
             guard let name: String = try? info.details["name"] else {

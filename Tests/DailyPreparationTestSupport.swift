@@ -217,6 +217,8 @@ struct DailyTask: Equatable {
     private(set) var dailyRunTasks: [DailyTask]?
     var dailyTaskProfile = "Fixture"
     func logError(verbatim value: String) { errors.append(value) }
+    // G18 开关在桩世界以普通存储面替代（@AppStorage 属 SwiftUI，桩不引入）。
+    var roguelikeDelayAbortUntilCombatComplete = false
     // PRODUCTION_MODEL_MEMBERS
     enum DailyTasksDetailMode { case log }
     struct DailyTaskTimer {

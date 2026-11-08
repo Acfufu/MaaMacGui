@@ -105,6 +105,8 @@ actor FakeHandle {
  var touchMode = Touch.maatouch
  var clientChannel = "CN"
  var tasks: [DailyTask] = []
+ // G18 战斗态成员：startTasks 提取体的前置清零与入队置位引用。
+ var activeRunHasRoguelike = false; var roguelikeInCombat = false
  var handle: FakeHandle? = FakeHandle()
  var messageTask: Task<Void,Never>?
  var taskIDMap: [Int32: UUID] = [:]

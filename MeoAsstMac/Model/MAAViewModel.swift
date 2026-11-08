@@ -46,6 +46,18 @@ import SwiftUI
 
     // 核心回调可能在异步操作返回前重置 status，独立标记防止入口重叠。
     @Published private(set) var isStartStopInFlight = false
+
+    // G18 停止语义：肉鸽战斗中延迟停止。开关是全局运行时设置（WPF
+    // Gui.RuntimeSettings.RoguelikeDelayAbortUntilCombatComplete 同位，不进任务参数）。
+    @AppStorage("MAARoguelikeDelayAbortUntilCombatComplete") var roguelikeDelayAbortUntilCombatComplete = false
+    /// 本轮运行是否下发了肉鸽任务：限定战斗态跟踪范围，防止 Copilot 的 StageInfo 误触发。
+    /// （ setter 供 MaaMessage 扩展跨文件写入，与 taskStatus 同例。）
+    @Published var activeRunHasRoguelike = false
+    /// 肉鸽当前处于战斗节点（StageInfo/RoguelikeCombatEnd 消息对驱动）。
+    @Published var roguelikeInCombat = false
+    /// 停止请求正在等待当前战斗结束；再次请求停止时立即终止等待。
+    @Published var roguelikeWaitingForCombat = false
+    private var roguelikeCombatWaitAborted = false
     var forceRecovery: ForcedGameRecovery?
     var forceRecoveryInFlight = false
     private var forceRecoveryAbortRequested = false
@@ -422,6 +434,13 @@ extension MAAViewModel {
         if cancelScheduledStart {
             NotificationCenter.default.post(name: .MAACancelPendingScheduledStart, object: nil)
         }
+        if roguelikeWaitingForCombat {
+            // G18：等待战斗结束期间再次请求停止 → 只终止等待；实际的 Core 停止
+            // 由在途的首次停止流程在跳出等待后立即执行，此处不重复进入停止互斥。
+            roguelikeCombatWaitAborted = true
+            logInfo("已请求立即停止，不再等待当前战斗结束。")
+            return
+        }
         if forceRecoveryInFlight && isStartStopInFlight && !forceRecoveryCleanupPending {
             // 强制恢复最长约 5 分钟,且仅在 startDailyTasks 持有启动互斥期间运行;
             // 该窗口内保留停止途径:请求中止恢复,恢复循环会清理并释放 Core,
@@ -474,6 +493,30 @@ extension MAAViewModel {
         // 停止尝试后必须就地消化隔离状态,避免标志跨运行残留污染下一次运行
         // 的消息路由与收尾过滤。
         let discardQuarantinedCore = abandonedRun && forceRecoveryCleanupPending
+        // G18：肉鸽战斗中延迟停止——等待当前战斗结束（RoguelikeCombatEnd）后再停止，
+        // 最长 10 分钟；等待期间 MainActor 挂起，消息循环持续更新战斗态。
+        // 再次请求停止经 roguelikeCombatWaitAborted 立即跳出；应用退出/进程终止
+        // 不经过此协程，不存在无限等待。
+        if roguelikeDelayAbortUntilCombatComplete, activeRunHasRoguelike,
+           roguelikeInCombat, await handle?.running == true {
+            roguelikeWaitingForCombat = true
+            logInfo("肉鸽战斗中：等待当前战斗结束后再停止（最长 10 分钟）。再次点击停止可立即停止。")
+            let deadline = Date.now.addingTimeInterval(600)
+            while Date.now < deadline, roguelikeInCombat, !roguelikeCombatWaitAborted, !Task.isCancelled,
+                  await handle?.running == true {
+                try? await Task.sleep(for: .seconds(1))
+            }
+            roguelikeWaitingForCombat = false
+            if roguelikeCombatWaitAborted {
+                logInfo("已按请求立即停止。")
+            } else if roguelikeInCombat, await handle?.running == true {
+                logInfo("等待战斗结束超时，现在停止。")
+            } else {
+                // 战斗态清零（RoguelikeCombatEnd）或 Core 自然收口（running 已 false）。
+                logInfo("战斗已结束或运行已收口，继续停止。")
+            }
+        }
+        roguelikeCombatWaitAborted = false
         do { try await handle?.stop() }
         catch {
             guard discardQuarantinedCore else { throw error }
@@ -497,6 +540,11 @@ extension MAAViewModel {
 
     func resetStatus() {
         taskCompletionGeneration &+= 1
+        // G18：本轮运行收口（自然完成或链停止），战斗态与等待标志随之清零。
+        activeRunHasRoguelike = false
+        roguelikeInCombat = false
+        roguelikeWaitingForCombat = false
+        roguelikeCombatWaitAborted = false
         if let runID = dailyRunCoordinator.active?.id, dailyFinishAttemptedRunID == runID {
             status = .pending
             return
@@ -1309,6 +1357,9 @@ extension MAAViewModel {
         let inventoryRunID = UUID()
         var inventoryFightIDs = Set<Int32>()
         var appendedAnyTask = false
+        // G18：新运行开始前清残留战斗态（防上一轮异常收口后的陈旧标志）。
+        activeRunHasRoguelike = false
+        roguelikeInCombat = false
         do {
             for task in runTasks {
                 try Task.checkCancellation()
@@ -1381,6 +1432,7 @@ extension MAAViewModel {
                                                       blackflowStartAvailable: supportsBlackflowStart,
                                                       supportsRoguelikeSeedInput: touchMode != .MacPlayTools)
                 } else {
+                    if case .roguelike = task.task { activeRunHasRoguelike = true }
                     coreID = try await handle?.appendTask(task.task, recruitTagNames: recruitTagNames,
                                                       blackflowStartAvailable: supportsBlackflowStart,
                                                       supportsRoguelikeSeedInput: touchMode != .MacPlayTools)

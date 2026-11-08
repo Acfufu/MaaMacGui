@@ -43,6 +43,9 @@ struct DailyTask {}
  var dailyCompletionTask: Task<Void, Never>?
  var dailyFinishAttemptedRunID: UUID?
  var medicineUsedTimes = 0; var expiringMedicineUsedTimes = 0
+ // G18 战斗态成员：resetStatus 提取体引用，桩世界以普通存储面替代。
+ var activeRunHasRoguelike = false; var roguelikeInCombat = false
+ var roguelikeWaitingForCombat = false; var roguelikeCombatWaitAborted = false
  var logStore: LogStore? = LogStore()
  let dailyRunCoordinator: DailyRunCoordinator
  init(journalURL: URL? = nil) { dailyRunCoordinator = DailyRunCoordinator(journalURL: journalURL) }
