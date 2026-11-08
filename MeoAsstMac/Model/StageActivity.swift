@@ -80,6 +80,8 @@ extension MAAStageActivity {
 
         /// 统一开闭口径：左闭右开 [start, end)，与 medicineWindow 既有语义一致。
         /// Foundation 的 DateInterval.contains 端点闭区间，不能直接复用。
+        /// 与 WPF IsActivityOpen 闭区间 [start, end] 存在 ExpireTime 瞬间 ±1s 的端点差
+        /// （评审 P12-1-R3 低6，实义可忽略）。
         func contains(_ date: Date) -> Bool {
             guard let interval else { return false }
             return interval.start <= date && date < interval.end

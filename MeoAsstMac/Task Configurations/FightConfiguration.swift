@@ -298,16 +298,11 @@ struct FightConfiguration: MAATaskConfiguration {
     @MainActor static var inventoryDropItems: [(id: String, item: DropItem)] {
         dropItems.filter { InventoryTargetPlanner.supportsInventory(classification: $0.item.classifyType) }
     }
-    /// 合成配方反查表（itemID → 配方）：库存保持双芯片折算（I10）的数据源，
-    /// 与 dropItems 同一 item_index.json 装载面。
-    @MainActor static var dropFormulaTable: [String: [String: Int]] {
-        var table: [String: [String: Int]] = [:]
-        for (id, item) in dropItems {
-            guard let formula = item.formula, !formula.isEmpty else { continue }
-            table[id] = formula
-        }
-        return table
-    }
+    /// 合成配方反查表（itemID → 配方）：库存保持双芯片折算（I10）的数据源。
+    /// initDropItems 装载时由 ingestItemIndex 从全量 item_index.json 收集（不受
+    /// _excludedValues 过滤——8 个双芯片 3213-3283 的配方恰好整体落在排除集内，
+    /// 从过滤后的 dropItems 建表会把折算数据源结构性清空，评审 P12-1-R3 高1）。
+    @MainActor static var dropFormulaTable: [String: [String: Int]] = [:]
     @MainActor static var id2index: [String: Int] = [:]  // (id -> idx of dropItems)
     static let _excludedValues = Set([
         3213, 3223, 3233, 3243,  // 双芯片
@@ -323,6 +318,24 @@ struct FightConfiguration: MAATaskConfiguration {
         30145,  // 晶体电子单元
         30155,  // 烧结核凝晶
     ])
+
+    /// item_index.json 装载面（可注入测试）：配方表在排除过滤**之前**于全量面收集，
+    /// dropItems 仍按 _excludedValues 过滤（排除集=不可刷取物品，与下拉选择面语义一致）。
+    /// 纯函数（只读 nonisolated let 排除集），非隔离以便测试/装载双面直呼。
+    static func ingestItemIndex(_ json: [String: DropItem])
+        -> (items: [(id: String, item: DropItem)], formulas: [String: [String: Int]]) {
+        var items: [(id: String, item: DropItem)] = []
+        var formulas: [String: [String: Int]] = [:]
+        for item in json.sorted(by: { $0.key < $1.key }) {
+            guard let k = Int(item.key) else { continue }
+            if let formula = item.value.formula, !formula.isEmpty {
+                formulas[item.key] = formula
+            }
+            guard !_excludedValues.contains(k) else { continue }
+            items.append((id: item.key, item: item.value))
+        }
+        return (items, formulas)
+    }
 
     @MainActor static func initDropItems(_ language: String) throws {
         if !dropItems.isEmpty { return }
@@ -347,11 +360,9 @@ struct FightConfiguration: MAATaskConfiguration {
         let url = url_mid.appendingPathComponent("item_index.json")
         let data = try Data(contentsOf: url)
         let json = try JSONDecoder().decode([String: DropItem].self, from: data)
-        for item in json {
-            guard let k = Int(item.key) else { continue }
-            guard !_excludedValues.contains(k) else { continue }
-            dropItems.append((id: item.key, item: item.value))
-        }
+        let ingested = ingestItemIndex(json)
+        dropItems = ingested.items
+        dropFormulaTable = ingested.formulas
         dropItems.sort { $0.1.name.localizedCompare($1.1.name) == .orderedAscending }
         for (idx, item) in dropItems.enumerated() {
             id2index[item.0] = idx

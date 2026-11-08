@@ -197,6 +197,33 @@ do {
         config: config([a, b, e], onlyFirstInsufficientPlan: true, sortByProgress: true),
         inventory: inventory)
     check(outcomes.map(\.index) == [1], "sorted order then break at first insufficient")
+
+    // 评审 P12-1-R3 中2：「下标决胜复现 LINQ 稳定序」是 Swift 不稳定排序下稳定序的唯一
+    // 保障——直接钉比较器（变异摘除决胜后原 60 断言仍全绿，此处补捕获力）。
+    let ties = (0..<8).map { ($0, plan(stage: "1-7", dropID: "30011", dropCount: 100)) }
+    for i in 0..<7 {
+        check(DepotMaintainPlanner.isProgressOrdered(ties[i], ties[i + 1], inventory: ["30011": 50],
+                                                     formulas: [:], chipConversion: false),
+              "tiebreak: adjacent equal progress ordered by offset (\(i) before \(i + 1))")
+        check(!DepotMaintainPlanner.isProgressOrdered(ties[i + 1], ties[i], inventory: ["30011": 50],
+                                                      formulas: [:], chipConversion: false),
+              "tiebreak: reversed pair rejected (\(i + 1) not before \(i))")
+    }
+    check(DepotMaintainPlanner.isProgressOrdered(ties[0], ties[7], inventory: ["30011": 50],
+                                                 formulas: [:], chipConversion: false) &&
+          !DepotMaintainPlanner.isProgressOrdered(ties[7], ties[0], inventory: ["30011": 50],
+                                                  formulas: [:], chipConversion: false),
+          "tiebreak: extremes of equal run follow original order")
+    let nilA = (0, plan(stage: "1-7", dropID: "", dropCount: 100))
+    let nilB = (1, plan(stage: "1-7", dropID: "", dropCount: 50))
+    check(DepotMaintainPlanner.isProgressOrdered(nilA, nilB, inventory: [:], formulas: [:], chipConversion: false) &&
+          !DepotMaintainPlanner.isProgressOrdered(nilB, nilA, inventory: [:], formulas: [:], chipConversion: false),
+          "tiebreak: nil-nil pair ordered by offset")
+
+    // 64 条等达成率计划：evaluate 输出必须严格保持配置顺序（大规模等键面）
+    let many = (0..<64).map { _ in plan(stage: "1-7", dropID: "30011", dropCount: 100) }
+    outcomes = DepotMaintainPlanner.evaluate(config: config(many, sortByProgress: true), inventory: ["30011": 50])
+    check(outcomes.map(\.index) == Array(0..<64), "64 equal-progress plans keep exact list order")
 }
 
 // MARK: - 双芯片折算（I10）
@@ -230,6 +257,28 @@ do {
           "progress uses converted count")
     check(DepotMaintainPlanner.progress(of: plan(dropID: ""), inventory: [:], formulas: [:], chipConversion: false) == nil,
           "invalid plan has no progress (sorts last)")
+
+    // 评审 P12-1-R3 高1：配方表必须来自未过滤全量面——真实 item_index.json 中 8 个
+    // 双芯片（3213-3283）配方恰好整体落在 _excludedValues 排除集内，从过滤后 dropItems
+    // 建表会把折算数据源结构性清空（WPF ArkItems 无过滤装载，功能真实可用）。
+    // 本块以真实形态镜像装载路径：双芯片被排除出下拉面、但其配方必须进入反查表。
+    let itemIndexFixture: [String: DropItem] = [
+        "3222": DropItem(classifyType: "MATERIAL", description: nil, icon: "", name: "近卫芯片组", sortId: 0, usage: nil, formula: nil),
+        "3223": DropItem(classifyType: "MATERIAL", description: nil, icon: "", name: "近卫双芯片", sortId: 1, usage: nil,
+                         formula: ["32001": 1, "3222": 2]),  // 真实形态：合成耗 2× 芯片组 + 1× 助剂
+        "4004": DropItem(classifyType: "MATERIAL", description: nil, icon: "", name: "凭证", sortId: 2, usage: nil, formula: nil),
+        "30012": DropItem(classifyType: "MATERIAL", description: nil, icon: "", name: "固源岩", sortId: 3, usage: nil,
+                          formula: ["30011": 3]),
+    ]
+    let ingested = FightConfiguration.ingestItemIndex(itemIndexFixture)
+    check(ingested.formulas["3223"] == ["32001": 1, "3222": 2],
+          "excluded dual chip formula still collected (unfiltered source)")
+    check(ingested.formulas["30012"] == ["30011": 3], "ordinary formula collected")
+    check(!ingested.items.contains(where: { $0.id == "3223" }) && !ingested.items.contains(where: { $0.id == "4004" }),
+          "drop list still excludes dual chip / excluded values")
+    check(ingested.items.contains(where: { $0.id == "3222" }), "chip pack stays selectable")
+    check(DepotMaintainPlanner.dualChipConversion(for: "3222", inventory: ["3223": 5], formulas: ingested.formulas) == 10,
+          "real loading path: conversion wired through ingested table")
 }
 
 // MARK: - 下发参数契约（upstream AsstFightTask 同构）

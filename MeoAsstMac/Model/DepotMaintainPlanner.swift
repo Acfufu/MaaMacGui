@@ -102,20 +102,28 @@ enum DepotMaintainPlanner {
                                      chipConversion: Bool) -> [(offset: Int, element: DepotMaintainPlan)] {
         guard sortByProgress, plans.count > 1 else { return plans }
         var order = plans
-        order.sort { lhs, rhs in
-            switch (progress(of: lhs.element, inventory: inventory, formulas: formulas, chipConversion: chipConversion),
-                    progress(of: rhs.element, inventory: inventory, formulas: formulas, chipConversion: chipConversion)) {
-            case let (l?, r?):
-                return l == r ? lhs.offset < rhs.offset : l < r
-            case (nil, _?):
-                return false
-            case (_?, nil):
-                return true
-            case (nil, nil):
-                return lhs.offset < rhs.offset
-            }
-        }
+        order.sort { isProgressOrdered($0, $1, inventory: inventory, formulas: formulas, chipConversion: chipConversion) }
         return order
+    }
+
+    /// 全序比较器（可独立断言——评审 P12-1-R3 中2：下标决胜是 Swift 不稳定排序下
+    /// 稳定序语义的唯一保障，须直接钉住）：达成率升序，相等以下标决胜；无效计划置末，
+    /// 双无效按原序。
+    static func isProgressOrdered(_ lhs: (offset: Int, element: DepotMaintainPlan),
+                                  _ rhs: (offset: Int, element: DepotMaintainPlan),
+                                  inventory: [String: Int], formulas: [String: [String: Int]],
+                                  chipConversion: Bool) -> Bool {
+        switch (progress(of: lhs.element, inventory: inventory, formulas: formulas, chipConversion: chipConversion),
+                progress(of: rhs.element, inventory: inventory, formulas: formulas, chipConversion: chipConversion)) {
+        case let (l?, r?):
+            return l == r ? lhs.offset < rhs.offset : l < r
+        case (nil, _?):
+            return false
+        case (_?, nil):
+            return true
+        case (nil, nil):
+            return lhs.offset < rhs.offset
+        }
     }
 
     /// 全量预检。返回按下发顺序排列的评估：
