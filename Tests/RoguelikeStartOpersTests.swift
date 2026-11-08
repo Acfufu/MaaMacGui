@@ -125,4 +125,65 @@ let partialOper = try JSONDecoder().decode(
 expect(partialOper.startingOpers[0].name == "棘刺" && !partialOper.startingOpers[0].useSupport,
        "Operator entry tolerates missing use_support")
 
+// P09.2: production editor accessors preserve old profiles until actual edits.
+var editor = legacy
+let beforeRead = editor
+expect(editor.startingOper(at: 2) == .init(), "Missing third slot reads as blank")
+expect(editor == beforeRead, "Displaying slots never rewrites a legacy profile")
+editor.setStartingOper(.init(name: "克洛丝", useSupport: true), at: 2)
+expect(editor.startingOpers.count == 3 && editor.startingOpers[1] == .init(), "Editing third slot pads missing second slot")
+expect(editor.startingOpers[0] == legacy.startingOpers[0], "Editing third slot preserves first")
+editor.useAdditionalStartingOpers = true
+expect(editor.hasStartingSupport, "Additional support controls nonfriend UI")
+editor.useAdditionalStartingOpers = false
+editor.use_support = false
+expect(!editor.hasStartingSupport, "Hidden additional support cannot expose nonfriend UI")
+editor.useAdditionalStartingOpers = true
+expect(editor.startingOper(at: 2).name == "克洛丝", "Toggling additional slots preserves names")
+editor.start_with_elite_two = true
+editor.setStartingOper(.init(name: "棘刺", useSupport: true), at: 0)
+expect(!editor.start_with_elite_two && editor.use_support, "First-slot editor honors elite-two exclusion")
+editor.start_with_elite_two = true
+expect(!editor.use_support && editor.startingOper(at: 2).useSupport, "Elite-two only excludes first-slot support")
+let beforeInvalid = editor
+editor.setStartingOper(.init(name: "invalid"), at: -1)
+editor.setStartingOper(.init(name: "invalid"), at: 3)
+expect(editor == beforeInvalid, "Invalid editor slots ignored")
+editor.startingOpers = [.init(name: " ", useSupport: true)]
+expect(!editor.hasStartingSupport, "Blank-name support does not expose nonfriend UI")
+editor.setStartingOper(.init(name: "维什戴尔", useSupport: true), at: 1)
+let editorPayload = startList(try params(editor))
+expect(editorPayload.count == 1 && editorPayload[0]["name"] as? String == "维什戴尔", "Blank first editor slot compacts consistently with visible hint")
+expect(try! JSONDecoder().decode(RoguelikeConfiguration.self, from: JSONEncoder().encode(editor)) == editor, "Edited slots JSON roundtrip")
+expect(try! PropertyListDecoder().decode(RoguelikeConfiguration.self, from: PropertyListEncoder().encode(editor)) == editor, "Edited slots plist roundtrip")
+
+let catalog = RoguelikeConfiguration.OperatorCatalog(data: Data(#"{"chars":{"char_1":{"name":"棘刺","name_en":"Thorns","name_jp":"ソーンズ","name_kr":"쏜즈","name_tw":"棘刺","profession":"WARRIOR"},"char_2":{"name":"山","name_en":"Mountain","profession":"WARRIOR"},"char_3":{"name":"克洛丝","name_en":"Kroos","profession":"SNIPER"}}}"#.utf8))
+for name in ["棘刺", " thorns ", "THORNS", "ソーンズ", "쏜즈"] {
+    expect(catalog.entry(for: name)?.name == "棘刺", "Official server name resolves: \(name)")
+}
+expect(catalog.entry(for: "unknown") == nil, "Unknown names are not guessed")
+expect(RoguelikeConfiguration.OperatorCatalog(data: Data("broken".utf8)).entry(for: "Thorns") == nil, "Corrupt catalog fails open without crashing")
+editor.startingOpers = [.init(name: " thorns ", useSupport: true), .init(name: "Mountain"), .init(name: "unknown")]
+editor.useAdditionalStartingOpers = true
+expect(editor.hasDuplicateStartingProfession(in: catalog), "Localized aliases reveal duplicate classes")
+let normalizedParams = RoguelikeConfiguration.Params(config: editor, operatorCatalog: catalog)
+let normalized = startList(try JSONSerialization.jsonObject(with: JSONEncoder().encode(normalizedParams)) as! [String: Any])
+expect(normalized.map { $0["name"] as! String } == ["棘刺", "山", "unknown"], "Dispatch canonical names and preserve unknown input")
+expect(normalized[0]["use_support"] as? Bool == true, "Canonical dispatch preserves per-slot support")
+expect(editor.startingOpers[0].name == " thorns ", "Normalization does not rewrite saved user input")
+editor.useAdditionalStartingOpers = false
+expect(!editor.hasDuplicateStartingProfession(in: catalog), "Hidden slots do not produce duplicate warning")
+editor.useAdditionalStartingOpers = true
+editor.setStartingOper(.init(name: "Kroos"), at: 1)
+expect(!editor.hasDuplicateStartingProfession(in: catalog), "Different classes and unknown names do not produce false warning")
+editor.theme = .BlackFlow; editor.mode = .exp; editor.blackflowFastFlight = true
+expect(!editor.hasDuplicateStartingProfession(in: catalog), "Fast flight does not validate inactive user list")
+editor.blackflowFastFlight = false; editor.mode = .blackflowStart
+editor.blackflowStart.preparationOperator = " Thorns "
+let prepParams = RoguelikeConfiguration.Params(config: editor, operatorCatalog: catalog)
+expect(prepParams.core_char_list?.first?.name == "棘刺", "Preparation aliases normalize too")
+editor.blackflowStart.utopia = true
+let utopiaParams = RoguelikeConfiguration.Params(config: editor, blackflowStartAvailable: true, operatorCatalog: catalog)
+expect(utopiaParams.collectible_mode_core_char_list?.first?.name == "棘刺", "Utopia preparation aliases normalize consistently")
+
 print("PASS \(checks) starting-oper checks")

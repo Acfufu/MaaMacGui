@@ -149,6 +149,68 @@ struct RoguelikeConfiguration: MAATaskConfiguration {
     /// 启用第 2/3 顺位开局干员；关闭时仅顺位 1 参与下发（WPF UseAdditionalStartingOpers 同构）。
     var useAdditionalStartingOpers = false
 
+    /// UI reads missing slots without mutating an old profile on display.
+    func startingOper(at index: Int) -> StartingOper {
+        guard (0..<3).contains(index), startingOpers.indices.contains(index) else { return .init() }
+        return startingOpers[index]
+    }
+
+    /// Slot one retains the existing elite-two/support exclusion. Slots two and
+    /// three have independent support flags, matching the Core contract.
+    mutating func setStartingOper(_ oper: StartingOper, at index: Int) {
+        guard (0..<3).contains(index) else { return }
+        while startingOpers.count <= index { startingOpers.append(.init()) }
+        startingOpers[index] = oper
+        if index == 0 && oper.useSupport { start_with_elite_two = false }
+    }
+
+    var hasStartingSupport: Bool {
+        startingOpers.prefix(useAdditionalStartingOpers ? 3 : 1).contains {
+            !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.useSupport
+        }
+    }
+
+    /// Battle data carries the five official server names. Like WPF's name
+    /// index, this accepts those names case-insensitively, without guessing nicknames.
+    struct OperatorCatalog: Sendable {
+        struct Entry: Sendable {
+            let name: String
+            let profession: String
+        }
+        private var byName: [String: Entry] = [:]
+
+        init(data: Data? = nil) {
+            guard let data,
+                  let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let chars = root["chars"] as? [String: [String: Any]] else { return }
+            for id in chars.keys.sorted() where id.hasPrefix("char_") {
+                guard let fields = chars[id], let name = fields["name"] as? String else { continue }
+                let entry = Entry(name: name, profession: fields["profession"] as? String ?? "")
+                for key in ["name", "name_en", "name_jp", "name_kr", "name_tw"] {
+                    guard let alias = fields[key] as? String, !alias.isEmpty else { continue }
+                    if byName[alias.lowercased()] == nil { byName[alias.lowercased()] = entry }
+                }
+            }
+        }
+
+        func entry(for name: String) -> Entry? {
+            byName[name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()]
+        }
+
+        static let bundled: Self = {
+            let url = Bundle.main.resourceURL?.appendingPathComponent("resource/battle_data.json")
+            return Self(data: url.flatMap { try? Data(contentsOf: $0) })
+        }()
+    }
+
+    func hasDuplicateStartingProfession(in catalog: OperatorCatalog = .bundled) -> Bool {
+        guard !usesBlackflowFastFlight else { return false }
+        let professions = startingOpers.prefix(useAdditionalStartingOpers ? 3 : 1).compactMap {
+            catalog.entry(for: $0.name)?.profession
+        }.filter { !$0.isEmpty }
+        return Set(professions).count < professions.count
+    }
+
     var squad: String
     var roles: String
 
@@ -672,7 +734,7 @@ extension RoguelikeConfiguration {
 }
 
 extension RoguelikeConfiguration.Params {
-    init(config: RoguelikeConfiguration, blackflowStartAvailable: Bool = false, supportsSeedInput: Bool = false) {
+    init(config: RoguelikeConfiguration, blackflowStartAvailable: Bool = false, supportsSeedInput: Bool = false, operatorCatalog: RoguelikeConfiguration.OperatorCatalog = .bundled) {
         self.start_with_seed =
             supportsSeedInput && config.supportsSeedConfiguration && config.seedEnabled && config.hasValidSeed
             ? config.trimmedSeed : nil
@@ -686,20 +748,25 @@ extension RoguelikeConfiguration.Params {
         self.collectible_mode_roles = utopia ? config.blackflowStart.preparationRoles : nil
         // An explicit empty list prevents Core from falling back to the target
         // run's operator list, which may include support units.
+        let preparationName = config.blackflowStart.preparationOperator.trimmingCharacters(in: .whitespacesAndNewlines)
+        let canonicalPreparationName = operatorCatalog.entry(for: preparationName)?.name ?? preparationName
         self.collectible_mode_core_char_list = utopia
-            ? (config.blackflowStart.preparationOperator.isEmpty
-                ? [] : [.init(name: config.blackflowStart.preparationOperator, use_support: false)]) : nil
+            ? (canonicalPreparationName.isEmpty
+                ? [] : [.init(name: canonicalPreparationName, use_support: false)]) : nil
         self.theme = config.theme.rawValue
         self.mode = config.mode.rawValue
         let fastFlight = config.usesBlackflowFastFlight
         let startPrep = startRun && !utopia && !fastFlight
         self.squad = fastFlight ? "特勤分队" : config.squad
         self.roles = fastFlight ? "稳扎稳打" : startPrep ? config.blackflowStart.preparationRoles : config.roles
-        let userStartOpers = config.checkedStartingOpers
+        let userStartOpers = config.checkedStartingOpers?.map {
+            RoguelikeConfiguration.StartingOper(name: operatorCatalog.entry(for: $0.name)?.name ?? $0.name,
+                                               useSupport: $0.useSupport)
+        }
         self.core_char_list = fastFlight
             ? [RoguelikeConfiguration.StartingOper(name: "机械师")]
             : startPrep
-            ? config.blackflowStartPreparationOpers
+            ? (canonicalPreparationName.isEmpty ? nil : [.init(name: canonicalPreparationName)])
             : userStartOpers
         self.use_nonfriend_support = fastFlight || startPrep ? nil
             : userStartOpers?.contains(where: \.useSupport) == true ? config.use_nonfriend_support : nil

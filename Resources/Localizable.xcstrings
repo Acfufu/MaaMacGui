@@ -1,6 +1,38 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "开局干员职业重复，请调整顺位配置。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting operators share a class. Adjust the starting order."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시작 오퍼레이터의 직업이 중복됩니다. 순위 설정을 변경하세요."
+          }
+        }
+      }
+    },
+    "指定第二、第三顺位干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specify second and third starting operators"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "두 번째 및 세 번째 시작 오퍼레이터 지정"
+          }
+        }
+      }
+    },
     "部分班次未设置时间段，自动选择时无匹配将使用第一个班次。" : {
       "localizations" : {
         "en" : {
@@ -7611,6 +7643,22 @@
         }
       }
     },
+    "使用助战" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use support unit"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지원 유닛 사용"
+          }
+        }
+      }
+    },
     "使用多显示器时，请将本窗口与《明日方舟》放置在同一台显示器上。\n基于当前显示器的设定，建议在PlayCover中，将图像设置调整为以下预设之一：" : {},
     "使用人间烟火跨设施组合" : {
       "localizations" : {
@@ -7951,6 +7999,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "현재 작업을 중지하지 못해 이번 예약을 시작하지 않습니다."
+          }
+        }
+      }
+    },
+    "停止当前任务；肉鸽战斗中先等待战斗结束，最多 10 分钟。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop current tasks. During a roguelike battle, wait up to 10 minutes for combat to end."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 작업을 중지합니다. 통합 전략 전투 중에는 전투가 끝날 때까지 최대 10분 기다립니다."
           }
         }
       }
@@ -12234,6 +12298,22 @@
         }
       }
     },
+    "正在等待当前肉鸽战斗结束；再次停止将立即中断。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for the current roguelike battle to end. Stop again to interrupt immediately."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 통합 전략 전투가 끝나기를 기다리는 중입니다. 다시 중지하면 즉시 중단합니다."
+          }
+        }
+      }
+    },
     "正在解压…" : {
       "localizations" : {
         "ko" : {
@@ -13446,6 +13526,22 @@
       }
     },
     "窗口大小：" : {},
+    "立即停止" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop immediately"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "즉시 중지"
+          }
+        }
+      }
+    },
     "第一只动物" : {
       "localizations" : {
         "en" : {
@@ -13490,6 +13586,22 @@
         }
       }
     },
+    "第一顺位干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First starting operator"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 번째 시작 오퍼레이터"
+          }
+        }
+      }
+    },
     "第三结局" : {
       "localizations" : {
         "en" : {
@@ -13508,6 +13620,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "第三结局"
+          }
+        }
+      }
+    },
+    "第三顺位干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Third starting operator"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "세 번째 시작 오퍼레이터"
           }
         }
       }
@@ -13552,6 +13680,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "第二结局"
+          }
+        }
+      }
+    },
+    "第二顺位干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Second starting operator"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "두 번째 시작 오퍼레이터"
           }
         }
       }
@@ -14888,6 +15032,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "이벤트 상점 페이지에서 시작해주세요.\n무한 풀은 구매하지 않습니다."
+          }
+        }
+      }
+    },
+    "请填写干员中文名。三名干员职业不能相同，建议希望消耗高的排在前面；空项会被跳过，后续非空项依次前移。未找到指定干员时由 Core 自动选择。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter Chinese operator names. Use different classes and put higher Hope costs first. Empty entries are skipped and later entries move forward. Core chooses automatically if the requested operator is not found."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터의 중국어 이름을 입력하세요. 직업이 서로 달라야 하며 희망 소모가 높은 순서를 권장합니다. 빈 항목은 건너뛰고 이후 항목이 앞으로 이동합니다. 지정한 오퍼레이터를 찾지 못하면 Core가 자동으로 선택합니다."
           }
         }
       }
