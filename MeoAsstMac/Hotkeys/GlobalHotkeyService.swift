@@ -102,7 +102,7 @@ final class GlobalHotkeyService: ObservableObject {
             errorMessage = String(localized: "全局热键配置无效或系统处理器不可用")
             return false
         }
-        for (command, chord) in [(HotkeyCommand.start, value.start), (.stop, value.stop)] {
+        for (command, chord) in [(HotkeyCommand.start, value.start), (.stop, value.stop), (.showGui, value.showGui)] {
             guard let chord else { continue }
             var reference: EventHotKeyRef?
             let status = RegisterEventHotKey(chord.keyCode, chord.modifiers,
@@ -135,8 +135,9 @@ final class GlobalHotkeyService: ObservableObject {
             let accepted = await command(action)
             self?.dispatching.remove(id)
             if accepted {
+                let name = action == .start ? "start" : (action == .stop ? "stop" : "showGui")
                 NotificationCenter.default.post(name: Notification.Name("MAAHotkeyCommandAccepted"), object: nil,
-                                                userInfo: ["command": action == .start ? "start" : "stop"])
+                                                userInfo: ["command": name])
             }
         }
     }

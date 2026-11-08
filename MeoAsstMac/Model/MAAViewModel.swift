@@ -323,6 +323,23 @@ import SwiftUI
         }
     }
 
+    // S04: WPF RuntimeSettings.BlockSleepWithScreenOn 同位。true（缺省）＝任务期间
+    // 屏幕常亮（历史行为 NoDisplaySleep）；false＝允许屏幕休眠、系统仍保持唤醒。
+    @AppStorage("MAABlockSleepWithScreenOn") var blockSleepWithScreenOn = true {
+        didSet {
+            NotificationCenter.default.post(name: .MAABlockSleepWithScreenOnChanged, object: blockSleepWithScreenOn)
+        }
+    }
+
+    // S02: WPF Start.RunDirectly / Start.SkipStartupAutoRunAfterUpdate 同位。
+    @AppStorage("MAARunDirectly") var runDirectly = false
+    @AppStorage(StartupAutoRunPolicy.skipAfterUpdateDefaultsKey) var skipStartupAutoRunAfterUpdate = true
+
+    /// S02: 启动自动运行倒计时的剩余秒数；nil＝无倒计时（驱动 ContentView 弹窗）。
+    @Published private(set) var startupAutoRunRemaining: Int?
+    let startupAutoRunCountdown = StartupAutoRunCountdown()
+    private var startupAutoRunHandled = false
+
     // MARK: - Initializer
 
     init() {
@@ -364,8 +381,15 @@ import SwiftUI
             case .stop:
                 guard self.status != .idle || self.dailyRunCoordinator.active != nil else { return false }
                 do { try await self.stop(); return true } catch { return false }
+            case .showGui:
+                // S13: 显隐主窗口；与 WPF ShowGui 一致始终视作已受理。
+                MainWindowVisibility.toggle(tracker: .shared)
+                return true
             }
         }
+        NotificationCenter.default.publisher(for: .MAABlockSleepWithScreenOnChanged)
+            .sink { [weak self] _ in self?.refreshAwakeAssertionType() }
+            .store(in: &cancellables)
         dailyRunCoordinator.didChange = { [weak self] in self?.objectWillChange.send() }
         initScheduledDailyTaskTimer()
         AchievementStore.shared.recordLaunch()
@@ -2152,13 +2176,16 @@ extension MAAViewModel {
     }
 
     // keeps the system from sleeping during tasks
+    // S04: 断言类型由「阻止休眠时保持屏幕常亮」决定——常亮（缺省）＝NoDisplaySleep
+    // （历史行为），关闭＝NoIdleSleep（允许屏幕休眠、系统保持唤醒，WPF DisplayRequired 位同构）。
     private func enableAwake() {
         guard awakeAssertionID == nil else { return }
         var assertionID: IOPMAssertionID = 0
         let name = "MAA is running; sleep is diabled."
+        let assertionType = blockSleepWithScreenOn ? kIOPMAssertionTypeNoDisplaySleep : kIOPMAssertionTypeNoIdleSleep
         let properties =
             [
-                kIOPMAssertionTypeKey: kIOPMAssertionTypeNoDisplaySleep as CFString,
+                kIOPMAssertionTypeKey: assertionType as CFString,
                 kIOPMAssertionNameKey: name as CFString,
                 kIOPMAssertionLevelKey: UInt32(kIOPMAssertionLevelOn),
             ] as [String: Any]
@@ -2166,6 +2193,14 @@ extension MAAViewModel {
         if result == kIOReturnSuccess {
             awakeAssertionID = assertionID
         }
+    }
+
+    /// S04: 运行中切换屏幕常亮选项时，以新断言类型重建（唤醒断言不动）。
+    func refreshAwakeAssertionType() {
+        guard awakeAssertionID != nil else { return }
+        Self.releaseAssertion(awakeAssertionID)
+        awakeAssertionID = nil
+        enableAwake()
     }
 
     private nonisolated static func releaseAssertion(_ assertionID: IOPMAssertionID?) {
@@ -2183,6 +2218,47 @@ extension MAAViewModel {
         Self.releaseAssertion(wakeupAssertionID)
         self.awakeAssertionID = nil
         self.wakeupAssertionID = nil
+    }
+}
+
+// MARK: - Startup Auto Run (S02)
+
+extension MAAViewModel {
+    /// 应用启动后调用一次：按策略决定是否自动开始日常任务（WPF 启动自动运行同构）。
+    /// WPF 的资源损坏/需重启/演示模式守卫映射到 Mac 的 canStartTasks 前置检查；
+    /// 真正启动仍走 startDailyTasks 的完整检查点（互斥、连接、参数编码）。
+    func requestStartupAutoRun(cliSkipRequested: Bool) {
+        guard !startupAutoRunHandled else { return }
+        startupAutoRunHandled = true
+        let markerPresent = StartupAutoRunMarker.consume()
+        switch StartupAutoRunPolicy.decide(runDirectly: runDirectly, cliSkipRequested: cliSkipRequested,
+                                           updateRelaunchMarkerPresent: markerPresent) {
+        case .skip(let reason):
+            logInfo(verbatim: "Startup auto-run skipped (\(reason))")
+        case .run:
+            guard canStartTasks else {
+                logInfo(verbatim: "Startup auto-run skipped (not ready to start)")
+                return
+            }
+            logInfo(verbatim: "Startup auto-run armed; starting in 10s unless canceled")
+            startupAutoRunCountdown.begin(
+                seconds: 10,
+                tick: .seconds(1),
+                onTick: { [weak self] remaining in self?.startupAutoRunRemaining = remaining },
+                onProceed: { [weak self] in
+                    guard let self else { return }
+                    Task { _ = await self.startDailyTasks(origin: .startup) }
+                }
+            )
+        }
+    }
+
+    /// 倒计时内用户取消；对已归零的倒计时是安全空操作。
+    func cancelStartupAutoRun() {
+        guard startupAutoRunCountdown.isCounting else { return }
+        startupAutoRunCountdown.cancel()
+        startupAutoRunRemaining = nil
+        logInfo(verbatim: "Startup auto-run canceled during countdown")
     }
 }
 

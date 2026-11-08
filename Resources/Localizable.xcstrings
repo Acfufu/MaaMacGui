@@ -1,6 +1,248 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "打开应用即运行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run Tasks on Launch"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 시 자동 시작"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开应用即运行"
+          }
+        }
+      }
+    },
+    "启动后自动开始日常任务, 倒计时内可取消" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily tasks start automatically after launch; cancel within the countdown"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 후 일일 작업이 자동 시작되며, 카운트다운 내에 취소할 수 있습니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动后自动开始日常任务, 倒计时内可取消"
+          }
+        }
+      }
+    },
+    "更新后立即重启时不自动运行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don't auto-run when restarting immediately for update"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 후 즉시 재시작할 때 자동 실행 안 함"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新后立即重启时不自动运行"
+          }
+        }
+      }
+    },
+    "仅在自动安装更新或更新提示中选择立即重启时生效" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only applies when updates install automatically or you choose to restart immediately in the update prompt"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 업데이트 설치 또는 업데이트 안내에서 즉시 재시작을 선택한 경우에만 적용됩니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅在自动安装更新或更新提示中选择立即重启时生效"
+          }
+        }
+      }
+    },
+    "阻止休眠时保持屏幕常亮" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep screen on when preventing hibernation"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "절전 모드 방지 시 항상 밝게 표시"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阻止休眠时保持屏幕常亮"
+          }
+        }
+      }
+    },
+    "任务运行期间保持屏幕点亮, 关闭后允许屏幕休眠而系统保持唤醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the display on while tasks run; when off, the display may sleep while the system stays awake"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 실행 중 화면을 켠 상태로 유지하고, 끄면 시스템은 깨어 있는 상태로 화면 절전을 허용합니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务运行期间保持屏幕点亮, 关闭后允许屏幕休眠而系统保持唤醒"
+          }
+        }
+      }
+    },
+    "显示/隐藏主窗口" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show/Hide Main Window"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기본 창 표시/숨기기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示/隐藏主窗口"
+          }
+        }
+      }
+    },
+    "即将自动开始日常任务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily tasks will start automatically"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일일 작업이 곧 자동 시작됩니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即将自动开始日常任务"
+          }
+        }
+      }
+    },
+    "取消自动运行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Auto-Run"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 실행 취소"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消自动运行"
+          }
+        }
+      }
+    },
+    "将在 %lld 秒后自动开始日常任务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily tasks will start in %lld seconds"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld초 후 일일 작업이 자동 시작됩니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将在 %lld 秒后自动开始日常任务"
+          }
+        }
+      }
+    },
+    "登录后打开应用；已启用「打开应用即运行」，将自动开始日常任务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the app at login; with \"Run Tasks on Launch\" enabled, daily tasks will start automatically"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 시 앱이 열리며, 「실행 시 자동 시작」이 활성화된 경우 일일 작업이 자동 시작됩니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录后打开应用；已启用「打开应用即运行」，将自动开始日常任务"
+          }
+        }
+      }
+    },
     "Peep.FpsReduced %lld" : {
       "localizations" : {
         "en" : {
@@ -16426,24 +16668,24 @@
         }
       }
     },
-    "组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口。无需输入监控权限。" : {
+    "组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口；显隐主窗口切换主窗口可见性。无需输入监控权限。" : {
       "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口。无需输入监控权限。"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Include Command or Control. Start runs only when idle; Stop uses the same task controls. Input Monitoring permission is not required."
+            "value" : "Must include Command or Control. Start runs only when idle; Stop uses the same entry as the task buttons; Show/Hide toggles main window visibility. No Input Monitoring permission required."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Command 또는 Control을 포함해야 합니다. 유휴 상태에서만 시작하며 중지는 작업 버튼과 동일하게 작동합니다. 입력 모니터링 권한은 필요하지 않습니다."
+            "value" : "Command 또는 Control을 포함해야 합니다. 시작은 대기 중일 때만 실행되고, 중지는 작업 버튼과 같은 진입점을 사용하며, 창 표시/숨기기는 기본 창 표시 상태를 전환합니다. 입력 모니터링 권한이 필요하지 않습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口；显隐主窗口切换主窗口可见性。无需输入监控权限。"
           }
         }
       }

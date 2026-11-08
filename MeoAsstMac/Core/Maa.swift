@@ -359,6 +359,7 @@ typealias MAAInstanceOptions = [MAAInstanceOptionKey: String]
 
 extension Notification.Name {
     static let MAAPreventSystemSleepingChanged = Notification.Name("MAAPreventSystemSleepingChanged")
+    static let MAABlockSleepWithScreenOnChanged = Notification.Name("MAABlockSleepWithScreenOnChanged")
 }
 
 extension AsstBool {

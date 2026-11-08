@@ -274,11 +274,12 @@ func run() async throws {
     }
 
     // 6. 正常下发：前置识别 + 逐计划战斗 + 登记。
+    // 计划 2 用 LS-6（日日开放）：CA-5 在周一/四/六关闭会使本套件日期态翻转。
     do {
         let m = makeVM(runID: runID)
         m.handle?.script = [(type: .Depot, id: 7), (type: .Fight, id: 8), (type: .Fight, id: 9)]
         var cfg = defaults()
-        cfg.plans = [plan(), plan(stage: "CA-5", dropID: "3303", dropCount: 40)]
+        cfg.plans = [plan(), plan(stage: "LS-6", dropID: "2004", dropCount: 40)]
         m.currentInventorySnapshot = InventorySnapshot(
             generation: UUID(), scope: m.inventoryScope, capturedAt: Date(), items: ["30012": 30])
         var fights = Set<Int32>()
@@ -300,7 +301,7 @@ func run() async throws {
         let p1 = try JSONSerialization.jsonObject(with: Data(appended[1].params.utf8)) as! [String: Any]
         let p2 = try JSONSerialization.jsonObject(with: Data(appended[2].params.utf8)) as! [String: Any]
         check((p1["drops"] as? [String: Int]) == ["30012": 70], "plan 1 gap from snapshot (30/100)")
-        check((p2["drops"] as? [String: Int]) == ["3303": 40], "plan 2 gap (no snapshot entry counts 0)")
+        check((p2["drops"] as? [String: Int]) == ["2004": 40], "plan 2 gap (no snapshot entry counts 0)")
         check(p1["times"] as? Int == Int(Int32.max) && p2["times"] as? Int == Int(Int32.max),
               "unlimited times encoded")
         check(m.logs.contains { $0.message.contains("计划1") && $0.message.contains("需补 70") }, "gap logged")
@@ -313,7 +314,7 @@ func run() async throws {
         var cfg = defaults()
         cfg.updateDepot = false
         cfg.onlyFirstInsufficientPlan = true
-        cfg.plans = [plan(), plan(stage: "CA-5", dropID: "3303", dropCount: 40)]
+        cfg.plans = [plan(), plan(stage: "LS-6", dropID: "2004", dropCount: 40)]
         var fights = Set<Int32>()
         _ = try await m.appendDepotMaintainTask(
             task: DailyTask(id: taskID, task: .depotMaintain(cfg), enabled: true, runOnce: false),
@@ -327,7 +328,7 @@ func run() async throws {
         let m = makeVM(runID: runID)
         m.handle?.script = [(type: .Depot, id: nil), (type: .Fight, id: nil), (type: .Fight, id: 31)]
         var cfg = defaults()
-        cfg.plans = [plan(), plan(stage: "CA-5", dropID: "3303", dropCount: 40)]
+        cfg.plans = [plan(), plan(stage: "LS-6", dropID: "2004", dropCount: 40)]
         var fights = Set<Int32>()
         let dispatched = try await m.appendDepotMaintainTask(
             task: DailyTask(id: taskID, task: .depotMaintain(cfg), enabled: true, runOnce: false),

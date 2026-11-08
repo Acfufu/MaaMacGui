@@ -180,6 +180,8 @@
 		F12200000000000000000002 /* CopilotFileOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12200000000000000000001 /* CopilotFileOperations.swift */; };
 		F12300000000000000000002 /* VideoRecognitionImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12300000000000000000001 /* VideoRecognitionImport.swift */; };
 		F12400000000000000000002 /* MiniGameLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12400000000000000000001 /* MiniGameLaunch.swift */; };
+		F12500000000000000000002 /* StartupAutoRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12500000000000000000001 /* StartupAutoRun.swift */; };
+		F12600000000000000000002 /* MainWindowVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12600000000000000000001 /* MainWindowVisibility.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -389,6 +391,8 @@
 		F12200000000000000000001 /* CopilotFileOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotFileOperations.swift; sourceTree = "<group>"; };
 		F12300000000000000000001 /* VideoRecognitionImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecognitionImport.swift; sourceTree = "<group>"; };
 		F12400000000000000000001 /* MiniGameLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniGameLaunch.swift; sourceTree = "<group>"; };
+		F12500000000000000000001 /* StartupAutoRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupAutoRun.swift; sourceTree = "<group>"; };
+		F12600000000000000000001 /* MainWindowVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowVisibility.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -670,6 +674,7 @@
 				F11200000000000000000001 /* OperBoxHistoryStore.swift */,
 				F12100000000000000000001 /* OperBoxHistoryPayload.swift */,
 				F12200000000000000000001 /* CopilotFileOperations.swift */,
+				F12500000000000000000001 /* StartupAutoRun.swift */,
 				F11400000000000000000001 /* YituliuOperBoxService.swift */,
 				F11500000000000000000001 /* DataExport.swift */,
 				F11700000000000000000001 /* DepotMaintainPlanner.swift */,
@@ -744,6 +749,7 @@
 				B50000000000000000000002 /* BlackflowStartSupport.swift */,
 				83B8E0D83053131B00AB0B56 /* HGCalendar.swift */,
 				B30000000000000000000002 /* LoginItemService.swift */,
+				F12600000000000000000001 /* MainWindowVisibility.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -936,6 +942,8 @@
 				F12200000000000000000002 /* CopilotFileOperations.swift in Sources */,
 				F12300000000000000000002 /* VideoRecognitionImport.swift in Sources */,
 				F12400000000000000000002 /* MiniGameLaunch.swift in Sources */,
+				F12500000000000000000002 /* StartupAutoRun.swift in Sources */,
+				F12600000000000000000002 /* MainWindowVisibility.swift in Sources */,
 				F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */,
 				F11500000000000000000002 /* DataExport.swift in Sources */,
 				F11600000000000000000002 /* DepotMaintainConfiguration.swift in Sources */,

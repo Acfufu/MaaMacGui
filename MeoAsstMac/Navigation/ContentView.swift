@@ -26,7 +26,23 @@ struct ContentView: View {
             MAADetail(sidebar: $selectedSidebar, selection: $selectedContent)
         }
         .toolbar { ToolbarItem { AnnouncementMenuButton(store: announcements) } }
+        .background(MainWindowAccessor())
+        .alert(
+            "即将自动开始日常任务",
+            isPresented: Binding(
+                get: { viewModel.startupAutoRunRemaining != nil },
+                set: { if !$0 { viewModel.cancelStartupAutoRun() } }
+            ),
+            actions: {
+                Button("取消自动运行", role: .cancel) { viewModel.cancelStartupAutoRun() }
+            },
+            message: {
+                Text("将在 \(viewModel.startupAutoRunRemaining ?? 0) 秒后自动开始日常任务")
+            }
+        )
         .task {
+            // S18: Dock 点击/显隐热键在主窗口被 SwiftUI 释放后可经此重建。
+            MainWindowTracker.shared.reopenHandler = { openWindow(id: "main") }
             do {
                 try await viewModel.initialize()
                 // Core initialization/errors own the first window. Announcements load afterward without blocking it.
@@ -35,6 +51,10 @@ struct ContentView: View {
                     viewModel.status == .idle
                 {
                     openWindow(id: "community-announcements")
+                }
+                // S02: 初始化就绪后再判定启动自动运行（WPF 在 Init 尾段同位）。
+                if !Task.isCancelled {
+                    viewModel.requestStartupAutoRun(cliSkipRequested: StartupAutoRunPolicy.cliSkipRequested)
                 }
             } catch {
                 viewModel.logError("初始化失败: \(error.localizedDescription)")

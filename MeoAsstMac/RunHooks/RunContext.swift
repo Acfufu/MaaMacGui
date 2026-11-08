@@ -7,7 +7,8 @@ extension Notification.Name {
 }
 
 /// Shared identity and terminal contract for daily automation entry points.
-enum DailyRunOrigin: String, Codable { case manual, schedule, hotkey }
+/// `startup` 为 S02「打开应用即运行」的启动自动运行入口。
+enum DailyRunOrigin: String, Codable { case manual, schedule, hotkey, startup }
 enum DailyRunPhase: String, Codable { case preparing, preHook, connecting, running, stopping, postHook, finished }
 enum DailyRunOutcome: String, Codable { case completed, cancelled, failed, timedOut, interrupted }
 

@@ -109,6 +109,23 @@ import Carbon
         check(HotkeyChord(keyCode: 41, modifiers: UInt32(cmdKey)).isSystemReserved, "AZERTY minimize chord reserved")
         check(!service.save(HotkeyConfiguration(enabled: true, start: HotkeyChord(keyCode: 8, modifiers: UInt32(cmdKey)))), "reserved edit chord rejected")
         check(!service.configuration.enabled, "edit chord rejection keeps current bindings")
+        // S13: showGui 命令面
+        check(HotkeyCommand(rawValue: 3) == .showGui, "showGui command id")
+        let legacy = try JSONEncoder().encode(HotkeyConfiguration(enabled: true, start: chordA))
+        check(try JSONDecoder().decode(HotkeyConfiguration.self, from: legacy).showGui == nil, "legacy config decodes without showGui")
+        check(!HotkeyConfiguration(enabled: true, start: chordA, showGui: chordA).isValid, "showGui duplicate of start rejected")
+        let chordC = HotkeyChord(keyCode: 31, modifiers: UInt32(cmdKey | controlKey))
+        check(HotkeyConfiguration(enabled: true, start: chordA, stop: chordB, showGui: chordC).isValid, "three distinct chords valid")
+        check(service.save(HotkeyConfiguration(enabled: true, start: chordA, stop: chordB, showGui: chordC)), "three commands registered")
+        var acceptedCommand: String?
+        let observer = NotificationCenter.default.addObserver(forName: Notification.Name("MAAHotkeyCommandAccepted"), object: nil, queue: nil) { note in
+            acceptedCommand = note.userInfo?["command"] as? String
+        }
+        service.command = { _ in true }
+        service.handleHotkeyEvent(3, pressed: true)
+        for _ in 0..<20 { await Task.yield() }
+        check(acceptedCommand == "showGui", "showGui acceptance carries command name")
+        NotificationCenter.default.removeObserver(observer)
         print("HotkeyTests: \(count) assertions passed; exclusive native conflict used two processes")
     }
 }

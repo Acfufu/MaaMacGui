@@ -15,10 +15,37 @@ struct SystemSettingsView: View {
             Button("日常任务前后脚本…") { showHooks = true }
             Button("全局热键…") { showHotkeys = true }
 
+            GroupBox {
+                VStack(alignment: .leading, spacing: 10) {
+                    Toggle(isOn: $viewModel.runDirectly) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("打开应用即运行")
+                            Text("启动后自动开始日常任务, 倒计时内可取消")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    Toggle(isOn: $viewModel.skipStartupAutoRunAfterUpdate) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("更新后立即重启时不自动运行")
+                            Text("仅在自动安装更新或更新提示中选择立即重启时生效")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+
             Toggle(isOn: $viewModel.preventSystemSleeping) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("阻止系统睡眠")
                     Text("日常任务定时执行会在系统休眠之后失效, 打开此功能可以阻止系统自动睡眠")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+
+            Toggle(isOn: $viewModel.blockSleepWithScreenOn) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("阻止休眠时保持屏幕常亮")
+                    Text("任务运行期间保持屏幕点亮, 关闭后允许屏幕休眠而系统保持唤醒")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -46,6 +73,8 @@ struct SystemSettingsView_Previews: PreviewProvider {
 @MainActor struct LoginItemSettingsView: View {
     @StateObject private var service: LoginItemService
     @Environment(\.scenePhase) private var scenePhase
+    // S02: 与「打开应用即运行」联动更新说明文案。
+    @AppStorage("MAARunDirectly") private var runDirectly = false
 
     init(service: LoginItemService? = nil) {
         _service = StateObject(wrappedValue: service ?? LoginItemService())
@@ -62,7 +91,9 @@ struct SystemSettingsView_Previews: PreviewProvider {
             )
             .disabled(service.hasPendingOperation)
 
-            Text("登录后仅打开应用，不会自动开始日常任务")
+            Text(runDirectly
+                ? "登录后打开应用；已启用「打开应用即运行」，将自动开始日常任务"
+                : "登录后仅打开应用，不会自动开始日常任务")
                 .font(.caption).foregroundStyle(.secondary)
             statusText.font(.caption).foregroundStyle(.secondary)
 

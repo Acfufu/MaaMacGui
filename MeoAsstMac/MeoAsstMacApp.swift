@@ -129,6 +129,13 @@ final class MaaUpdaterDelegate: NSObject, SPUUpdaterDelegate {
             return Set()
         }
     }
+
+    // S02: Sparkle 更新重启不透传命令行参数；以一次性标记文件承担 WPF
+    // --skip-startup-auto-run 的更新重启链语义（受 SkipStartupAutoRunAfterUpdate 门控）。
+    func updaterWillRelaunchApplication(_ updater: SPUUpdater) {
+        guard StartupAutoRunPolicy.skipAfterUpdateEnabled() else { return }
+        try? StartupAutoRunMarker.write()
+    }
 }
 
 private class AppDelegate: NSObject, NSApplicationDelegate {
@@ -152,6 +159,13 @@ private class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        true
+        // S18 统一行为：关窗不退出（定时任务/后台调度依赖进程存活），应用保留在
+        // Dock；窗口经 Dock 点击/热键找回。显式退出（⌘Q）仍走 applicationShouldTerminate。
+        false
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag { MainActor.assumeIsolated { MainWindowVisibility.reopen(tracker: .shared) } }
+        return true
     }
 }
