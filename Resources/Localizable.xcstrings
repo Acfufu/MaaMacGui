@@ -1,6 +1,50 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "更新源 Appcast URL（fork 自建，可选）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update appcast URL (self-hosted fork, optional)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 앱캐스트 URL (포크 자체 호스팅, 선택)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新源 Appcast URL（fork 自建，可选）"
+          }
+        }
+      }
+    },
+    "未配置时主程序更新不可用（上游 feed 已移除）；渠道由 appcast 的 sparkle:channel 标记分流（stable/beta）。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Without it, app updates are unavailable (upstream feed removed); channels are routed by the appcast's sparkle:channel markers (stable/beta)."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "구성하지 않으면 앱 업데이트를 사용할 수 없습니다(업스트림 feed 제거됨). 채널은 앱캐스트의 sparkle:channel 마커(stable/beta)로 라우팅됩니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未配置时主程序更新不可用（上游 feed 已移除）；渠道由 appcast 的 sparkle:channel 标记分流（stable/beta）。"
+          }
+        }
+      }
+    },
     "下载的资源缺少 version.json，已放弃应用。" : {
       "localizations" : {
         "en" : {

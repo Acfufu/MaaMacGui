@@ -23,6 +23,8 @@ struct UpdaterSettingsView: View {
     @AppStorage("MAAResourceUpdateCheckIntervalHours") var resourceUpdateCheckIntervalHours = 24
     @AppStorage("MAAResourceUpdateProxyEnabled") var resourceProxyEnabled = false
     @AppStorage("MAAResourceUpdateProxy") var resourceUpdateProxy = ""
+    // P28/U01: fork 自有更新源（与 MaaUpdaterDelegate 同键）。
+    @AppStorage(UpdateFeedPolicy.feedURLDefaultsKey) var updateFeedURL = ""
 
     init(updater: SPUUpdater) {
         self.updater = updater
@@ -44,6 +46,17 @@ struct UpdaterSettingsView: View {
                 .onChange(of: automaticallyDownloadsUpdates) {
                     updater.automaticallyDownloadsUpdates = $1
                 }
+
+            Divider()
+
+            // P28/U01: fork 自有更新源（上游 SUFeedURL 已被移除；端到端需正式签名+appcast，验收单列）。
+            TextField("更新源 Appcast URL（fork 自建，可选）", text: $updateFeedURL)
+            if UpdateFeedPolicy.isUnsafeHTTP(updateFeedURL) {
+                Text("当前更新源为 http 明文连接，存在被窃听/篡改的风险。")
+                    .font(.caption).foregroundStyle(.orange)
+            }
+            Text("未配置时主程序更新不可用（上游 feed 已移除）；渠道由 appcast 的 sparkle:channel 标记分流（stable/beta）。")
+                .font(.caption).foregroundStyle(.secondary)
 
             Divider()
 

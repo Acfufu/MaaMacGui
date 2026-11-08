@@ -190,6 +190,7 @@
 		F13200000000000000000002 /* RemoteControlService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13200000000000000000001 /* RemoteControlService.swift */; };
 		F13300000000000000000002 /* RemoteControlSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13300000000000000000001 /* RemoteControlSettingsView.swift */; };
 		F13400000000000000000002 /* ResourceUpdateNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13400000000000000000001 /* ResourceUpdateNetwork.swift */; };
+		F13500000000000000000002 /* UpdateFeedPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13500000000000000000001 /* UpdateFeedPolicy.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -409,6 +410,7 @@
 		F13200000000000000000001 /* RemoteControlService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlService.swift; sourceTree = "<group>"; };
 		F13300000000000000000001 /* RemoteControlSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlSettingsView.swift; sourceTree = "<group>"; };
 		F13400000000000000000001 /* ResourceUpdateNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceUpdateNetwork.swift; sourceTree = "<group>"; };
+		F13500000000000000000001 /* UpdateFeedPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateFeedPolicy.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -773,6 +775,7 @@
 				B30000000000000000000002 /* LoginItemService.swift */,
 				F12600000000000000000001 /* MainWindowVisibility.swift */,
 				F13400000000000000000001 /* ResourceUpdateNetwork.swift */,
+				F13500000000000000000001 /* UpdateFeedPolicy.swift */,
 				F12700000000000000000001 /* LocalNotificationService.swift */,
 			);
 			path = Utils;
@@ -975,6 +978,7 @@
 				F12500000000000000000002 /* StartupAutoRun.swift in Sources */,
 				F12600000000000000000002 /* MainWindowVisibility.swift in Sources */,
 				F13400000000000000000002 /* ResourceUpdateNetwork.swift in Sources */,
+				F13500000000000000000002 /* UpdateFeedPolicy.swift in Sources */,
 				F12700000000000000000002 /* LocalNotificationService.swift in Sources */,
 				F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */,
 				F11500000000000000000002 /* DataExport.swift in Sources */,

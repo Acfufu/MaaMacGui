@@ -123,13 +123,19 @@ struct MeoAsstMacApp: App {
 
 final class MaaUpdaterDelegate: NSObject, SPUUpdaterDelegate {
     @AppStorage("MaaUseBetaChannel") private var useBetaChannel = false
+    // P28/U01: fork 自有更新源（上游 Info.plist 的 SUFeedURL 已被 fork 移除）。
+    @AppStorage(UpdateFeedPolicy.feedURLDefaultsKey) private var updateFeedURL = ""
 
     func allowedChannels(for updater: SPUUpdater) -> Set<String> {
-        if useBetaChannel {
-            return Set(["beta"])
-        } else {
-            return Set()
-        }
+        // U02: 渠道面由 appcast 的 sparkle:channel 标记分流（stable/beta 两档；
+        // WPF Nightly 渠道无 Mac appcast 支撑，不提供——差异入档）。
+        UpdateFeedPolicy.allowedChannels(useBetaChannel: useBetaChannel)
+    }
+
+    /// U01: fork feed 注入。未配置时返回 nil——Sparkle 回退 Info.plist（fork 已移除，
+    /// 即无 feed，检查失败有可见错误而非静默空转）。
+    func feedURLString(for updater: SPUUpdater) -> String? {
+        UpdateFeedPolicy.feedURLString(configured: updateFeedURL)
     }
 
     // S02: Sparkle 更新重启不透传命令行参数；以一次性标记文件承担 WPF
