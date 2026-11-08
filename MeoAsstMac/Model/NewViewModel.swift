@@ -255,6 +255,14 @@ extension NewViewModel {
                     color: .warning))
         case .failed(let failure):
             appendLog(.init(date: .now, content: failure.logMessage, color: .error))
+            // 评审低-1：首现失败即显式回退（onChange 仅值变化触发——首现失败面
+            // 原本滞留空列表页直到重进页面；损坏存档静默路径同此回退）。
+            await MainActor.run {
+                if copilot.category == .list {
+                    copilot.category = .external
+                    copilot.selection = nil
+                }
+            }
         }
     }
 }

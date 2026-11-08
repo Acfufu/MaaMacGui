@@ -42,11 +42,15 @@ enum CopilotRestoreOutcome: Equatable {
 
 enum CopilotRestoreFailure: Equatable {
     case setUnreadable
+    /// 列表存档数据存在但解码失败（评审低-2：与"无存档"区分记因）。
+    case archiveCorrupt
 
     var logMessage: String {
         switch self {
         case .setUnreadable:
             return String(localized: "上次激活的作业集无法恢复：目录被移动或作业集清单损坏，已重置列表。")
+        case .archiveCorrupt:
+            return String(localized: "上次的列表存档损坏，已按空列表重置。")
         }
     }
 }
@@ -90,6 +94,33 @@ enum CopilotPersistence {
             return nil
         }
         return try? JSONDecoder().decode(CopilotListState.self, from: data)
+    }
+
+    /// 存档数据是否存在（含解码失败面——区分"无存档"与"存档损坏"，评审低-2）。
+    static func hasListStateData(store: UserDefaults = CopilotPersistence.store) -> Bool {
+        store.data(forKey: listStateKey) != nil
+    }
+
+    /// 降级恢复的合并式存档（评审 P13-1-R3 中危-2）：didSet 刚以幸存行整表落盘——
+    /// 把被跳过成员的旧 overrides/order 键并回（apply 忽略未知 order 键；成员后续
+    /// 以就绪资源恢复时按用户此前勾选与相对次序回归，而非派生缺省 isOn=true）。
+    /// 同步执行（MainActor 同回合，紧随赋值，无用户编辑竞态窗口）。
+    static func preserveSkippedOverrides(
+        old: CopilotListState, skippedMemberIDs: [String],
+        store: UserDefaults = CopilotPersistence.store) {
+        guard var merged = loadListState(store: store) else { return }
+        for id in skippedMemberIDs {
+            for suffix in ["#0", "#1"] {
+                let key = "\(id)\(suffix)"
+                if let override = old.overrides[key] {
+                    merged.overrides[key] = override
+                }
+                if old.order.contains(key) {
+                    merged.order.append(key)
+                }
+            }
+        }
+        saveListState(merged, store: store)
     }
 
     // MARK: - Pure Transforms

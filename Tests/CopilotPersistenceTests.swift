@@ -221,6 +221,84 @@ struct CopilotPersistenceTests {
         let context5 = CopilotContext()
         check(await context5.restorePersistedList() == .none, "cleared archive restores as no-op")
 
+        // MARK: - E2. Restore adversarial regressions (评审 P13-1-R3 中危-1/中危-2/低-2/低-3/低-5)
+
+        defer {
+            MAAProvider.overrideMap = nil
+            MAAProvider.mapDelayNanoseconds = 0
+        }
+
+        // 中危-2：降级恢复（映射瞬时失败）不得销毁被跳过成员的归档——61 正常恢复
+        // 且用户勾选态套用；62 映射失败跳过，其旧存档 isOn=false + navOverride 以
+        // 合并式保留（下次资源就绪恢复时按用户此前勾选回归，而非缺省 isOn=true）。
+        do {
+            clearStore()
+            let sentinelJSON = #"{"stage_name":"SENTINEL-62","opers":[],"minimum_required":"v4.0"}"#
+            let fixtureD = try makeSetDirectory(name: "t-degraded", ids: [61, 62], contents: [61: regularJSON, 62: sentinelJSON])
+            let degradedArchive = CopilotListState(
+                setPath: fixtureD.path(percentEncoded: false),
+                order: ["61#0", "62#0"],
+                overrides: [
+                    "61#0": .init(isOn: false, isRaid: nil, navOverride: nil),
+                    "62#0": .init(isOn: false, isRaid: nil, navOverride: "AC-5"),
+                ])
+            CopilotPersistence.saveListState(degradedArchive)
+            MAAProvider.overrideMap = ["SENTINEL-62": nil]  // 62 的 stage_name 改写后恒 nil（模拟瞬时映射失败）
+            let contextD = CopilotContext()
+            let degradedOutcome = await contextD.restorePersistedList()
+            check(degradedOutcome == .restored(active: 0, skipped: ["62.json（导航名映射失败）"]),
+                  "degraded restore reports the mapped-failure skip reason")
+            check(contextD.copilotList.map(\.memberID) == ["61#0"], "surviving member restored alone")
+            check(contextD.copilotList[0].isOn == false, "surviving member keeps its archived off state")
+            let merged = CopilotPersistence.loadListState()
+            check(merged?.overrides["62#0"]?.isOn == false && merged?.overrides["62#0"]?.navOverride == "AC-5",
+                  "skipped member's archived override preserved (not destroyed by degraded capture)")
+            check(merged?.order.contains("62#0") == true, "skipped member's order key preserved for later restore")
+            MAAProvider.overrideMap = nil
+        }
+
+        // 中危-1：恢复派生窗口内的手工激活不被覆盖、存档保留手工激活态
+        //（延迟桩拉宽悬点窗口；活态保护复查必须在 await 之后）。
+        do {
+            clearStore()
+            let fixtureC = try makeSetDirectory(name: "t-concurrent", ids: [201, 202], contents: [201: regularJSON, 202: regularJSON])
+            CopilotPersistence.saveListState(CopilotListState(
+                setPath: fixtureC.path(percentEncoded: false), order: ["201#0"], overrides: [:]))
+            MAAProvider.mapDelayNanoseconds = 150_000_000
+            let contextC = CopilotContext()
+            let restoreTask = Task { await contextC.restorePersistedList() }
+            try? await Task.sleep(nanoseconds: 80_000_000)  // 落入派生窗口（每成员 ~150ms × 2）
+            contextC.copilotList = [row("999#0", isRaid: nil, isOn: true)]
+            let concurrentOutcome = await restoreTask.value
+            check(concurrentOutcome == .none, "restore abandons when manual activation landed in the derivation window")
+            check(contextC.copilotList.map(\.memberID) == ["999#0"], "manual activation rows survive the restore window")
+            check(CopilotPersistence.loadListState()?.order == ["999#0"],
+                  "manual activation archive not clobbered by restore persistence")
+        }
+
+        // 低-3：难度值越界成员记因跳过（不再静默丢弃）。
+        do {
+            clearStore()
+            let unsupportedJSON = #"{"stage_name":"1-7","opers":[],"minimum_required":"v4.0","difficulty":4}"#
+            let fixtureU = try makeSetDirectory(name: "t-difficulty", ids: [71, 72], contents: [71: regularJSON, 72: unsupportedJSON])
+            CopilotPersistence.saveListState(CopilotListState(
+                setPath: fixtureU.path(percentEncoded: false), order: [], overrides: [:]))
+            let contextU = CopilotContext()
+            let unsupportedOutcome = await contextU.restorePersistedList()
+            check(unsupportedOutcome == .restored(active: 1, skipped: ["72.json（难度值不支持）"]),
+                  "unsupported difficulty member skips with a recorded reason")
+            check(contextU.copilotList.map(\.memberID) == ["71#0"], "supported member unaffected")
+        }
+
+        // 低-2：损坏列表存档走 .failed(.archiveCorrupt)（与"无存档"区分记因）。
+        do {
+            clearStore()
+            CopilotPersistence.store.set(Data("not json".utf8), forKey: "CopilotListState")
+            let contextE = CopilotContext()
+            check(await contextE.restorePersistedList() == .failed(.archiveCorrupt),
+                  "corrupt archive reports archiveCorrupt (not silent none)")
+        }
+
         // MARK: - F. didSet persistence wiring
 
         clearStore()

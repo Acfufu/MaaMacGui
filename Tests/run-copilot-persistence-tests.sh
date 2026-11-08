@@ -25,7 +25,20 @@ import Foundation
 
 actor MAAProvider {
     static let shared = MAAProvider()
-    func mapLevelCode(matching key: String) -> String? { key }
+    /// 可注入映射表（评审 P13-1-R3 低5：恒等桩使映射失败分支零覆盖）——显式
+    /// 命中的键返回表值（nil 值=映射失败哨兵），未命中键保持恒等；delay 拉宽
+    /// 派生窗口供并发交错回归（中危-1）。
+    nonisolated(unsafe) static var overrideMap: [String: String?]? = nil
+    nonisolated(unsafe) static var mapDelayNanoseconds: UInt64 = 0
+    func mapLevelCode(matching key: String) async -> String? {
+        if Self.mapDelayNanoseconds > 0 {
+            try? await Task.sleep(nanoseconds: Self.mapDelayNanoseconds)
+        }
+        if let map = Self.overrideMap, map.keys.contains(key) {
+            return map[key] ?? nil
+        }
+        return key
+    }
 }
 
 enum MAATaskType: String {

@@ -482,7 +482,12 @@ extension CopilotContext {
     }
 
     /// C09 跨启动恢复：重建上次激活的作业集并套用持久化的行状态与顺序。
-    /// 一次性（`restoreAttempted` 闸门）；用户已手工激活时不覆盖现场。
+    /// 一次性（`restoreAttempted` 闸门）；活态保护复查在全部 await 之后——派生
+    /// 窗口内用户手工激活是合法操作，恢复收尾以当场状态为准（评审 P13-1-R3
+    /// 中危-1：前置检查在悬点间会被绕过，手工激活现场连同存档被旧存档顶掉）。
+    /// 降级恢复（有跳过成员）以合并式存档保留被跳过成员的归档行（评审中危-2：
+    /// 整表覆写会把瞬时映射失败成员的 isOn/isRaid/navOverride 永久销毁，用户
+    /// 刻意关掉的行下次恢复按派生缺省 isOn=true 回归并可静默执行）。
     @discardableResult
     nonisolated(nonsending) func restorePersistedList() async -> CopilotRestoreOutcome {
         guard !restoreAttempted else {
@@ -493,7 +498,12 @@ extension CopilotContext {
         guard copilotList.isEmpty else {
             return .none
         }
-        guard let state = CopilotPersistence.loadListState(), let setPath = state.setPath else {
+        let archivedState = CopilotPersistence.loadListState()
+        if archivedState == nil, CopilotPersistence.hasListStateData() {
+            // 存档数据存在但解码失败 = 损坏，与"无存档"区分记因（评审低-2）。
+            return .failed(.archiveCorrupt)
+        }
+        guard let state = archivedState, let setPath = state.setPath else {
             return .none
         }
 
@@ -504,9 +514,21 @@ extension CopilotContext {
             return .failed(.setUnreadable)
         }
 
+        // 活态保护复查（悬点后）：派生窗口内用户手工激活（列表非空）→ 放弃恢复。
+        guard copilotList.isEmpty else {
+            return .none
+        }
+
         copilotSet = .init(kind: listing.kind, data: setData, url: url)
         let applied = CopilotPersistence.apply(state, to: listing.items)
         copilotList = applied
+        // 降级恢复合并式存档：didSet 刚以幸存行整表落盘——把被跳过成员的旧
+        // overrides/order 并回（apply 忽略未知 order 键；成员后续以就绪资源恢复
+        // 时按用户此前勾选回归）。与赋值同一 MainActor 回合，无用户编辑竞态窗口。
+        if !listing.skippedMemberIDs.isEmpty {
+            CopilotPersistence.preserveSkippedOverrides(
+                old: state, skippedMemberIDs: listing.skippedMemberIDs)
+        }
         return .restored(active: applied.filter(\.isOn).count, skipped: listing.skipped)
     }
 }
@@ -533,10 +555,13 @@ extension CopilotContext.Content {
 extension CopilotSetData {
     /// 派生结果：集合类型 + 行清单 + 逐成员跳过原因（C09 损坏恢复——单个
     /// 成员缺失/损坏/映射失败只跳过该成员，不再让整个集合激活失败）。
+    /// skippedMemberIDs 供降级恢复的合并式存档保留被跳过成员的归档行
+    /// （评审 P13-1-R3 中危-2）。
     struct SetListing {
         let kind: MAACopilot.Kind
         let items: [CopilotContext.ListItem]
         let skipped: [String]
+        let skippedMemberIDs: [String]
     }
 
     func copilotList(at url: URL) async -> SetListing? {
@@ -544,6 +569,7 @@ extension CopilotSetData {
 
         var copilotList = [CopilotContext.ListItem]()
         var skipped = [String]()
+        var skippedMemberIDs = [String]()
 
         var lastCopilotKind: MAACopilot.Kind?
 
@@ -554,11 +580,13 @@ extension CopilotSetData {
                     ? String(localized: "文件损坏")
                     : String(localized: "文件缺失")
                 skipped.append("\(copilotID).json（\(reason)）")
+                skippedMemberIDs.append(String(copilotID))
                 continue
             }
             guard let code = await MAAProvider.shared.mapLevelCode(matching: copilot.stage_name) else {
                 skipped.append(
                     "\(copilotID).json（\(String(localized: "导航名映射失败"))）")
+                skippedMemberIDs.append(String(copilotID))
                 continue
             }
 
@@ -594,6 +622,10 @@ extension CopilotSetData {
                         url: memberURL, stageCode: code, memberID: "\(copilotID)#1",
                         isRaid: true, isOn: true))
             default:
+                // 难度值越界成员记因跳过（评审低-3：静默丢弃曾让全灭集合误报「清单损坏」）。
+                skipped.append(
+                    "\(copilotID).json（\(String(localized: "难度值不支持"))）")
+                skippedMemberIDs.append(String(copilotID))
                 continue
             }
         }
@@ -603,7 +635,9 @@ extension CopilotSetData {
         if !copilot_ids.isEmpty && copilotList.isEmpty {
             return nil
         }
-        return SetListing(kind: lastCopilotKind ?? .regular, items: copilotList, skipped: skipped)
+        return SetListing(
+            kind: lastCopilotKind ?? .regular, items: copilotList, skipped: skipped,
+            skippedMemberIDs: skippedMemberIDs)
     }
 }
 

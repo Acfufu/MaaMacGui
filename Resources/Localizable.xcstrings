@@ -1,6 +1,50 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "上次的列表存档损坏，已按空列表重置。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The previous list archive was corrupt and has been reset to empty."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전 목록 아카이브가 손상되어 빈 목록으로 초기화했습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次的列表存档损坏，已按空列表重置。"
+          }
+        }
+      }
+    },
+    "难度值不支持" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported difficulty value"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지원되지 않는 난이도 값"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "难度值不支持"
+          }
+        }
+      }
+    },
     "环境与支持" : {
       "localizations" : {
         "en" : {
