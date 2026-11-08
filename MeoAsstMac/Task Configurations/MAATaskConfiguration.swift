@@ -54,6 +54,12 @@ extension MAAHandle {
             return try appendTask(type: config.type, params: config.params(blackflowStartAvailable: blackflowStartAvailable, supportsSeedInput: supportsRoguelikeSeedInput).jsonString())
         case .reclamation(let config):
             return try appendTask(config: config)
+        case .custom(let config):
+            try config.validate()
+            return try appendTask(config: config)
+        case .operProgress(let config):
+            _ = try config.validatedPlans()
+            return try appendTask(config: config)
         }
     }
 

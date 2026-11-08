@@ -33,7 +33,7 @@ struct TaskButtons: View {
         Button("全部启用") {
             for (index, task) in viewModel.tasks.enumerated() {
                 switch task.task {
-                case .roguelike, .reclamation:
+                case .roguelike, .reclamation, .custom, .operProgress:
                     continue
                 default:
                     viewModel.tasks[index].enabled = true

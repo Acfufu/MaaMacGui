@@ -317,6 +317,7 @@ enum MAATaskType: String {
     case Reclamation
     case VideoRecognition
     case OperBox
+    case OperProgress
     case Custom
 }
 
