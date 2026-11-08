@@ -398,6 +398,23 @@ import SwiftUI
         }
     }
 
+    // MARK: - Post Actions & Duration Limit (P22/S15-S17)
+
+    let postActionSettings = PostActionSettingsStore()
+    /// S15: 作业也执行前后脚本（WPF ExecuteScriptOnCopilot 同位，缺省 false 零暗改）。
+    @AppStorage("MAAExecuteScriptOnCopilot") var executeScriptOnCopilot = false
+    /// S15: 本轮运行是否为作业——终态 after-hook 的门控标记。
+    @Published private(set) var activeRunIsCopilot = false
+    /// S16: 运行时长上限（WPF RunDurationLimit* 同位；缺省关）。
+    @AppStorage("MAARunDurationLimitEnabled") var runDurationLimitEnabled = false
+    @AppStorage("MAARunDurationLimitMinutes") var runDurationLimitMinutes = RunDurationLimit.clampedMinutes(240)
+    @AppStorage("MAARunDurationLimitExecutePostActions") var runDurationLimitExecutePostActions = true
+    private var durationLimitTask: Task<Void, Never>?
+    private var stopInitiatedByDurationLimit = false
+    /// S17: per-run 幂等（WPF _postActionsLaunched 同构）——时长上限停止与
+    /// 自然完成赛跑时只执行一次收尾动作。
+    private var postActionsLaunchedRunID: UUID?
+
     // MARK: - Initializer
 
     init() {
@@ -810,6 +827,14 @@ extension MAAViewModel {
             dailyRunTasks = nil
             status = .idle
             if !cleanupSucceeded { logError("后置清理失败，请检查脚本输出并手动恢复设备设置") }
+            // P22: 收尾动作在清理契约之后执行（WPF CheckAfterCompleted 同序）。
+            // 时长上限到点的停止按 RunDurationLimitExecutePostActions 门控；
+            // 其余路径（自然完成/用户手动停止）总是执行。
+            cancelDurationLimit()
+            let policyAllows = stopInitiatedByDurationLimit ? runDurationLimitExecutePostActions : true
+            stopInitiatedByDurationLimit = false
+            await executePostActions(runID: id, hasError: outcome == .failed || outcome == .timedOut,
+                                     policyAllows: policyAllows)
         } catch {
             status = .pending
             logError(verbatim: "Daily run journal: \(error.localizedDescription)")
@@ -850,8 +875,9 @@ extension MAAViewModel {
         }
     }
 
-    private func executeHook(_ command: HookCommand, context: RunContext, outcome: DailyRunOutcome?,
-                             cancellable: Bool = true) async throws -> HookResult {
+    /// P22 起作业终态 after-hook（MaaMessage 扩展）也消费，故为 internal。
+    func executeHook(_ command: HookCommand, context: RunContext, outcome: DailyRunOutcome?,
+                     cancellable: Bool = true) async throws -> HookResult {
         let directory = Self.userDirectory.appendingPathComponent("RunHooks", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let configuredTimeout = TimeInterval(runHookConfiguration.timeoutSeconds)
@@ -1277,6 +1303,8 @@ extension MAAViewModel {
                     AchievementStore.shared.record(.init(runID: runID, metric: .scheduledStart))
                 }
                 await finishDailyRunIfStopped(allowInFlight: true)
+                // P22/S16: 启动成功后武装运行时长上限计时。
+                armDurationLimit(runID: runID)
                 return .started
             } catch {
                 let recoveryCleanupFailed = error is ForcedRecoveryCleanupFailure
@@ -2003,6 +2031,10 @@ extension MAAViewModel {
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
+        // S15: 作业运行标记 + 前置脚本（失败阻止开始）。
+        activeRunIsCopilot = true
+        try await runCopilotPreHookIfEnabled()
+
         try await ensureHandle()
         try await appendTrackedTask(type: type, params: params)
         try await startCoreTasks()
@@ -2019,6 +2051,10 @@ extension MAAViewModel {
 
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
+
+        // S15: 作业运行标记 + 前置脚本（失败阻止开始）。
+        activeRunIsCopilot = true
+        try await runCopilotPreHookIfEnabled()
 
         try await ensureHandle()
         do {
@@ -2317,6 +2353,121 @@ extension MAAViewModel {
         startupAutoRunCountdown.cancel()
         startupAutoRunRemaining = nil
         logInfo(verbatim: "Startup auto-run canceled during countdown")
+    }
+}
+
+// MARK: - Post Actions & Duration Limit (P22)
+
+extension MAAViewModel {
+    /// S16: 运行启动后武装时长上限计时（到点按手动停止路径收口）。
+    func armDurationLimit(runID: UUID) {
+        durationLimitTask?.cancel()
+        guard runDurationLimitEnabled else { return }
+        let minutes = RunDurationLimit.clampedMinutes(runDurationLimitMinutes)
+        durationLimitTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(TimeInterval(minutes * 60)))
+            guard !Task.isCancelled, let self, self.dailyRunCoordinator.active?.id == runID else { return }
+            self.logInfo(verbatim: "运行时长上限（\(minutes) 分钟）到点，正在停止任务。")
+            self.stopInitiatedByDurationLimit = true
+            try? await self.stop(logsConflict: false)
+        }
+    }
+
+    private func cancelDurationLimit() {
+        durationLimitTask?.cancel()
+        durationLimitTask = nil
+    }
+
+    /// S17: 收尾动作执行（WPF RunPostActionsCoreAsync 同位）。逐动作失败记录并继续；
+    /// per-run 幂等防止时长上限停止与自然完成赛跑双执行。
+    func executePostActions(runID: UUID, hasError: Bool, policyAllows: Bool) async {
+        let actions = PostActionPlanner.plannedActions(
+            config: postActionSettings.configuration, hasError: hasError, policyAllows: policyAllows)
+        guard !actions.isEmpty, postActionsLaunchedRunID != runID else { return }
+        postActionsLaunchedRunID = runID
+        logInfo(verbatim: "执行收尾动作")
+        for action in actions {
+            do {
+                switch action {
+                case .backToAndroidHome:
+                    guard await handle?.running == true else {
+                        logError(verbatim: "收尾动作：Core 已停止，无法返回安卓主页")
+                        continue
+                    }
+                    guard await handle?.backToHome() == true else {
+                        logError(verbatim: "返回安卓主页失败")
+                        continue
+                    }
+                    try? await Task.sleep(for: .seconds(1))
+                case .exitArknights:
+                    // WPF AsstStartCloseDown 同位：以 CloseDown 任务链关闭游戏客户端。
+                    let params = ClosedownConfiguration(client_type: clientChannel)
+                    let data = try JSONEncoder().encode(params)
+                    try await startCopilot(type: .CloseDown, params: String(decoding: data, as: UTF8.self))
+                    try? await Task.sleep(for: .seconds(1))
+                case .exitEmulator:
+                    try await runSystemProcess(adbPath, ["-s", connectionAddress, "emu", "kill"])
+                    try? await Task.sleep(for: .seconds(1))
+                case .exitSelf:
+                    // 经 applicationShouldTerminate 清理链有序退出。
+                    NSApp.terminate(nil)
+                case .lockScreen:
+                    try await runSystemProcess("/usr/bin/pmset", ["displaysleepnow"])
+                case .sleep:
+                    try await runSystemProcess("/usr/bin/pmset", ["sleepnow"])
+                case .shutdown:
+                    try await runSystemProcess("/usr/bin/osascript",
+                                               ["-e", "tell app \"System Events\" to shut down"])
+                }
+            } catch {
+                logError(verbatim: "收尾动作失败：\(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// 不阻塞主线程的外部进程执行（收尾动作期间 UI 仍应响应）。
+    private func runSystemProcess(_ path: String, _ arguments: [String]) async throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = arguments
+        try process.run()
+        while process.isRunning {
+            try Task.checkCancellation()
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        guard process.terminationStatus == 0 else {
+            throw PostActionCommandError(path: path, code: process.terminationStatus)
+        }
+    }
+
+    /// S15: 作业终态 after-hook（WPF CopilotWithScript 同位；手动停止不执行）。
+    func runCopilotPostHookIfEnabled() {
+        guard activeRunIsCopilot else { return }
+        activeRunIsCopilot = false
+        guard executeScriptOnCopilot, runHookConfiguration.enabled,
+              let command = runHookConfiguration.after else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            let context = RunContext(id: UUID(), origin: .manual, profileID: self.dailyTaskProfile,
+                                     status: .postHook, startedAt: .now)
+            _ = try? await self.executeHook(command, context: context, outcome: .completed, cancellable: false)
+        }
+    }
+
+    /// S15: 作业前置脚本（MAAExecuteScriptOnCopilot 门控）。失败阻止开始
+    /// （WPF 启动脚本失败中止 LinkStart 同构）。
+    func runCopilotPreHookIfEnabled() async throws {
+        runHookConfiguration = hookSettings.configuration
+        guard executeScriptOnCopilot, runHookConfiguration.enabled,
+              let command = runHookConfiguration.before else { return }
+        let context = RunContext(id: UUID(), origin: .manual, profileID: dailyTaskProfile,
+                                 status: .preHook, startedAt: .now)
+        do {
+            _ = try await executeHook(command, context: context, outcome: nil)
+        } catch {
+            logError(verbatim: "作业前置脚本失败：\(error.localizedDescription)")
+            throw error
+        }
     }
 }
 

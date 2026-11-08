@@ -183,6 +183,7 @@
 		F12500000000000000000002 /* StartupAutoRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12500000000000000000001 /* StartupAutoRun.swift */; };
 		F12600000000000000000002 /* MainWindowVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12600000000000000000001 /* MainWindowVisibility.swift */; };
 		F12700000000000000000002 /* LocalNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12700000000000000000001 /* LocalNotificationService.swift */; };
+		F12800000000000000000002 /* PostActionRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12800000000000000000001 /* PostActionRunner.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -395,6 +396,7 @@
 		F12500000000000000000001 /* StartupAutoRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupAutoRun.swift; sourceTree = "<group>"; };
 		F12600000000000000000001 /* MainWindowVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowVisibility.swift; sourceTree = "<group>"; };
 		F12700000000000000000001 /* LocalNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNotificationService.swift; sourceTree = "<group>"; };
+		F12800000000000000000001 /* PostActionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostActionRunner.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -441,6 +443,7 @@
 				B7743B34F2704668B4E0A0E9 /* RunContext.swift */,
 				9A6855ABEC964286B70706AC /* HookConfiguration.swift */,
 				3621885B42794A3E8940DB36 /* HookRunner.swift */,
+				F12800000000000000000001 /* PostActionRunner.swift */,
 				0FC2C19F5DD0469BBD8F1A7F /* HookSettingsView.swift */,
 				3DD9F10173EA49D5B595D506 /* DailyRunProfilePatch.swift */,
 				E78B60E254D04E2E91F4FA92 /* HotkeySettingsView.swift */,
@@ -856,6 +859,7 @@
 				D435C735FBB248EDAB963960 /* HotkeyConfiguration.swift in Sources */,
 				4EED5734D98847338FFE7732 /* HookSettingsView.swift in Sources */,
 				175E0E7F43434EA4845EFF97 /* HookRunner.swift in Sources */,
+				F12800000000000000000002 /* PostActionRunner.swift in Sources */,
 				7B1B36888B12496B9DA5C1DB /* HookConfiguration.swift in Sources */,
 				BCAD46240D494C047C5532E9 /* BackgroundScheduleSettingsView.swift in Sources */,
 				E2634018F76DBCBF1FAA3074 /* BackgroundScheduleService.swift in Sources */,

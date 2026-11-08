@@ -10,6 +10,11 @@ model=(source_root/'MeoAsstMac/Model/MAAViewModel.swift').read_text()
 _strip_pattern = r'\n *if case \.depotMaintain\(let depotConfig\) = task\.task \{\n(?:.*?\n)*? *\}\n'
 assert len(re.findall(_strip_pattern, model, re.M)) == 1, 'depotMaintain interception block drifted'
 model = re.sub(_strip_pattern, '\n', model, count=1)
+# P22/S16 时长上限武装（armDurationLimit）属收尾动作域，由 post-action 套件覆盖；
+# 本套件生命周期面不含该调用，剥离并 fail-loudly。
+_p22_arm = r'\n *// P22/S16: 启动成功后武装运行时长上限计时。\n *armDurationLimit\(runID: runID\)\n'
+assert len(re.findall(_p22_arm, model, re.M)) == 1, 'P22 armDurationLimit call drifted'
+model = re.sub(_p22_arm, '\n', model, count=1)
 
 message=(source_root/'MeoAsstMac/Core/MaaMessage.swift').read_text()
 def declaration(source,pattern):

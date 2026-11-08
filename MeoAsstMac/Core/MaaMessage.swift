@@ -342,12 +342,9 @@ extension MAAViewModel {
     private func processTaskChainMessage(_ message: MaaMessage) {
         if message.code == .AllTasksCompleted {
             // TODO: (LogCard) Update the all-tasks-completed log card.
-            // TODO: (Notification) Show the all-tasks-completed notification.
             // TODO: (ExternalNotification) Send the all-tasks-completed event.
-            // TODO: (Notification) Schedule the sanity-recovery notification.
             // TODO: (PostAction) Execute the configured completion action.
             // TODO: (ViewState) Show the April Fools completion animation when applicable.
-            // TODO: (Notification) Show completion feedback for standalone Copilot tasks.
             // TODO: (Persistence) Record the credit-store easter-egg date when applicable.
             // TODO: (Dialog) Present the credit-store easter-egg dialog when applicable.
             // TODO: (ViewState) Apply the easter-egg language after confirmation.
@@ -355,6 +352,9 @@ extension MAAViewModel {
             defer {
                 resetStatus()
             }
+            // S15: 作业运行的 after-hook（WPF CopilotWithScript 终态同位）；
+            // 手动停止不执行——与 WPF Copilot 停止路径无脚本同构。
+            runCopilotPostHookIfEnabled()
             guard let ids: [Int32] = try? message.details["finished_tasks"] else {
                 return
             }

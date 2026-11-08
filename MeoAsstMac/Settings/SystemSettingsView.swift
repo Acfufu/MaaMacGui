@@ -62,6 +62,30 @@ struct SystemSettingsView: View {
                     NotificationStatusView(service: viewModel.localNotifications)
                 }
             }
+
+            GroupBox {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle(isOn: $viewModel.runDurationLimitEnabled) {
+                        Text("限制运行时长")
+                    }
+                    if viewModel.runDurationLimitEnabled {
+                        Stepper(value: $viewModel.runDurationLimitMinutes, in: 1...RunDurationLimit.maxMinutes) {
+                            Text("运行时长上限：\(viewModel.runDurationLimitMinutes) 分钟")
+                        }
+                        Toggle(isOn: $viewModel.runDurationLimitExecutePostActions) {
+                            Text("到点停止后执行收尾动作")
+                                .font(.caption)
+                        }
+                    }
+                }
+            }
+
+            GroupBox {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("收尾动作")
+                    PostActionSettingsView(store: viewModel.postActionSettings)
+                }
+            }
         }
         .padding()
         .sheet(isPresented: $showHooks) {
@@ -84,8 +108,7 @@ struct SystemSettingsView_Previews: PreviewProvider {
 }
 
 /// P23/E01: 通知权限状态行。拒绝时提供系统设置跳转；授权后才允许测试投递。
-@MainActor struct NotificationStatusView: View {
-    @ObservedObject var service: LocalNotificationService
+@MainActor struct NotificationStatusView: View {    @ObservedObject var service: LocalNotificationService
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -111,6 +134,25 @@ struct SystemSettingsView_Previews: PreviewProvider {
         case .denied: Text("通知权限被拒绝，请在系统设置中允许")
         case .authorized: Text("系统通知已授权")
         case .unsupported: Text("当前系统不支持通知")
+        }
+    }
+}
+
+/// P22/S17: 收尾动作开关面。锁屏/睡眠/关机等系统动作的实际执行在专用
+/// 验收环境验证；此处仅落配置（逐动作失败记录并继续）。
+@MainActor struct PostActionSettingsView: View {
+    @ObservedObject var store: PostActionSettingsStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle("有失败任务时跳过收尾动作", isOn: $store.configuration.skipOnError)
+            Toggle("返回安卓主页", isOn: $store.configuration.backToAndroidHome)
+            Toggle("关闭游戏客户端", isOn: $store.configuration.exitArknights)
+            Toggle("退出模拟器", isOn: $store.configuration.exitEmulator)
+            Toggle("退出 MAA", isOn: $store.configuration.exitSelf)
+            Toggle("锁定屏幕", isOn: $store.configuration.lockScreen)
+            Toggle("睡眠", isOn: $store.configuration.sleep)
+            Toggle("关机", isOn: $store.configuration.shutdown)
         }
     }
 }

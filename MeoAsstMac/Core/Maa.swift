@@ -169,6 +169,13 @@ actor MAAHandle {
         }
     }
 
+    /// Core AsstBackToHome（pinned 51dac87 AsstCaller.h:88）：MaaTouch 回到游戏首页，
+    /// P22 收尾动作「返回安卓主页」消费。
+    @discardableResult
+    func backToHome() -> Bool {
+        AsstBackToHome(handle) != 0
+    }
+
     func appendTask(type: MAATaskType, params: String) throws -> Int32 {
         guard type != .UserDataUpdate, type != .DepotMaintain else { throw MaaCoreError.appendTaskFailed }
         let taskID = AsstAppendTask(handle, type.rawValue, params)

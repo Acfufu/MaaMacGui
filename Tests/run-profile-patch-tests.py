@@ -47,6 +47,11 @@ def daily_task_array_subscript_extension():
     ext=declaration(tasks,r'^extension Array where Element == DailyTask')
     return ext[:ext.index('    mutating func append')]+'}'
 model=(root/'MeoAsstMac/Model/MAAViewModel.swift').read_text()
+# P22 收尾动作块（时长上限门控 + executePostActions）由 run-post-action-tests.py
+# 域外消费；本套件 finishDailyRun 提取面剥离该块，fail-loudly 防锚点漂移。
+_p22_finish=re.compile(r'\n *// P22: 收尾动作在清理契约之后执行（WPF CheckAfterCompleted 同序）。\n(?: *//[^\n]*\n)* *cancelDurationLimit\(\)\n(?:.*?\n)*? *policyAllows: policyAllows\)\n')
+assert len(_p22_finish.findall(model)) == 1, 'P22 post-action finish block drifted'
+model=_p22_finish.sub('\n',model,count=1)
 support+='''
 @MainActor final class MAAViewModel {
  let dailyRunCoordinator = DailyRunCoordinator()
