@@ -473,7 +473,7 @@ extension MAAViewModel {
             if info.taskchain == "Infrast" {
                 if let task = dailyTask(coreID: info.taskid),
                     case .infrast(let config) = task,
-                    config.mode == .custom,
+                    config.mode == .custom, config.planSelection == .automatic,
                     let plan = try? MAAInfrast(path: config.filename),
                     plan.plans.indices.contains(config.plan_index)
                 {

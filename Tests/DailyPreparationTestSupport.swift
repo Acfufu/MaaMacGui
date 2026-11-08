@@ -38,6 +38,7 @@ extension MAATaskConfiguration { init() { self = try! JSONDecoder().decode(Self.
         }
     }
     var queued = [UUID]()
+    var appendedInfrast = [InfrastConfiguration]()
     var failAppendAt: Int?
     var startCount = 0
     var appendCount = 0
@@ -61,6 +62,7 @@ extension MAATaskConfiguration { init() { self = try! JSONDecoder().decode(Self.
         appendCount += 1
         if appendCount == failAppendAt { throw FixtureError.connection }
         queued.append(UUID())
+        if case .infrast(let config) = task { appendedInfrast.append(config) }
         return Int32(appendCount)
     }
     func start() async throws {
@@ -312,7 +314,8 @@ struct DailyTask: Equatable {
     func logError(_ text: String) { errors.append(text) }
     func logInfo(_ text: String) { infos.append(text) }
     func logTrace(verbatim text: String) {}
-    func logWarn(_ text: String) {}
+    var warnings = [String]()
+    func logWarn(_ text: String) { warnings.append(text) }
     var startupCancellationRequested = false
     var dailyRunChainFailed = false
     func ensureHandle(requireConnect: Bool = true) async throws {

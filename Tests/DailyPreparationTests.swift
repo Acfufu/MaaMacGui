@@ -14,6 +14,31 @@ import Foundation
    print("PASS: \(count) accelerated combat-timeout checks (600s production literal asserted by runner)")
    return
   }
+  // Actual production startTasks dispatches a copy: period resolution never
+  // edits the saved/frozen preference, and fixed selection keeps its index.
+  do {
+   let directory = FileManager.default.temporaryDirectory.appendingPathComponent("maa-p08-3-\(UUID())")
+   try! FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+   defer { try? FileManager.default.removeItem(at: directory) }
+   let file = directory.appendingPathComponent("plan.json")
+   let data = Data(#"{"plans":[{"name":"timed","period":[["00:00","23:59"]]},{"name":"manual"}]}"#.utf8)
+   try! data.write(to: file)
+   for selection in InfrastConfiguration.PlanSelection.allCases {
+    let model = MAAViewModel(); let core = model.handle!
+    var config = InfrastConfiguration(); config.mode = .custom
+    config.filename = file.path; config.plan_index = 1; config.planSelection = selection
+    model.tasks = [.init(task: .infrast(config))]
+    check(await model.startDailyTasks() == .started, "custom infrastructure starts")
+    check(core.appendedInfrast.count == 1 && core.appendedInfrast[0].plan_index == (selection == .fixed ? 1 : 0), "fixed/automatic index reaches Core boundary")
+    check(core.appendedInfrast[0].params.plan_index == (selection == .fixed ? 1 : 0), "encoded params preserve dispatched index")
+    if case .infrast(let frozen)? = model.dailyRunTasks?.first?.task {
+     check(frozen == config, "period selection leaves frozen preference unchanged")
+    } else { fatalError("missing infrastructure snapshot") }
+    check(model.tasks[0].task == .infrast(config), "period selection leaves saved preference unchanged")
+    check(model.warnings.contains("部分班次未设置时间段，自动选择时无匹配将使用第一个班次。") == (selection == .automatic), "mixed periods warn only for automatic selection")
+    try! await model.stop()
+   }
+  }
   for failStop in [false,true] {
    let model=MAAViewModel();let core=model.handle!
    model.tasks=[.init(task:.fixture),.init(task:.fixture)];core.failAppendAt=2;core.failStop=failStop

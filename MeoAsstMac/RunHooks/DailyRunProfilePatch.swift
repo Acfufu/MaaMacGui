@@ -10,6 +10,7 @@ enum DailyTaskCallbackUpdate {
         switch (self, current, original) {
         case (.infrastructurePlanIndex(let next), .infrast(var latest), .infrast(let expected)):
             guard latest.mode == .custom, expected.mode == .custom,
+                  latest.planSelection == .automatic, expected.planSelection == .automatic,
                   latest.filename == expected.filename, latest.plan_index == expected.plan_index else { return nil }
             latest.plan_index = next
             return .infrast(latest)

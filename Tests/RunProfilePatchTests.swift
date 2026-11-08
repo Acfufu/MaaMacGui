@@ -84,6 +84,18 @@ import Foundation
         infraEdit.plan_index = 1; infraEdit.filename = "Other plan"
         try save([DailyTask(id: id, task: .infrast(infraEdit), enabled: true)], aURL)
         check(!rotation.applyDailyTaskCallback(.infrastructurePlanIndex(2), coreID: 42), "changed plan file not rotated")
+        // P08.3: choosing fixed during a run wins over its late automatic callback.
+        var fixedEdit = infrast; fixedEdit.planSelection = .fixed
+        try save([DailyTask(id: id, task: .infrast(fixedEdit), enabled: true)], aURL)
+        let switched = try configure(infraFrozen)
+        let fixedBefore = try Data(contentsOf: aURL)
+        check(!switched.applyDailyTaskCallback(.infrastructurePlanIndex(1), coreID: 42), "late automatic callback respects fixed selection")
+        check(try Data(contentsOf: aURL) == fixedBefore, "fixed selection stays byte-identical on disk")
+        let fixedFrozen = DailyTask(id: id, task: .infrast(fixedEdit), enabled: true)
+        let fixedRun = try configure(fixedFrozen)
+        check(!fixedRun.applyDailyTaskCallback(.infrastructurePlanIndex(1), coreID: 42), "fixed run never advances on success")
+        try save([infraFrozen], aURL)
+        check(!fixedRun.applyDailyTaskCallback(.infrastructurePlanIndex(1), coreID: 42), "fixed run cannot rotate a profile switched back to automatic")
         try FileManager.default.removeItem(at: aURL)
         check(!rotation.applyDailyTaskCallback(.infrastructurePlanIndex(2), coreID: 42), "deleted original profile not recreated")
         check(!FileManager.default.fileExists(atPath: aURL.path), "deleted profile stays deleted")

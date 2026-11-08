@@ -65,6 +65,7 @@ for mode in [0, 10000, 20000] {
         LegacyInfrastConfiguration.self, from: JSONSerialization.data(withJSONObject: old))
     let migrated = InfrastConfiguration(migrating: legacy)
     check(!migrated.fiammetta_recovery_enabled && migrated.fiammetta_targets == defaults)
+    check(migrated.planSelection == .automatic)
     check(migrated.mode.rawValue == mode && migrated.facility == [.Dorm] && migrated.dorm_trust_enabled)
     // Legacy migration must not silently turn on grouping, mute clues, or
     // constrain the weekly schedule.
@@ -180,3 +181,37 @@ if let sourcePath = CommandLine.arguments.dropFirst().first {
 print(
     "PASS: \(count) mode/enablement/missing-empty-invalid target combinations; JSON/plist, mode restoration and actual legacy migration"
 )
+
+// P08.3: old profiles preserve automatic rotation; fixed selection survives
+// storage and ignores every period, including mixed files and fallback gaps.
+do {
+    let legacy = try JSONDecoder().decode(InfrastConfiguration.self, from: Data("{}".utf8))
+    check(legacy.planSelection == .automatic)
+    let mixed = plan([], [["00:00", "23:59"]])
+    check(mixed.hasPeriods && mixed.hasMixedPeriods)
+    check(!twoWindows.hasMixedPeriods && !plan([]).hasPeriods && !plan([]).hasMixedPeriods)
+    var selected = legacy
+    selected.mode = .custom
+    selected.plan_index = 1
+    selected.planSelection = .fixed
+    for date in [at(0, 0), at(9, 0), at(14, 0), at(23, 59)] {
+        for file in [twoWindows, mixed, plan([]), broken] {
+            check(selected.resolvedPlanIndex(at: date, plan: file) == nil)
+            check(selected.params.plan_index == 1)
+        }
+    }
+    for selection in InfrastConfiguration.PlanSelection.allCases {
+        selected.planSelection = selection
+        let json = try JSONEncoder().encode(selected)
+        check(try JSONDecoder().decode(InfrastConfiguration.self, from: json) == selected)
+        check(try PropertyListDecoder().decode(InfrastConfiguration.self,
+              from: PropertyListEncoder().encode(selected)) == selected)
+        let payload = try JSONSerialization.jsonObject(with: JSONEncoder().encode(selected.params)) as! [String: Any]
+        check(payload["planSelection"] == nil && payload["plan_index"] as? Int == 1)
+    }
+    selected.planSelection = .automatic
+    check(selected.resolvedPlanIndex(at: at(15, 0), plan: twoWindows) == 1)
+    check(selected.resolvedPlanIndex(at: at(9, 0), plan: twoWindows) == 0)
+    check(selected.resolvedPlanIndex(at: at(9, 0), plan: mixed) == 1)
+    print("PASS: P08.3 selection migration, JSON/plist, mixed periods, fixed/automatic matrix and Core field isolation")
+}

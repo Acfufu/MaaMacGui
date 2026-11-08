@@ -1420,15 +1420,19 @@ extension MAAViewModel {
                         logInfo("周计划今日未勾选，已跳过「\(dispatchConfig.subtitle)」")
                         continue
                     }
-                    // B11 时间轮换：任一 plan 带 period 时按当前时刻选班（端点闭
-                    // 匹配，无匹配回退第一个）；nil 保持用户手选 plan_index。
+                    // Only automatic selection resolves periods; fixed selection
+                    // dispatches the saved plan_index without changing the profile.
                     if dispatchConfig.mode == .custom,
-                        let plan = try? MAAInfrast(path: dispatchConfig.filename),
-                        let rotated = dispatchConfig.resolvedPlanIndex(at: Date.now, plan: plan) {
-                        let name = plan.plans.indices.contains(rotated)
-                            ? (plan.plans[rotated].name ?? "\(rotated)") : "\(rotated)"
-                        logInfo("时间轮换 (\(name))")
-                        dispatchConfig.plan_index = rotated
+                        dispatchConfig.planSelection == .automatic,
+                        let plan = try? MAAInfrast(path: dispatchConfig.filename) {
+                        if plan.hasMixedPeriods {
+                            logWarn("部分班次未设置时间段，自动选择时无匹配将使用第一个班次。")
+                        }
+                        if let rotated = dispatchConfig.resolvedPlanIndex(at: Date.now, plan: plan) {
+                            let name = plan.plans[rotated].name ?? "\(rotated)"
+                            logInfo("时间轮换 (\(name))")
+                            dispatchConfig.plan_index = rotated
+                        }
                     }
                     coreID = try await handle?.appendTask(.infrast(dispatchConfig),
                                                       recruitTagNames: recruitTagNames,

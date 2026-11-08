@@ -1,6 +1,118 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "部分班次未设置时间段，自动选择时无匹配将使用第一个班次。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some plans have no time periods. Automatic selection falls back to the first plan when no period matches."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일부 근무조에 시간대가 설정되지 않았습니다. 자동 선택 시 일치하는 시간대가 없으면 첫 번째 근무조를 사용합니다."
+          }
+        }
+      }
+    },
+    "从所选班次开始，每次成功完成后切换到下一班次。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with the selected plan and advance after each successful completion."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 근무조부터 시작하여 성공적으로 완료할 때마다 다음 근무조로 전환합니다."
+          }
+        }
+      }
+    },
+    "按本机时间选择班次，无匹配时使用第一个班次。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a plan using local time; use the first plan if no period matches."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "컴퓨터의 현재 시간에 따라 근무조를 선택하며, 일치하는 시간대가 없으면 첫 번째 근무조를 사용합니다."
+          }
+        }
+      }
+    },
+    "始终执行所选班次，完成后不自动切换。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always run the selected plan without advancing after completion."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "항상 선택한 근무조를 실행하며, 완료 후 자동으로 전환하지 않습니다."
+          }
+        }
+      }
+    },
+    "固定班次" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fixed plan"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "고정 근무조"
+          }
+        }
+      }
+    },
+    "自动轮换" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic rotation"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 순환"
+          }
+        }
+      }
+    },
+    "班次选择" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan selection"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "근무조 선택"
+          }
+        }
+      }
+    },
     "" : {
       "shouldTranslate" : false
     },
