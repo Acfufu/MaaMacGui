@@ -2788,6 +2788,36 @@ extension MAAViewModel {
         }
     }
 
+    // MARK: 预设（P12.5，upstream RefreshActivityPresetList/AddActivityPresetPlan 同构）
+
+    private static func isKnownDropItem(_ drop: String?) -> Bool {
+        guard let drop, !drop.isEmpty else { return false }
+        return FightConfiguration.dropItems.contains { $0.id == drop }
+    }
+
+    /// 当前进行中且至少含一个已知掉落关卡的活动预设（键与显示名，显示名取
+    /// StageName 缺省回退活动键）。时间口径沿用统一左闭右开 ActivityPeriod.contains
+    /// （与 upstream 端点闭区间的瞬时差异入档 P12-[j]）。
+    func depotActivityPresets(at date: Date = .now) -> [(key: String, display: String)] {
+        guard let activities = stageActivity?.sideStoryStage else { return [] }
+        return activities.compactMap { key, stage in
+            guard let period = stage.Activity, period.contains(date),
+                  let stages = stage.Stages,
+                  stages.contains(where: { Self.isKnownDropItem($0.Drop) })
+            else { return nil }
+            let display = (period.StageName?.isEmpty == false) ? period.StageName! : key
+            return (key, display)
+        }
+    }
+
+    /// 导入指定进行中活动的一对一计划序列（已知掉落关卡，目标数量统一缺省 200；
+    /// 快捷导入不干预运行语义，「活动期间跳过」开启时由设置面提示）。
+    func depotActivityPresetPlans(forKey activityKey: String) -> [(stage: String, dropID: String, count: Int)] {
+        guard let stage = stageActivity?.sideStoryStage?[activityKey] else { return [] }
+        return DepotMaintainPlanner.activityPresetPlans(from: stage.Stages,
+                                                        isKnownDrop: Self.isKnownDropItem)
+    }
+
     /// 任务级跳过时冻结 runOnce（对齐 appendDailyUserDataUpdate 的跳过语义：
     /// 未执行的条目不得被同批成功运行消费）。
     private func skipDepotMaintainRunOnce(task: DailyTask) {

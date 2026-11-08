@@ -1,6 +1,22 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "「活动期间跳过」已开启，导入的计划在活动期间不会执行。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「Skip during event」 is enabled: imported plans will not run while an event is open."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "｢이벤트 기간 중 건너뛰기｣가 활성화되어 있어 가져온 계획은 이벤트 기간 동안 실행되지 않습니다."
+          }
+        }
+      }
+    },
     "仓库历史快照保存失败。" : {
       "localizations" : {
         "en" : {
@@ -33,6 +49,54 @@
         }
       }
     },
+    "低级芯片（全职业）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chips (All Classes)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "칩 (전 직군)"
+          }
+        }
+      }
+    },
+    "导入预设" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Presets"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프리셋 가져오기"
+          }
+        }
+      }
+    },
+    "常驻关卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permanent Stages"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "상시 스테이지"
+          }
+        }
+      }
+    },
     "开局干员职业重复，请调整顺位配置。" : {
       "localizations" : {
         "en" : {
@@ -45,6 +109,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "시작 오퍼레이터의 직업이 중복됩니다. 순위 설정을 변경하세요."
+          }
+        }
+      }
+    },
+    "技巧概要·卷3" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skill Summary - III"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스킬개론 제3권"
           }
         }
       }
@@ -6070,6 +6150,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "실행"
+          }
+        }
+      }
+    },
+    "采购凭证（红票）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Purchase Certificates"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "구매 증명서"
           }
         }
       }
@@ -17598,7 +17694,22 @@
         }
       }
     },
-    "预设" : {},
+    "预设" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preset"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프리셋"
+          }
+        }
+      }
+    },
     "领取周年庆赠送月卡奖励" : {
       "localizations" : {
         "ko" : {
@@ -17710,6 +17821,22 @@
       }
     },
     "高度：" : {},
+    "高级芯片组（全职业）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chip Packs (All Classes)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "칩셋 (전 직군)"
+          }
+        }
+      }
+    },
     "黄票商店" : {
       "localizations" : {
         "ko" : {
@@ -17808,6 +17935,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "LMD"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "용문폐"
           }
         }
       }

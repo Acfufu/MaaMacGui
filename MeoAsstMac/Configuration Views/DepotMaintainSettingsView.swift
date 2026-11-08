@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-/// 库存保持设置（P12.2：计划编辑器 + 全局开关；预设导入归 P12.5）。
+/// 库存保持设置（P12.2 计划编辑器 + 全局开关；P12.5 预设导入与计划摘要）。
 struct DepotMaintainSettingsView: View {
     @EnvironmentObject private var viewModel: MAAViewModel
     @Binding var config: DepotMaintainConfiguration
@@ -14,6 +14,7 @@ struct DepotMaintainSettingsView: View {
 
     var body: some View {
         Form {
+            presetSection
             plansSection
             executionSection
             orderBudgetSection
@@ -31,6 +32,68 @@ struct DepotMaintainSettingsView: View {
         }
     }
 
+    // MARK: 预设导入（P12.5，upstream Preset SplitButton 同构）
+
+    private var presetSection: some View {
+        Section {
+            Menu {
+                Section("常驻关卡") {
+                    ForEach(DepotMaintainPlanner.presetOrder, id: \.self) { key in
+                        Button(Self.presetDisplay(key)) { importStaticPreset(key) }
+                    }
+                }
+                if !activityPresets.isEmpty {
+                    Section("当期活动") {
+                        ForEach(activityPresets, id: \.key) { preset in
+                            Button(preset.display) { importActivityPreset(preset.key) }
+                        }
+                    }
+                }
+            } label: {
+                Text("导入预设")
+            }
+            if config.skipDuringActivity {
+                Text("「活动期间跳过」已开启，导入的计划在活动期间不会执行。")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("预设")
+        }
+    }
+
+    /// 快捷导入不干预运行语义：活动跳过开启时仅提示，导入的计划在活动期间不会执行
+    /// （upstream PresetActivitySkipConflict 的常驻提示形态）。
+    private var activityPresets: [(key: String, display: String)] {
+        viewModel.depotActivityPresets()
+    }
+
+    private func importStaticPreset(_ key: String) {
+        guard let plans = DepotMaintainPlanner.presetPlans(forKey: key) else { return }
+        appendPlans(plans)
+    }
+
+    private func importActivityPreset(_ key: String) {
+        appendPlans(viewModel.depotActivityPresetPlans(forKey: key))
+    }
+
+    /// 批量追加计划（upstream AppendPlans 同构：逐条追加，不去重不排序）。
+    private func appendPlans(_ plans: [(stage: String, dropID: String, count: Int)]) {
+        for plan in plans {
+            config.plans.append(DepotMaintainPlan(stage: plan.stage, dropID: plan.dropID, dropCount: plan.count))
+        }
+    }
+
+    private static func presetDisplay(_ key: String) -> String {
+        switch key {
+        case "Chip1": String(localized: "低级芯片（全职业）")
+        case "Chip2": String(localized: "高级芯片组（全职业）")
+        case "CE6": String(localized: "龙门币")
+        case "AP5": String(localized: "采购凭证（红票）")
+        case "CA5": String(localized: "技巧概要·卷3")
+        default: key
+        }
+    }
+
     // MARK: 计划（I05 编辑面）
 
     private var plansSection: some View {
@@ -45,6 +108,9 @@ struct DepotMaintainSettingsView: View {
             }
             if !config.plans.isEmpty {
                 Button("清空计划", role: .destructive) { showClearConfirmation = true }
+            }
+            if let info = planInfo {
+                Text(info).font(.caption).foregroundStyle(.secondary)
             }
         } header: {
             Text("计划")
@@ -143,6 +209,23 @@ struct DepotMaintainSettingsView: View {
         StageCatalog(context: StageActivityContext(
             channel: viewModel.clientChannel,
             activities: viewModel.stageActivity))
+    }
+
+    /// 计划摘要（upstream PlanInfo 同构）：「N: 关卡 - 材料 当前/目标」逐行。
+    private var planInfo: String? {
+        DepotMaintainPlanner.planInfo(
+            for: config,
+            inventory: viewModel.currentInventorySnapshot?.items,
+            chipConversion: config.countDualChipAsChipPack,
+            formulas: FightConfiguration.dropFormulaTable,
+            dropName: { id in
+                FightConfiguration.dropItems.first { $0.id == id }?.item.name
+                    ?? (id.isEmpty ? String(localized: "未选择") : id)
+            },
+            stageDisplay: { code in
+                code.isEmpty ? String(localized: "未选择")
+                    : (catalog.entries(at: .now).first { $0.code == code }?.name ?? code)
+            })
     }
 
     // MARK: 执行

@@ -182,7 +182,87 @@ enum DepotMaintainPlanner {
             DrGrandet: false)
     }
 
+    // MARK: 预设（P12.5，upstream PresetData/AddPresetPlan 同构）
+
+    /// 静态预设（upstream PresetData 逐字同构）：预设键 → (关卡, 掉落物 id 列表, 缺省目标数量)。
+    static let presetData: [String: [(stage: String, drops: [String], count: Int)]] = [
+        "Chip1": [("PR-A-1", ["3261", "3231"], 20), ("PR-B-1", ["3251", "3241"], 20),
+                  ("PR-C-1", ["3211", "3271"], 20), ("PR-D-1", ["3221", "3281"], 20)],
+        "Chip2": [("PR-A-2", ["3262", "3232"], 32), ("PR-B-2", ["3252", "3242"], 32),
+                  ("PR-C-2", ["3212", "3272"], 32), ("PR-D-2", ["3222", "3282"], 32)],
+        "CE6": [("CE-6", ["4001"], 5000000)],
+        "AP5": [("AP-5", ["4006"], 8000)],
+        "CA5": [("CA-5", ["3303"], 400)],
+    ]
+
+    /// 静态预设展示顺序（upstream PresetList 同序）。
+    static let presetOrder: [String] = ["Chip1", "Chip2", "CE6", "AP5", "CA5"]
+
+    /// 展开预设为计划序列（每个掉落物一条，upstream AddPresetPlan SelectMany 同构）。
+    /// 未命中返回 nil（调用方按活动预设分发）。
+    static func presetPlans(forKey key: String) -> [(stage: String, dropID: String, count: Int)]? {
+        guard let stages = presetData[key] else { return nil }
+        return stages.flatMap { entry in entry.drops.map { (entry.stage, $0, entry.count) } }
+    }
+
+    /// 活动预设统一缺省目标数量（upstream ActivityPresetDefaultCount）。
+    static let activityPresetDefaultCount = 200
+
+    /// 活动预设计划：掉落为已知物品的关卡一对一生成（upstream AddActivityPresetPlan
+    /// 同构；掉落未知/缺失或关卡值缺失的条目跳过——文案型 Drop 无可生成计划）。
+    static func activityPresetPlans(from stages: [MAAStageActivity.SideStoryStageItem]?,
+                                    defaultCount: Int = DepotMaintainPlanner.activityPresetDefaultCount,
+                                    isKnownDrop: (String?) -> Bool) -> [(stage: String, dropID: String, count: Int)] {
+        guard let stages else { return [] }
+        return stages.compactMap { item in
+            guard let stage = item.Value, let drop = item.Drop, isKnownDrop(item.Drop) else { return nil }
+            return (stage, drop, defaultCount)
+        }
+    }
+
+    // MARK: 计划摘要（P12.5，upstream PlanInfo 同构）
+
+    /// 计划摘要：每条「N: 关卡 - 材料 当前/目标」换行拼接；无计划返回 nil。
+    /// 当前库存显示对齐 upstream GetCurrentInventoryCount/GetInventoryCountDisplay：
+    /// 无库存数据、条目缺失或未选材料为 "--"；双芯片折算开启且有折算量时
+    /// 「原始 (+折算)」；数值千位分组（WPF FormatNumber(false) 同口径，分组符固定）。
+    static func planInfo(for config: DepotMaintainConfiguration, inventory: [String: Int]?,
+                         chipConversion: Bool, formulas: [String: [String: Int]],
+                         dropName: (String) -> String, stageDisplay: (String) -> String) -> String? {
+        guard !config.plans.isEmpty else { return nil }
+        return config.plans.enumerated().map { index, plan in
+            let current = inventoryCountDisplay(of: plan.dropID, inventory: inventory,
+                                                chipConversion: chipConversion, formulas: formulas)
+            return "\(index + 1): \(stageDisplay(plan.stage)) - \(dropName(plan.dropID)) \(current)/\(grouped(plan.dropCount))"
+        }.joined(separator: "\n")
+    }
+
+    /// 计划摘要的当前库存显示（upstream GetInventoryCountDisplay 同构）。
+    static func inventoryCountDisplay(of dropID: String, inventory: [String: Int]?,
+                                      chipConversion: Bool, formulas: [String: [String: Int]]) -> String {
+        guard let inventory, !inventory.isEmpty, !dropID.isEmpty, let raw = inventory[dropID] else {
+            return "--"
+        }
+        guard chipConversion else { return grouped(raw) }
+        let conversion = dualChipConversion(for: dropID, inventory: inventory, formulas: formulas)
+        return conversion > 0 ? "\(grouped(raw)) (+\(grouped(conversion)))" : grouped(raw)
+    }
+
+    /// 千位分组（WPF FormatNumber(false) 同口径；固定逗号分组符，不随 locale 漂移）。
+    static func grouped(_ value: Int) -> String {
+        guard value >= 0 else { return String(value) }
+        let text = String(value)
+        var result = ""
+        for (offset, char) in text.enumerated() {
+            let remaining = text.count - offset
+            if offset > 0, remaining % 3 == 0 { result.append(",") }
+            result.append(char)
+        }
+        return result
+    }
+
     // MARK: 识别回填复查（P12.4，upstream ReviewSkippedPlansAfterDepotSync）
+
 
     /// 复查命中的翻转计划：配置列表下标（日志序号 = index + 1，与 Evaluation 一致）
     /// 与识别后最新有效库存。

@@ -365,4 +365,66 @@ do {
     check(skips.map(\.index) == [1, 0], "sortByProgress orders review by fresh progress ascending")
 }
 
+// MARK: - 预设与计划摘要（P12.5，upstream PresetData/PlanInfo 同构）
+
+do {
+    // 静态预设展开：Chip1 8 条（4 关 × 2 掉落、缺省 20）；CE6 单条 5,000,000。
+    let chip1 = DepotMaintainPlanner.presetPlans(forKey: "Chip1")!
+    check(chip1.count == 8 && chip1[0] == ("PR-A-1", "3261", 20) && chip1[1] == ("PR-A-1", "3231", 20)
+          && chip1[7] == ("PR-D-1", "3281", 20), "Chip1 expands one plan per drop in upstream order")
+    let ce6 = DepotMaintainPlanner.presetPlans(forKey: "CE6")!
+    check(ce6.count == 1 && ce6[0].stage == "CE-6" && ce6[0].dropID == "4001" && ce6[0].count == 5000000,
+          "CE6 single LMD plan with upstream count")
+    let ca5 = DepotMaintainPlanner.presetPlans(forKey: "CA5")!
+    check(ca5.count == 1 && ca5[0].stage == "CA-5" && ca5[0].dropID == "3303" && ca5[0].count == 400,
+          "CA5 skill summary plan")
+    check(DepotMaintainPlanner.presetPlans(forKey: "missing") == nil,
+          "unknown key falls through to activity presets (upstream AddPresetPlan)")
+    check(DepotMaintainPlanner.presetOrder == ["Chip1", "Chip2", "CE6", "AP5", "CA5"],
+          "preset order matches upstream PresetList")
+
+    // 活动预设：已知掉落关卡一对一生成、未知/缺失掉落跳过、关卡值缺失跳过。
+    let stages: [MAAStageActivity.SideStoryStageItem] = [
+        .init(Value: "SYN-1", Display: "其一", Drop: "31023"),
+        .init(Value: "SYN-2", Display: "其二", Drop: "unknown-id"),
+        .init(Value: "SYN-3", Display: "其三", Drop: ""),
+        .init(Value: nil, Display: nil, Drop: "31023"),
+    ]
+    let plans = DepotMaintainPlanner.activityPresetPlans(from: stages, isKnownDrop: { $0 == "31023" })
+    check(plans.count == 1 && plans[0].stage == "SYN-1" && plans[0].dropID == "31023"
+          && plans[0].count == 200, "activity preset keeps known-drop stages at default 200")
+    check(DepotMaintainPlanner.activityPresetPlans(from: nil, isKnownDrop: { _ in true }).isEmpty,
+          "nil stage list yields no plans")
+
+    // 计划摘要：千位分组、无数据 "--"、双芯片折算「原始 (+折算)」。
+    let cfg = config([plan(stage: "CE-6", dropID: "4001", dropCount: 5000000)])
+    let info = DepotMaintainPlanner.planInfo(
+        for: cfg, inventory: ["4001": 1234567], chipConversion: false, formulas: [:],
+        dropName: { $0.isEmpty ? "未选择" : "物品(\($0))" }, stageDisplay: { $0.isEmpty ? "未选择" : $0 })
+    check(info == "1: CE-6 - 物品(4001) 1,234,567/5,000,000", "plan info groups numbers with fixed separators")
+    let empty = DepotMaintainPlanner.planInfo(
+        for: cfg, inventory: nil, chipConversion: false, formulas: [:],
+        dropName: { $0 }, stageDisplay: { $0 })
+    check(empty == "1: CE-6 - 4001 --/5,000,000", "missing inventory renders -- per upstream")
+    check(DepotMaintainPlanner.planInfo(
+        for: config([]), inventory: ["4001": 1], chipConversion: false, formulas: [:],
+        dropName: { $0 }, stageDisplay: { $0 }) == nil, "no plans yields nil summary")
+    // 未选材料 → "--"（upstream dropId 空判定）。
+    let invalid = DepotMaintainPlanner.planInfo(
+        for: config([plan(stage: "1-7", dropID: "", dropCount: 10)]), inventory: ["4001": 1],
+        chipConversion: false, formulas: [:], dropName: { $0.isEmpty ? "未选择" : $0 }, stageDisplay: { $0 })
+    check(invalid == "1: 1-7 - 未选择 --/10", "empty drop id renders -- and localized placeholder")
+    // 双芯片折算显示：开启且有折算量 →「原始 (+折算)」。
+    let formulas = ["32002": ["32001": 1, "3211": 2]]
+    let chip = DepotMaintainPlanner.planInfo(
+        for: config([plan(stage: "PR-C-1", dropID: "3211", dropCount: 100)]),
+        inventory: ["3211": 40, "32002": 3], chipConversion: true, formulas: formulas,
+        dropName: { $0 }, stageDisplay: { $0 })
+    check(chip == "1: PR-C-1 - 3211 40 (+6)/100",
+          "dual chip display appends conversion in parens")
+    check(DepotMaintainPlanner.grouped(0) == "0" && DepotMaintainPlanner.grouped(999) == "999"
+          && DepotMaintainPlanner.grouped(1000) == "1,000" && DepotMaintainPlanner.grouped(-5) == "-5",
+          "grouping edges: zero, sub-thousand, thousand, negative passthrough")
+}
+
 print("depot-maintain-planning: \(checks) checks passed")

@@ -60,6 +60,9 @@ final class MAAViewModel {
  var logStore:TestRecognitionStore?=TestRecognitionStore()
  func receiveDailyDepot(_ value:MAADepot?,coreID:Int32?) -> Bool {false}
  func receiveDailyOperators(_ value:MAAOperBox?,coreID:Int32?) -> Bool {false}
+ // P12.4 识别回填复查钩子（processDailyUserDataTerminal .depot 分支引用）；
+ // 真实复查行为由 run-depot-maintain-dispatch-tests.py 专责，此处 no-op 存根。
+ func reviewDepotMaintainSkippedPlans(){}
  func logError(_ text:String) { errors.append(text) }
 ''' + invalidate + r'''
  func process(_ message:Message,_ info:Info) {
