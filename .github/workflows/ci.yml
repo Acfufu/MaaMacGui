@@ -31,6 +31,8 @@ jobs:
       - name: Run test scripts
         # 4 个脚本需要一份已完成 Debug 构建的 DerivedData（JBird 产物），
         # 由下方 build job 顺带执行；其余脚本自包含，实测串行全程 <2 分钟。
+        # ⑦（W0 记录-1）：Packages.resolved 变更默认被本地排除，涉依赖锁定
+        # 的提交须显式 git add -f 包含，否则 CI 与本地的 JBird 解析漂移。
         run: |
           set -euo pipefail
           SKIP="run-mall-configuration-tests.sh run-roguelike-exit-log-tests.sh run-roguelike-settlement-tests.sh run-blackflow-start-status-tests.py"
