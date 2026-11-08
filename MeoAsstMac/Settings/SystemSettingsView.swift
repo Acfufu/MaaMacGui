@@ -49,6 +49,19 @@ struct SystemSettingsView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
+
+            GroupBox {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle(isOn: $viewModel.localNotificationsEnabled) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("系统通知")
+                            Text("任务完成、公招识别出错等事件发送本机通知")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    NotificationStatusView(service: viewModel.localNotifications)
+                }
+            }
         }
         .padding()
         .sheet(isPresented: $showHooks) {
@@ -67,6 +80,38 @@ struct SystemSettingsView_Previews: PreviewProvider {
     static var previews: some View {
         SystemSettingsView()
             .environmentObject(MAAViewModel())
+    }
+}
+
+/// P23/E01: 通知权限状态行。拒绝时提供系统设置跳转；授权后才允许测试投递。
+@MainActor struct NotificationStatusView: View {
+    @ObservedObject var service: LocalNotificationService
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        HStack {
+            statusText.font(.caption).foregroundStyle(.secondary)
+            Spacer()
+            if service.authorizationState == .denied {
+                Button("打开系统通知设置") { service.openSystemSettings() }
+            }
+            Button("发送测试通知") { Task { await service.sendTest() } }
+                .disabled(service.authorizationState != .authorized)
+        }
+        .onAppear { Task { await service.refreshState() } }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await service.refreshState() } }
+        }
+    }
+
+    private var statusText: Text {
+        switch service.authorizationState {
+        case .loading: Text("正在检查通知权限")
+        case .notDetermined: Text("开启开关后请求通知授权")
+        case .denied: Text("通知权限被拒绝，请在系统设置中允许")
+        case .authorized: Text("系统通知已授权")
+        case .unsupported: Text("当前系统不支持通知")
+        }
     }
 }
 

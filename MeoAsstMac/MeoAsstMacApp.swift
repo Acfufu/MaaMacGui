@@ -38,6 +38,8 @@ struct MeoAsstMacApp: App {
             await viewModel.prepareForTermination()
             await newModel.waitLogStoreToFinish()
         }
+        // P23/E01: 点击通知仅重新前置主窗口（S18 关窗驻留语义下的找回路径）。
+        viewModel.localNotifications.installTapHandler { MainWindowVisibility.reopen(tracker: .shared) }
     }
 
     var body: some Scene {

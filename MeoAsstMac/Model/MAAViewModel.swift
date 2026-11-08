@@ -340,6 +340,64 @@ import SwiftUI
     let startupAutoRunCountdown = StartupAutoRunCountdown()
     private var startupAutoRunHandled = false
 
+    // MARK: - Local Notifications (P23/E01)
+
+    let localNotifications = LocalNotificationService()
+    /// 缺省关（历史行为无系统通知，零暗改）；开启时走授权链。
+    @AppStorage("MAALocalNotificationsEnabled") var localNotificationsEnabled = false {
+        didSet {
+            localNotifications.userEnabled = localNotificationsEnabled
+            if localNotificationsEnabled {
+                Task { await localNotifications.requestIfNecessary() }
+            }
+        }
+    }
+
+    /// AllTasksCompleted：完成通知（按运行去重）+ 理智恢复定时提醒（同 id 覆盖旧计划）。
+    func notifyAllTasksCompleted(body: String) {
+        let runID = dailyRunCoordinator.active?.id
+        let recoveryTime = logStore?.sanityReport?.fullRecoveryTime()
+        Task {
+            await localNotifications.send(
+                id: "all-tasks-completed-\(runID?.uuidString ?? "unknown")",
+                title: String(localized: "任务已完成"),
+                body: body.isEmpty ? String(localized: "全部任务执行完毕") : body,
+                deduplicateSession: true
+            )
+            if let recoveryTime {
+                await localNotifications.schedule(
+                    id: LocalNotificationService.sanityRecoveryID,
+                    title: String(localized: "理智恢复提醒"),
+                    body: String(localized: "理智已回满，可以继续安排任务"),
+                    fireDate: recoveryTime
+                )
+            }
+        }
+    }
+
+    /// 公招识别错误（WPF ToastNotification.ShowDirect(identifyTheMistakes) 同位）。
+    func notifyRecruitRecognitionError() {
+        Task {
+            await localNotifications.send(
+                id: "recruit-error-\(UUID().uuidString)",
+                title: String(localized: .identifyTheMistakes),
+                body: String(localized: "公招任务链出错，请查看日志")
+            )
+        }
+    }
+
+    /// 独立作业完成反馈（WPF runOwner==Copilot 的 TaskComplete 同位）。
+    func notifyCopilotCompleted(chainName: String) {
+        Task {
+            await localNotifications.send(
+                id: "copilot-completed-\(chainName)",
+                title: String(localized: "作业已完成"),
+                body: chainName,
+                deduplicateSession: true
+            )
+        }
+    }
+
     // MARK: - Initializer
 
     init() {

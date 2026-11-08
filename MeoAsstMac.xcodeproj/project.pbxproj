@@ -182,6 +182,7 @@
 		F12400000000000000000002 /* MiniGameLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12400000000000000000001 /* MiniGameLaunch.swift */; };
 		F12500000000000000000002 /* StartupAutoRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12500000000000000000001 /* StartupAutoRun.swift */; };
 		F12600000000000000000002 /* MainWindowVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12600000000000000000001 /* MainWindowVisibility.swift */; };
+		F12700000000000000000002 /* LocalNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12700000000000000000001 /* LocalNotificationService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -393,6 +394,7 @@
 		F12400000000000000000001 /* MiniGameLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniGameLaunch.swift; sourceTree = "<group>"; };
 		F12500000000000000000001 /* StartupAutoRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupAutoRun.swift; sourceTree = "<group>"; };
 		F12600000000000000000001 /* MainWindowVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowVisibility.swift; sourceTree = "<group>"; };
+		F12700000000000000000001 /* LocalNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNotificationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -750,6 +752,7 @@
 				83B8E0D83053131B00AB0B56 /* HGCalendar.swift */,
 				B30000000000000000000002 /* LoginItemService.swift */,
 				F12600000000000000000001 /* MainWindowVisibility.swift */,
+				F12700000000000000000001 /* LocalNotificationService.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -944,6 +947,7 @@
 				F12400000000000000000002 /* MiniGameLaunch.swift in Sources */,
 				F12500000000000000000002 /* StartupAutoRun.swift in Sources */,
 				F12600000000000000000002 /* MainWindowVisibility.swift in Sources */,
+				F12700000000000000000002 /* LocalNotificationService.swift in Sources */,
 				F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */,
 				F11500000000000000000002 /* DataExport.swift in Sources */,
 				F11600000000000000000002 /* DepotMaintainConfiguration.swift in Sources */,

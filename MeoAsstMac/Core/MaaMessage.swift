@@ -321,7 +321,9 @@ extension MAAViewModel {
 // MARK: - Process TaskChain
 
 extension NewViewModel.SanityReport {
-    fileprivate func fullRecoveryTime() -> Date? {
+    /// 理智回满时刻（WPF SanityRecoveryTimer 同构：报告时刻 + 缺口×6 分钟）。
+    /// P23 起通知面（MAAViewModel）也消费，故为 internal。
+    func fullRecoveryTime() -> Date? {
         guard let reportedAt else {
             return nil
         }
@@ -377,6 +379,7 @@ extension MAAViewModel {
                     sanitySuffix = ""
                 }
                 logTrace(.allTasksComplete(duration: duration, sanity: sanitySuffix))
+                notifyAllTasksCompleted(body: duration + sanitySuffix)
                 break
             }
             return
@@ -458,10 +461,8 @@ extension MAAViewModel {
         }
 
         if info.taskchain == "Recruit", message.code == .TaskChainError {
-            // TODO: (Notification) Show the recruit-recognition error notification.
             // TODO: (ViewState) Show the recruit-recognition error in RecruitView.
-            let resource = LocalizedStringResource.identifyTheMistakes
-            _ = resource
+            notifyRecruitRecognitionError()
         }
 
         let isCopilot = ["Copilot", "SSSCopilot"].contains(info.taskchain)
@@ -539,6 +540,10 @@ extension MAAViewModel {
                 logTrace(.completeTaskWithSanity(name: taskchainName, cur: report.current, max: report.maximum))
             } else {
                 logTrace(.completeTask(name: taskchainName))
+            }
+            // P23/E01：独立作业完成反馈（WPF runOwner==Copilot 的 TaskComplete 同位）。
+            if isCopilot {
+                notifyCopilotCompleted(chainName: taskchainName)
             }
 
         case .TaskChainExtraInfo:
