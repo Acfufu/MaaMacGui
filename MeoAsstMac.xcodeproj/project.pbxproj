@@ -171,6 +171,9 @@
 		F11300000000000000000202 /* UserDataUpdateRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11300000000000000000201 /* UserDataUpdateRun.swift */; };
 		F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11400000000000000000001 /* YituliuOperBoxService.swift */; };
 		F11500000000000000000002 /* DataExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11500000000000000000001 /* DataExport.swift */; };
+		F11600000000000000000002 /* DepotMaintainConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11600000000000000000001 /* DepotMaintainConfiguration.swift */; };
+		F11700000000000000000002 /* DepotMaintainPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11700000000000000000001 /* DepotMaintainPlanner.swift */; };
+		F11800000000000000000002 /* DepotMaintainSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11800000000000000000001 /* DepotMaintainSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -371,6 +374,9 @@
 		F11300000000000000000201 /* UserDataUpdateRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataUpdateRun.swift; sourceTree = "<group>"; };
 		F11400000000000000000001 /* YituliuOperBoxService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YituliuOperBoxService.swift; sourceTree = "<group>"; };
 		F11500000000000000000001 /* DataExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExport.swift; sourceTree = "<group>"; };
+		F11600000000000000000001 /* DepotMaintainConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepotMaintainConfiguration.swift; sourceTree = "<group>"; };
+		F11700000000000000000001 /* DepotMaintainPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepotMaintainPlanner.swift; sourceTree = "<group>"; };
+		F11800000000000000000001 /* DepotMaintainSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepotMaintainSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -463,6 +469,7 @@
 				8341194F29EC249E00044F45 /* RoguelikeConfiguration.swift */,
 				83C75A102DD9000100000010 /* CustomConfiguration.swift */,
 				F11300000000000000000001 /* UserDataUpdateConfiguration.swift */,
+				F11600000000000000000001 /* DepotMaintainConfiguration.swift */,
 				8341195429EC55C600044F45 /* CopilotConfiguration.swift */,
 				832985AF29EEF483009F7ED5 /* ReclamationConfiguration.swift */,
 				83782A2A2CFFAF2900A32BDD /* LegacyConfigurations.swift */,
@@ -483,6 +490,7 @@
 				83D3283828F3048E00018D10 /* RoguelikeSettingsView.swift */,
 				83C75A202DD9000100000020 /* CustomSettingsView.swift */,
 				F11300000000000000000101 /* UserDataUpdateSettingsView.swift */,
+				F11800000000000000000001 /* DepotMaintainSettingsView.swift */,
 				83264A2529EBC9C10074E33A /* ReclamationSettingsView.swift */,
 			);
 			path = "Configuration Views";
@@ -646,6 +654,7 @@
 				F11200000000000000000001 /* OperBoxHistoryStore.swift */,
 				F11400000000000000000001 /* YituliuOperBoxService.swift */,
 				F11500000000000000000001 /* DataExport.swift */,
+				F11700000000000000000001 /* DepotMaintainPlanner.swift */,
 				F11300000000000000000201 /* UserDataUpdateRun.swift */,
 				C80000000000000000000001 /* AchievementDefinition.swift */,
 				C80000000000000000000002 /* AchievementEngine.swift */,
@@ -907,6 +916,9 @@
 				F11200000000000000000002 /* OperBoxHistoryStore.swift in Sources */,
 				F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */,
 				F11500000000000000000002 /* DataExport.swift in Sources */,
+				F11600000000000000000002 /* DepotMaintainConfiguration.swift in Sources */,
+				F11700000000000000000002 /* DepotMaintainPlanner.swift in Sources */,
+				F11800000000000000000002 /* DepotMaintainSettingsView.swift in Sources */,
 				F11300000000000000000202 /* UserDataUpdateRun.swift in Sources */,
 				C81000000000000000000001 /* AchievementDefinition.swift in Sources */,
 				C81000000000000000000002 /* AchievementEngine.swift in Sources */,

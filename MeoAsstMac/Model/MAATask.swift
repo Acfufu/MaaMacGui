@@ -24,6 +24,7 @@ enum MAATask: Codable, Equatable {
     case custom(CustomConfiguration)
     case operProgress(OperProgressConfiguration)
     case userdataupdate(UserDataUpdateConfiguration)
+    case depotMaintain(DepotMaintainConfiguration)
 }
 
 let defaultTaskConfigurations: [any MAATaskConfiguration] = [
@@ -31,6 +32,7 @@ let defaultTaskConfigurations: [any MAATaskConfiguration] = [
     RecruitConfiguration(),
     InfrastConfiguration(),
     FightConfiguration(),
+    DepotMaintainConfiguration(),
     MallConfiguration(),
     AwardConfiguration(),
     SwitchThemeConfiguration(),
@@ -83,6 +85,8 @@ extension MAATaskType: Codable, CustomStringConvertible {
             return String(localized: "更新资料")
         case .OperProgress:
             return String(localized: "干员养成计划")
+        case .DepotMaintain:
+            return String(localized: "库存保持")
         }
     }
 }
@@ -118,7 +122,7 @@ struct DailyTask: Codable, Equatable, Identifiable {
 extension DailyTask {
     init<T: MAATaskConfiguration>(config: T) {
         switch config.type {
-        case .Roguelike, .Reclamation, .Custom, .OperProgress, .UserDataUpdate:
+        case .Roguelike, .Reclamation, .Custom, .OperProgress, .UserDataUpdate, .DepotMaintain:
             self.init(id: UUID(), task: config.projectedTask, enabled: false)
         default:
             self.init(id: UUID(), task: config.projectedTask, enabled: true)

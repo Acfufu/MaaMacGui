@@ -57,6 +57,10 @@ extension MAAHandle {
         case .userdataupdate:
             // Expanded by daily preparation into registered Depot/OperBox tasks.
             throw MaaCoreError.appendTaskFailed
+        case .depotMaintain:
+            // Expanded by task serialization into an optional Depot recognition +
+            // per-plan Fight tasks (DepotMaintainPlanner evaluations).
+            throw MaaCoreError.appendTaskFailed
         case .custom(let config):
             try config.validate()
             return try appendTask(config: config)

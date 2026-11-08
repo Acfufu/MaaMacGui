@@ -1,7 +1,7 @@
 import Foundation
 protocol MAATaskConfiguration: Codable, Hashable, Sendable { associatedtype Params: Encodable; var params: Params { get } }
 extension MAATaskConfiguration { init() {self=try! JSONDecoder().decode(Self.self,from:Data("{}".utf8))} }
-enum MAATaskType:String {case UserDataUpdate,Depot,OperBox}
+enum MAATaskType:String {case UserDataUpdate,DepotMaintain,Depot,OperBox}
 enum MAATask {case userdataupdate(UserDataUpdateConfiguration)}
 enum MAAClientChannel:CaseIterable {case Official,Bilibili,txwy,YoStarEN,YoStarJP,YoStarKR}
 enum MaaCoreError:Error {case appendTaskFailed}

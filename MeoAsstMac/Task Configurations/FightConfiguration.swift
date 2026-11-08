@@ -345,6 +345,9 @@ struct DropItem: Codable, Equatable {
     let name: String
     let sortId: Int
     let usage: String?
+    /// 合成配方（材料ID → 消耗数），仅可合成物品携带（如双芯片含芯片助剂
+    /// 32001 与对应芯片组×2）。库存保持的双芯片折算（I10）以此重建产物反查表。
+    let formula: [String: Int]?
 }
 
 /// 活动关卡 Drop 字段的展示口径（P05.2）：纯数字按物品 ID 查已加载物品表；

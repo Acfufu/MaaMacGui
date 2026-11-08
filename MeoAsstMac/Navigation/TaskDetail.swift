@@ -43,6 +43,8 @@ struct TaskDetail: View {
                         ReclamationSettingsView(config: taskConfigBinding(config, id: id))
                     case .userdataupdate(let config):
                         UserDataUpdateSettingsView(config: taskConfigBinding(config, id: id))
+                    case .depotMaintain(let config):
+                        DepotMaintainSettingsView(config: taskConfigBinding(config, id: id))
                     case .custom(let config):
                         CustomSettingsView(config: taskConfigBinding(config, id: id))
                     case .operProgress(let config):

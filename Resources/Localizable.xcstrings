@@ -228,6 +228,22 @@
         }
       }
     },
+    "%lld 项计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld plans"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획 %lld개"
+          }
+        }
+      }
+    },
     "%lld" : {
       "shouldTranslate" : false
     },
@@ -395,6 +411,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "红票-5"
+          }
+        }
+      }
+    },
+    "AUTO 代理倍率" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto Series"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AUTO 대리 배수"
           }
         }
       }
@@ -5750,6 +5782,390 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当前任务模式需要您拥有可合成道具的存档。请考虑切换模式。"
+          }
+        }
+      }
+    },
+    "库存保持" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depot maintain"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재고 유지"
+          }
+        }
+      }
+    },
+    "未配置计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No plans configured"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "구성된 계획 없음"
+          }
+        }
+      }
+    },
+    "仅首个不足" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First insufficient only"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 부족만 실행"
+          }
+        }
+      }
+    },
+    "按达成率排序" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By progress"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "달성률순"
+          }
+        }
+      }
+    },
+    "活动跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip in events"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트 건너뜀"
+          }
+        }
+      }
+    },
+    "芯片折算" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chip conversion"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "칩 환산"
+          }
+        }
+      }
+    },
+    "执行前更新仓库数据" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update depot data before execution"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 전 창고 데이터 업데이트"
+          }
+        }
+      }
+    },
+    "活动期间跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip during event"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트 기간 중 건너뛰기"
+          }
+        }
+      }
+    },
+    "资源全开放期间跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip during resource collection limited-time all-day open"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자원 전체 개방 기간 중 건너뛰기"
+          }
+        }
+      }
+    },
+    "仅执行第一个不足计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only execute the first insufficient plan"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재고 부족한 첫 번째 계획만 실행"
+          }
+        }
+      }
+    },
+    "按库存达成率排序" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execute in inventory progress order"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재고 달성률 순으로 실행"
+          }
+        }
+      }
+    },
+    "使用药剂" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use sanity potion"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이성 회복제 사용"
+          }
+        }
+      }
+    },
+    "使用源石" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use originite prime"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오리지늄 사용"
+          }
+        }
+      }
+    },
+    "使用临期理智药（48 小时内）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use expiring sanity potions (within 48 hours)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "48시간 이내 만료되는 이성 회복제 사용"
+          }
+        }
+      }
+    },
+    "双芯片折算计入芯片组" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Count dual chips as chip packs"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "쌍칩을 칩 팩으로 계산"
+          }
+        }
+      }
+    },
+    "计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plans"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획"
+          }
+        }
+      }
+    },
+    "执行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execution"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행"
+          }
+        }
+      }
+    },
+    "顺序与预算" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Order and budget"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "순서와 예산"
+          }
+        }
+      }
+    },
+    "统计" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistics"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "통계"
+          }
+        }
+      }
+    },
+    "尚未配置计划。每条计划指定关卡与目标材料，达到目标库存即停。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No plans configured yet. Each plan targets a stage and a material and stops once the target stock is reached."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아직 구성된 계획이 없습니다. 각 계획은 스테이지와 목표 재료를 지정하며, 목표 수량에 도달하면 중단합니다."
+          }
+        }
+      }
+    },
+    "已配置 %lld 项计划。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld plans configured."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획 %lld개가 구성되어 있습니다."
+          }
+        }
+      }
+    },
+    "开启活动/资源跳过后，对应期间整个任务不会下发，计划配置保持不变。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With event or resource skipping enabled, the whole task is not dispatched during those periods; plan configuration is preserved."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트/자원 건너뛰기를 켜면 해당 기간 전체 작업이 실행되지 않으며, 계획 구성은 유지됩니다."
+          }
+        }
+      }
+    },
+    "两个策略同时开启时，先按达成率排序，再执行排序后的第一个不足计划。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With both strategies enabled, plans are sorted by progress first; the first insufficient plan in that order runs."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "두 전략을 모두 켜면 먼저 달성률순으로 정렬한 뒤, 정렬된 순서에서 첫 번째 부족한 계획을 실행합니다."
+          }
+        }
+      }
+    },
+    "开启后每个双芯片按配方折算为 2 个对应芯片组参与达标判定，不会自动合成。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When enabled, each dual chip counts as 2 matching chip packs per the synthesis recipe for completion checks; no synthesis is performed."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "켜면 각 쌍칩이 조합식에 따라 대응 칩 팩 2개로 계산되어 달성 판정에 반영되며, 자동 조합은 하지 않습니다."
           }
         }
       }

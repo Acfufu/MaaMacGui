@@ -148,7 +148,7 @@ main='''@main struct Main {
  @MainActor static func main() async throws {
   var checks = 0
   func check(_ value: Bool, _ message: String) { checks += 1; precondition(value, message) }
-  FightConfiguration.dropItems = [("30012", DropItem(classifyType: "MATERIAL", description: nil, icon: "", name: "Material", sortId: 1, usage: nil))]
+  FightConfiguration.dropItems = [("30012", DropItem(classifyType: "MATERIAL", description: nil, icon: "", name: "Material", sortId: 1, usage: nil, formula: nil))]
   var config = FightConfiguration(); config.inventoryTarget = InventoryTarget(itemID: "30012", quantity: 10)
   func make(_ stock: Int) throws -> Probe {
    let model = Probe(); model.tasks = [.init(id: UUID(), task: .fight(config), enabled: true)]

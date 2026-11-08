@@ -51,8 +51,8 @@ struct DailyStageTipViewTests {
             check(StageDropLabel.text("") == "", "empty drop must pass through")
             check(StageDropLabel.text("31093") == "31093", "numeric drop without loaded table must stay raw")
             FightConfiguration.dropItems = [
-                (id: "31093", item: DropItem(classifyType: nil, description: nil, icon: "", name: "聚合剂", sortId: 0, usage: nil)),
-                (id: "30053", item: DropItem(classifyType: nil, description: nil, icon: "", name: "固源岩组", sortId: 1, usage: nil)),
+                (id: "31093", item: DropItem(classifyType: nil, description: nil, icon: "", name: "聚合剂", sortId: 0, usage: nil, formula: nil)),
+                (id: "30053", item: DropItem(classifyType: nil, description: nil, icon: "", name: "固源岩组", sortId: 1, usage: nil, formula: nil)),
             ]
             check(StageDropLabel.text("31093") == "聚合剂", "numeric drop must map via loaded item table")
             check(StageDropLabel.text("30053") == "固源岩组", "second id must map")
