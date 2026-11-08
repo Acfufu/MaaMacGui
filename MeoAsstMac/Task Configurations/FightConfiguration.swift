@@ -287,6 +287,16 @@ struct FightConfiguration: MAATaskConfiguration {
     @MainActor static var inventoryDropItems: [(id: String, item: DropItem)] {
         dropItems.filter { InventoryTargetPlanner.supportsInventory(classification: $0.item.classifyType) }
     }
+    /// 合成配方反查表（itemID → 配方）：库存保持双芯片折算（I10）的数据源，
+    /// 与 dropItems 同一 item_index.json 装载面。
+    @MainActor static var dropFormulaTable: [String: [String: Int]] {
+        var table: [String: [String: Int]] = [:]
+        for (id, item) in dropItems {
+            guard let formula = item.formula, !formula.isEmpty else { continue }
+            table[id] = formula
+        }
+        return table
+    }
     @MainActor static var id2index: [String: Int] = [:]  // (id -> idx of dropItems)
     static let _excludedValues = Set([
         3213, 3223, 3233, 3243,  // 双芯片

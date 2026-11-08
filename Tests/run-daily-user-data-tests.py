@@ -18,7 +18,7 @@ composite=composite[composite.index('{')+1:composite.rfind('}')]
 extra='\n'.join(block(model,signature).replace('private func','func',1) for signature in ['    func applyDailyTaskCallback(','    func markDailyRunFailed()'])
 tasks=(root/'MeoAsstMac/Model/MAATask.swift').read_text();daily=block(tasks,'struct DailyTask:')
 start=model.index('                if case .userdataupdate(let config) = task.task {',model.index('private func startTasks(snapshot:'))
-end=model.index('                let coreID: Int32?',start);enqueue_branch=model[start:end]
+end=model.index('                if case .depotMaintain(let depotConfig) = task.task {',start);enqueue_branch=model[start:end]
 start=model.index('            if appendedAnyTask {',end);submit=block(model[start:],'            if appendedAnyTask {')
 catch_start=model.index('        } catch {',start);catch_end=model.index('\n    }\n\n    /// Freeze the target',catch_start);catch_block=model[catch_start:catch_end]
 messages=(root/'MeoAsstMac/Core/MaaMessage.swift').read_text()

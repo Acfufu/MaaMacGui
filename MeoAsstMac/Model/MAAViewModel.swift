@@ -1422,6 +1422,15 @@ extension MAAViewModel {
                     appendedAnyTask = appendedAnyTask || !ids.isEmpty
                     continue
                 }
+                if case .depotMaintain(let depotConfig) = task.task {
+                    // P12.3 库存保持展开：任务级跳过 → 可选前置识别 → 逐计划战斗追加。
+                    let dispatched = try await appendDepotMaintainTask(
+                        task: task, config: depotConfig, runID: runID, scope: scope,
+                        hasFrozenInventoryTarget: frozenPlan != nil,
+                        inventoryFightIDs: &inventoryFightIDs)
+                    appendedAnyTask = appendedAnyTask || dispatched
+                    continue
+                }
                 let coreID: Int32?
                 if case .fight(let config) = task.task {
                     let now = Date.now
@@ -2483,5 +2492,132 @@ extension MAAViewModel {
     func updateDailyTaskStatus(_ value: TaskStatus, coreID: Int32?) {
         guard let coreID, userDataUpdateRun.entries[coreID] == nil, let id = taskIDMap[coreID] else { return }
         taskStatus[id] = value
+    }
+}
+
+// MARK: - Depot maintain dispatch
+
+extension MAAViewModel {
+    /// P12.3 库存保持分发展开（I05-I12）：任务级跳过 → 可选前置仓库识别 →
+    /// 逐计划预检与战斗任务追加。对齐 upstream DepotMaintainTaskUserControlModel
+    /// 序列化（dev-v2 d75bf9a）；预检库存取会话快照、空缓存按 0 计（upstream 同口径，
+    /// 由识别回填后的重算纠正——Mac 中途重算归 P12.4，divergence P12-[a]）。
+    /// 返回本任务是否实际下发了 Core 任务。
+    @discardableResult
+    func appendDepotMaintainTask(task: DailyTask, config: DepotMaintainConfiguration,
+                                 runID: UUID, scope: InventoryScope,
+                                 hasFrozenInventoryTarget: Bool,
+                                 inventoryFightIDs: inout Set<Int32>) async throws -> Bool {
+        guard dailyRunCoordinator.active?.id == runID, inventoryScope == scope else { throw CancellationError() }
+        let now = Date.now
+
+        if let skip = DepotMaintainPlanner.taskLevelSkip(config: config, at: now, activities: stageActivity) {
+            taskStatus[task.id] = .skipped
+            skipDepotMaintainRunOnce(task: task)
+            logInfo(skip == .activityOpen ? "活动进行中，库存保持已跳过。" : "资源全开放期间，库存保持已跳过。")
+            return false
+        }
+        if config.plans.isEmpty && !config.updateDepot {
+            taskStatus[task.id] = .skipped
+            skipDepotMaintainRunOnce(task: task)
+            logWarn("库存保持未配置计划且未启用执行前识别，已跳过。")
+            return false
+        }
+        if hasFrozenInventoryTarget && config.updateDepot {
+            // 单目标库存任务的冻结校验依赖快照代际不变；本任务的前置识别会在
+            // 运行中刷新快照使其失效。upstream 靠逐计划重算消化该交互——Mac 重算
+            // 就绪（P12.4）前显式跳过本任务而非让整跑失败。
+            taskStatus[task.id] = .skipped
+            skipDepotMaintainRunOnce(task: task)
+            logWarn("库存保持的执行前识别会刷新库存快照，与目标库存任务同批运行会使冻结校验失效，本轮已跳过「\(config.subtitle)」。")
+            return false
+        }
+
+        logInfo("库存保持")
+
+        // 预检库存：会话快照（按账号/区服/档案/本地标识隔离）；无数据按 0 计。
+        let depotItems = currentInventorySnapshot?.items ?? [:]
+        let catalog = StageCatalog(context: StageActivityContext(
+            channel: clientChannel, activities: stageActivity))
+        let evaluations = DepotMaintainPlanner.evaluate(
+            config: config, inventory: depotItems,
+            formulas: FightConfiguration.dropFormulaTable,
+            isStageOpen: { code in
+                let normalized = FightConfiguration.normalizedStage(code)
+                if let entry = catalog.entries(at: now).first(where: { $0.code == normalized }) {
+                    return entry.isOpen
+                }
+                // 目录外口径与备选解析同源（F05）：活动形码按过期活动判关，
+                // 其余 fail-open（手输/特殊导航可连性）。
+                return !FightConfiguration.isExpiredActivityShape(normalized)
+            })
+
+        var dispatched = false
+        for evaluation in evaluations {
+            let label = "计划\(evaluation.index + 1)"
+            let dropName = FightConfiguration.dropItems.first { $0.id == evaluation.plan.dropID }?.item.name
+                ?? evaluation.plan.dropID
+            switch evaluation.outcome {
+            case .dispatched(let need, let current):
+                logInfo("\(label)：\(dropName) 库存不足（当前 \(current)/目标 \(evaluation.plan.dropCount)），需补 \(need) 个")
+            case .enough(let current):
+                logInfo("\(label)：\(dropName) 库存已充足（\(current)/\(evaluation.plan.dropCount)），已跳过")
+            case .invalidDrop:
+                logError("\(label)：未选择材料，已跳过")
+            case .zeroDropCount:
+                logError("\(label)：目标数量为 0，已跳过")
+            case .noStage:
+                logError("\(label)：未选择关卡，已跳过")
+            case .stageClosed:
+                logInfo("\(label)：关卡「\(evaluation.plan.stage)」今日不可执行，已跳过")
+            }
+        }
+
+        if config.updateDepot {
+            try Task.checkCancellation()
+            guard dailyRunCoordinator.active?.id == runID, inventoryScope == scope else { throw CancellationError() }
+            if let id = try await handle?.appendTask(type: .Depot, params: "") {
+                dispatched = true
+                // 登记会话识别槽：完成回调把结果捕获进快照并落盘历史
+                //（与手动识别同路径；多识别任务并发覆盖为已知边界，重算面收口）。
+                inventoryDepotScope = scope
+                inventoryDepotTaskID = id
+                taskIDMap[id] = task.id
+                achievementEvents.register(taskID: id, runID: runID)
+            } else {
+                logError("库存保持：执行前仓库识别任务下发失败")
+            }
+        }
+
+        for evaluation in evaluations {
+            guard case .dispatched(let need, _) = evaluation.outcome else { continue }
+            try Task.checkCancellation()
+            guard dailyRunCoordinator.active?.id == runID, inventoryScope == scope else { throw CancellationError() }
+            let fight = DepotMaintainPlanner.dispatchFight(for: evaluation.plan, config: config, need: need)
+            guard let coreID = try await handle?.appendTask(type: .Fight, params: fight.params.jsonString()) else {
+                logError("计划\(evaluation.index + 1)：战斗任务下发失败")
+                continue
+            }
+            dispatched = true
+            taskIDMap[coreID] = task.id
+            achievementEvents.register(taskID: coreID, runID: runID)
+            // 掉落并入会话快照（既有水位线管线）：前序计划掉落影响后续预检（I08）。
+            inventoryFightIDs.insert(coreID)
+        }
+
+        if !dispatched {
+            // 所有计划已达标/跳过且无前置识别：本轮无事可做，标记完成。
+            taskStatus[task.id] = .success
+        }
+        return dispatched
+    }
+
+    /// 任务级跳过时冻结 runOnce（对齐 appendDailyUserDataUpdate 的跳过语义：
+    /// 未执行的条目不得被同批成功运行消费）。
+    private func skipDepotMaintainRunOnce(task: DailyTask) {
+        guard task.runOnce,
+            let index = dailyRunTasks?.firstIndex(where: { $0.id == task.id }), let frozen = dailyRunTasks?[index]
+        else { return }
+        dailyRunTasks?[index] = DailyTask(id: frozen.id, task: frozen.task, enabled: false, runOnce: frozen.runOnce)
     }
 }
