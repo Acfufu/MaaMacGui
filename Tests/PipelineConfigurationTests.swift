@@ -8,7 +8,11 @@ protocol MAATaskConfiguration: Codable, Hashable, Sendable {
 extension MAATaskConfiguration {
     init() { self = try! JSONDecoder().decode(Self.self, from: Data("{}".utf8)) }
 }
-enum MAATaskType { case Custom, OperProgress, Roguelike, Reclamation, UserDataUpdate, DepotMaintain; var description: String { "pipeline" } }
+// P26 起生产 MAATask.maataskType 全 case 消费，桩枚举对齐生产形状（防提取面漂移）。
+enum MAATaskType { case StartUp, CloseDown, Recruit, Infrast, Fight, Mall, Award, SwitchTheme,
+                    Roguelike, Reclamation, Copilot, SSSCopilot, ParadoxCopilot, Depot, Custom,
+                    VideoRecognition, OperBox, OperProgress, UserDataUpdate, DepotMaintain;
+  var description: String { "pipeline" } }
 
 enum MAAClientChannel { case Official, Bilibili, txwy, YoStarEN, YoStarJP, YoStarKR }
 var checks = 0

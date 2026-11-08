@@ -25,6 +25,26 @@ enum MAATask: Codable, Equatable {
     case operProgress(OperProgressConfiguration)
     case userdataupdate(UserDataUpdateConfiguration)
     case depotMaintain(DepotMaintainConfiguration)
+
+    /// P26 远控子集启动按类型过滤消费（WPF LinkStart-<name> 的 OfType<T> 同位）。
+    var maataskType: MAATaskType {
+        switch self {
+        case .startup: .StartUp
+        case .closedown: .CloseDown
+        case .recruit: .Recruit
+        case .infrast: .Infrast
+        case .fight: .Fight
+        case .mall: .Mall
+        case .award: .Award
+        case .switchTheme: .SwitchTheme
+        case .roguelike: .Roguelike
+        case .reclamation: .Reclamation
+        case .custom: .Custom
+        case .operProgress: .OperProgress
+        case .userdataupdate: .UserDataUpdate
+        case .depotMaintain: .DepotMaintain
+        }
+    }
 }
 
 let defaultTaskConfigurations: [any MAATaskConfiguration] = [

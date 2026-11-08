@@ -7,6 +7,7 @@ struct SystemSettingsView: View {
     @State private var showHooks = false
     @State private var showHotkeys = false
     @State private var showExternalNotifications = false
+    @State private var showRemoteControl = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -16,6 +17,7 @@ struct SystemSettingsView: View {
             Button("日常任务前后脚本…") { showHooks = true }
             Button("全局热键…") { showHotkeys = true }
             Button("外部通知…") { showExternalNotifications = true }
+            Button("远控…") { showRemoteControl = true }
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 10) {
@@ -104,6 +106,12 @@ struct SystemSettingsView: View {
                 ExternalNotificationSettingsView(store: viewModel.externalNotificationSettings)
                 Button("完成") { showExternalNotifications = false }.keyboardShortcut(.defaultAction).padding(.bottom)
             }.environmentObject(viewModel)
+        }
+        .sheet(isPresented: $showRemoteControl) {
+            VStack {
+                RemoteControlSettingsView(service: viewModel.remoteControl)
+                Button("完成") { showRemoteControl = false }.keyboardShortcut(.defaultAction).padding(.bottom)
+            }
         }
     }
 }

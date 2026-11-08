@@ -474,6 +474,114 @@ import SwiftUI
         )
     }
 
+    // MARK: - Remote Control (P26/E07+E08)
+
+    let remoteControl = RemoteControlService()
+
+    /// 远控命令钩子接线（WPF ExecuteSequential/InstantJobLoop 的 Mac 等价面）。
+    /// @Sendable async 闭包直呼 @MainActor 方法自动 hop。
+    func wireRemoteControlHooks() {
+        remoteControl.hooks.startFull = { [weak self] in
+            await self?.remoteStartFull()
+        }
+        remoteControl.hooks.startSubset = { [weak self] name in
+            await self?.startRemoteSubset(name) ?? false
+        }
+        remoteControl.hooks.gacha = { [weak self] once in
+            await self?.remoteGacha(once: once)
+        }
+        remoteControl.hooks.captureImage = { [weak self] fresh in
+            await self?.remoteCaptureImage(fresh: fresh) ?? ""
+        }
+        remoteControl.hooks.setConnectAddress = { [weak self] value in
+            await self?.remoteSetConnectAddress(value)
+        }
+        remoteControl.hooks.setStage1 = { [weak self] value in
+            await self?.remoteSetStage1(value)
+        }
+        remoteControl.hooks.stop = { [weak self] in
+            await self?.remoteStop()
+        }
+        remoteControl.hooks.log = { [weak self] line in
+            await self?.remoteLog(line)
+        }
+    }
+
+    /// 以下为钩子的 @MainActor 执行面（与 UI/任务互斥同一执行域）。
+    @MainActor func remoteStartFull() {
+        Task { _ = await self.startDailyTasks(origin: .remote) }
+    }
+
+    @MainActor func remoteGacha(once: Bool) {
+        Task { try? await self.gachaPoll(once: once) }
+    }
+
+    @MainActor func remoteStop() {
+        Task { try? await self.stop(logsConflict: false) }
+    }
+
+    @MainActor func remoteSetConnectAddress(_ value: String) {
+        connectionAddress = value
+    }
+
+    @MainActor func remoteLog(_ line: String) {
+        logInfo(verbatim: line)
+    }
+
+    /// WPF LinkStart(subset) 同构：按任务名从已保存配置过滤，恰好一个启用任务才执行。
+    func startRemoteSubset(_ name: String) async -> Bool {
+        guard let taskType = Self.remoteSubsetTaskTypes[name] else {
+            logError(verbatim: "远控子集启动失败：未知任务类型 \(name)")
+            return false
+        }
+        let targets = tasks.filter { dailyTask in
+            guard dailyTask.enabled else { return false }
+            return dailyTask.task.maataskType == taskType
+        }
+        guard targets.count == 1 else {
+            logError(verbatim: "远控子集启动失败：\(name) 的启用任务数量为 \(targets.count)（须恰为 1）")
+            return false
+        }
+        let snapshot = DailyRunSnapshot(profileID: dailyTaskProfile, tasks: [targets[0]])
+        return await startDailyTasks(origin: .remote, snapshot: snapshot) == .started
+    }
+
+    /// WPF LinkStart 子集名 → Mac 任务类型（Base/WakeUp/Combat/Recruiting/Mall/Mission/AutoRoguelike/Reclamation）。
+    static let remoteSubsetTaskTypes: [String: MAATaskType] = [
+        "Base": .Infrast, "WakeUp": .StartUp, "Combat": .Fight, "Recruiting": .Recruit,
+        "Mall": .Mall, "Mission": .Award, "AutoRoguelike": .Roguelike, "Reclamation": .Reclamation,
+    ]
+
+    /// CaptureImage/CaptureImageNow：连接态截图 → PNG base64（WPF 同构；Mac 不做
+    /// 隐式重连——连接由日常链建立，差异入档）。
+    func remoteCaptureImage(fresh: Bool) async -> String {
+        guard let handle else { return "" }
+        do {
+            let (image, _) = try await handle.previewImage(requestFresh: fresh)
+            let representation = NSBitmapImageRep(cgImage: image)
+            guard let png = representation.representation(using: .png, properties: [:]) else { return "" }
+            return png.base64EncodedString()
+        } catch {
+            return ""
+        }
+    }
+
+    /// Settings-Stage1：首个启用战斗任务的主选关卡改写（WPF StagePlan 单项同位）。
+    func remoteSetStage1(_ stage: String) {
+        guard let index = tasks.firstIndex(where: { dailyTask in
+            guard dailyTask.enabled, case .fight = dailyTask.task else { return false }
+            return true
+        }) else {
+            logError(verbatim: "远控设置主线关卡失败：无启用的战斗任务")
+            return
+        }
+        if case .fight(var config) = tasks[index].task {
+            config.stage = stage
+            tasks[index] = DailyTask(id: tasks[index].id, task: .fight(config),
+                                     enabled: tasks[index].enabled, runOnce: tasks[index].runOnce)
+        }
+    }
+
     // MARK: - Initializer
 
     init() {
@@ -524,6 +632,9 @@ import SwiftUI
         NotificationCenter.default.publisher(for: .MAABlockSleepWithScreenOnChanged)
             .sink { [weak self] _ in self?.refreshAwakeAssertionType() }
             .store(in: &cancellables)
+        // P26: 远控命令钩子接线；端点为空时轮询不启动（WPF InitializePollJobTask 同位）。
+        wireRemoteControlHooks()
+        remoteControl.startPolling()
         dailyRunCoordinator.didChange = { [weak self] in self?.objectWillChange.send() }
         initScheduledDailyTaskTimer()
         AchievementStore.shared.recordLaunch()

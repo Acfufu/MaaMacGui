@@ -187,6 +187,8 @@
 		F12900000000000000000002 /* ExternalNotificationProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12900000000000000000001 /* ExternalNotificationProviders.swift */; };
 		F13000000000000000000002 /* ExternalNotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13000000000000000000001 /* ExternalNotificationSettingsView.swift */; };
 		F13100000000000000000002 /* ExternalNotificationTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13100000000000000000001 /* ExternalNotificationTrigger.swift */; };
+		F13200000000000000000002 /* RemoteControlService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13200000000000000000001 /* RemoteControlService.swift */; };
+		F13300000000000000000002 /* RemoteControlSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13300000000000000000001 /* RemoteControlSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -403,6 +405,8 @@
 		F12900000000000000000001 /* ExternalNotificationProviders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalNotificationProviders.swift; sourceTree = "<group>"; };
 		F13000000000000000000001 /* ExternalNotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalNotificationSettingsView.swift; sourceTree = "<group>"; };
 		F13100000000000000000001 /* ExternalNotificationTrigger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalNotificationTrigger.swift; sourceTree = "<group>"; };
+		F13200000000000000000001 /* RemoteControlService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlService.swift; sourceTree = "<group>"; };
+		F13300000000000000000001 /* RemoteControlSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -687,6 +691,7 @@
 				F12200000000000000000001 /* CopilotFileOperations.swift */,
 				F12900000000000000000001 /* ExternalNotificationProviders.swift */,
 				F13100000000000000000001 /* ExternalNotificationTrigger.swift */,
+				F13200000000000000000001 /* RemoteControlService.swift */,
 				F12500000000000000000001 /* StartupAutoRun.swift */,
 				F11400000000000000000001 /* YituliuOperBoxService.swift */,
 				F11500000000000000000001 /* DataExport.swift */,
@@ -738,7 +743,7 @@
 				83DD50B629BE385A000E84E7 /* UpdaterSettingsView.swift */,
 				92EB82862A0CD315006DD9D2 /* SystemSettingsView.swift */,
 				F13000000000000000000001 /* ExternalNotificationSettingsView.swift */,
-				F13000000000000000000001 /* ExternalNotificationSettingsView.swift */,
+				F13300000000000000000001 /* RemoteControlSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -872,6 +877,8 @@
 				F12800000000000000000002 /* PostActionRunner.swift in Sources */,
 				F12900000000000000000002 /* ExternalNotificationProviders.swift in Sources */,
 				F13100000000000000000002 /* ExternalNotificationTrigger.swift in Sources */,
+				F13200000000000000000002 /* RemoteControlService.swift in Sources */,
+				F13300000000000000000002 /* RemoteControlSettingsView.swift in Sources */,
 				F13000000000000000000002 /* ExternalNotificationSettingsView.swift in Sources */,
 				7B1B36888B12496B9DA5C1DB /* HookConfiguration.swift in Sources */,
 				BCAD46240D494C047C5532E9 /* BackgroundScheduleSettingsView.swift in Sources */,
