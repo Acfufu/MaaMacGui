@@ -151,6 +151,18 @@ extension DailyTask {
 }
 
 extension Array where Element == DailyTask {
+    /// D08: 按行移动一个任务（WPF MoveTask 一行同构；越界返回 nil=无操作）。
+    func moved(id: UUID, by delta: Int) -> [DailyTask]? {
+        guard let index = firstIndex(where: { $0.id == id }) else { return nil }
+        let target = index + delta
+        guard indices.contains(target) else { return nil }
+        var copy = self
+        let entry = copy.remove(at: index)
+        copy.insert(entry, at: target)
+        return copy
+    }
+
+
     subscript(_ id: UUID) -> MAATask? {
         get {
             first { $0.id == id }?.task

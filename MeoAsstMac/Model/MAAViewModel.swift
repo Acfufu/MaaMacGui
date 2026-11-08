@@ -485,6 +485,28 @@ import SwiftUI
         )
     }
 
+    // MARK: - Log Cards (P29/U11)
+
+    /// 卡尾缩略图（日志 id → 640×360）；上限 100（WPF TrimOldThumbnails 同构）。
+    @Published private(set) var logThumbnails: [UUID: NSImage] = [:]
+    private var logThumbnailInFlight = false
+
+    /// 任务链完成/错误时截图挂到最新日志卡尾；连接不可用或截图失败静默跳过
+    /// （WPF AttachThumbnailToCardAsync 的 catch 同构）。
+    func attachLogThumbnail() async {
+        guard !logThumbnailInFlight else { return }
+        logThumbnailInFlight = true
+        defer { logThumbnailInFlight = false }
+        guard let logID = logStore?.lastLogID, logThumbnails[logID] == nil else { return }
+        guard let handle, await handle.connected, let (cgImage, _) = try? await handle.previewImage(requestFresh: false) else {
+            return
+        }
+        let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+        let thumbnail = LogCardBuilder.thumbnail(from: image)
+        logThumbnails[logID] = thumbnail
+        logThumbnails = LogCardBuilder.trimThumbnails(logThumbnails)
+    }
+
     // MARK: - Remote Control (P26/E07+E08)
 
     let remoteControl = RemoteControlService()

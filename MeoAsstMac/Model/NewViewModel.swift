@@ -336,6 +336,7 @@ protocol LogStore: AnyObject {
     func setDailyTasksDetailMode(_ mode: MAAViewModel.DailyTasksDetailMode)
 
     var logCount: Int { get }
+    var lastLogID: UUID? { get }
     var screencapCost: (min: Int, max: Int, avg: Int)? { get set }
     var lastScreencapWarningLevel: Int { get set }
     var hasPrintedFPSHighTip: Bool { get set }
@@ -354,6 +355,11 @@ extension NewViewModel: LogStore {
 
     var logCount: Int {
         logs.count
+    }
+
+    /// U11: 卡片缩略图挂载的锚点（最新日志 id；空流返回 nil）。
+    var lastLogID: UUID? {
+        logs.last?.id
     }
 
     func clearLogs(upTo index: Int) {

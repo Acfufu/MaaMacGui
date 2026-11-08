@@ -380,7 +380,7 @@ extension MAAViewModel {
                 } else {
                     sanitySuffix = ""
                 }
-                logTrace(.allTasksComplete(duration: duration, sanity: sanitySuffix))
+                logTrace(.allTasksComplete(duration: duration, sanity: sanitySuffix), cardSplit: .after)
                 notifyAllTasksCompleted(body: duration + sanitySuffix)
                 break
             }
@@ -390,7 +390,7 @@ extension MAAViewModel {
         if message.code == .TaskChainStopped {
             invalidateInventory()
             resetStatus()
-            logTrace(.stopped)
+            logTrace(.stopped, cardSplit: .after)
         }
 
         guard let info = TaskChainMessage(json: message.details, context: "TaskChain") else {
@@ -490,10 +490,12 @@ extension MAAViewModel {
             updateDailyTaskStatus(.failure, coreID: info.taskid)
             let error: String? = try? message.details["details"]["error"]
             if error == "OutOfMemory" {
-                logError(.outOfMemoryError(name: taskchainName))
+                logError(.outOfMemoryError(name: taskchainName), cardSplit: .after)
             } else {
-                logError(.taskError(name: taskchainName))
+                logError(.taskError(name: taskchainName), cardSplit: .after)
             }
+            // U11: 错误卡挂载缩略图（WPF 错误卡截图同位）。
+            Task { await self.attachLogThumbnail() }
             if isCopilot {
                 logError(.combatError)
             }
@@ -502,7 +504,8 @@ extension MAAViewModel {
             // macOS task items do not currently support custom display names.
             // TODO: (ViewState) Switch the overlay log source for Copilot and daily tasks.
             updateDailyTaskStatus(.running, coreID: info.taskid)
-            logTrace(.startTask(name: taskchainName))
+            // U11: 任务链开始=新卡片（WPF LogCardSplitMode.Before 同位）。
+            logTrace(.startTask(name: taskchainName), cardSplit: .before)
 
         case .TaskChainCompleted:
             // TODO: (Achievement) Mirror WPF task-completion achievement progress.
@@ -539,10 +542,12 @@ extension MAAViewModel {
             }
             updateDailyTaskStatus(.success, coreID: info.taskid)
             if info.taskchain == "Fight", let report = logStore?.sanityReport {
-                logTrace(.completeTaskWithSanity(name: taskchainName, cur: report.current, max: report.maximum))
+                logTrace(.completeTaskWithSanity(name: taskchainName, cur: report.current, max: report.maximum), cardSplit: .after)
             } else {
-                logTrace(.completeTask(name: taskchainName))
+                logTrace(.completeTask(name: taskchainName), cardSplit: .after)
             }
+            // U11: 完成卡挂载缩略图（WPF updateCardImage 同位）。
+            Task { await self.attachLogThumbnail() }
             // P23/E01：独立作业完成反馈（WPF runOwner==Copilot 的 TaskComplete 同位）。
             if isCopilot {
                 notifyCopilotCompleted(chainName: taskchainName)
@@ -1778,8 +1783,8 @@ extension MAAViewModel {
 // MARK: - Convenience Methods
 
 extension MAAViewModel {
-    func logTrace(_ resource: LocalizedStringResource) {
-        logTrace(verbatim: .init(localized: resource))
+    func logTrace(_ resource: LocalizedStringResource, cardSplit: MAALog.CardSplit = .none) {
+        logTrace(verbatim: .init(localized: resource), cardSplit: cardSplit)
     }
 
     func logInfo(_ resource: LocalizedStringResource) {
@@ -1794,12 +1799,12 @@ extension MAAViewModel {
         logRare(verbatim: .init(localized: resource))
     }
 
-    func logError(_ resource: LocalizedStringResource) {
-        logError(verbatim: .init(localized: resource))
+    func logError(_ resource: LocalizedStringResource, cardSplit: MAALog.CardSplit = .none) {
+        logError(verbatim: .init(localized: resource), cardSplit: cardSplit)
     }
 
-    func logTrace(verbatim content: String) {
-        writeLog(color: .trace, content)
+    func logTrace(verbatim content: String, cardSplit: MAALog.CardSplit = .none) {
+        writeLog(color: .trace, content, cardSplit: cardSplit)
     }
 
     func logInfo(verbatim content: String) {
@@ -1814,12 +1819,12 @@ extension MAAViewModel {
         writeLog(color: .rare, content)
     }
 
-    func logError(verbatim content: String) {
-        writeLog(color: .error, content)
+    func logError(verbatim content: String, cardSplit: MAALog.CardSplit = .none) {
+        writeLog(color: .error, content, cardSplit: cardSplit)
     }
 
-    private func writeLog(color: MAALog.LogColor, _ content: String) {
-        let entry = MAALog(date: Date(), content: content, color: color)
+    private func writeLog(color: MAALog.LogColor, _ content: String, cardSplit: MAALog.CardSplit = .none) {
+        let entry = MAALog(date: Date(), content: content, color: color, cardSplit: cardSplit)
         logStore?.appendLog(entry)
     }
 

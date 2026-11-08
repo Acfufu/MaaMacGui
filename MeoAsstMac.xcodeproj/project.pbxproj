@@ -193,6 +193,7 @@
 		F13500000000000000000002 /* UpdateFeedPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13500000000000000000001 /* UpdateFeedPolicy.swift */; };
 		F13600000000000000000002 /* DiagnosticsReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13600000000000000000001 /* DiagnosticsReport.swift */; };
 		F13700000000000000000002 /* DiagnosticsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13700000000000000000001 /* DiagnosticsSettingsView.swift */; };
+		F13800000000000000000002 /* LogCardBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13800000000000000000001 /* LogCardBuilder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -415,6 +416,7 @@
 		F13500000000000000000001 /* UpdateFeedPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateFeedPolicy.swift; sourceTree = "<group>"; };
 		F13600000000000000000001 /* DiagnosticsReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsReport.swift; sourceTree = "<group>"; };
 		F13700000000000000000001 /* DiagnosticsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsSettingsView.swift; sourceTree = "<group>"; };
+		F13800000000000000000001 /* LogCardBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogCardBuilder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -702,6 +704,7 @@
 				F13200000000000000000001 /* RemoteControlService.swift */,
 				F12500000000000000000001 /* StartupAutoRun.swift */,
 				F13600000000000000000001 /* DiagnosticsReport.swift */,
+				F13800000000000000000001 /* LogCardBuilder.swift */,
 				F11400000000000000000001 /* YituliuOperBoxService.swift */,
 				F11500000000000000000001 /* DataExport.swift */,
 				F11700000000000000000001 /* DepotMaintainPlanner.swift */,
@@ -986,6 +989,7 @@
 				F13400000000000000000002 /* ResourceUpdateNetwork.swift in Sources */,
 				F13500000000000000000002 /* UpdateFeedPolicy.swift in Sources */,
 				F13600000000000000000002 /* DiagnosticsReport.swift in Sources */,
+				F13800000000000000000002 /* LogCardBuilder.swift in Sources */,
 				F13700000000000000000002 /* DiagnosticsSettingsView.swift in Sources */,
 				F12700000000000000000002 /* LocalNotificationService.swift in Sources */,
 				F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */,
