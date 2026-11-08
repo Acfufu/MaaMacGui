@@ -233,7 +233,9 @@ enum DepotMaintainPlanner {
     /// 计划摘要：每条「N: 关卡 - 材料 当前/目标」换行拼接；无计划返回 nil。
     /// 当前库存显示对齐 upstream GetCurrentInventoryCount/GetInventoryCountDisplay：
     /// 无库存数据、条目缺失或未选材料为 "--"；双芯片折算开启且有折算量时
-    /// 「原始 (+折算)」；数值千位分组（WPF FormatNumber(false) 同口径，分组符固定）。
+    /// 「原始 (+折算)」；数值千位分组（与 WPF FormatNumber(false) 不同口径：WPF
+    /// 对 ≥10,000 缩写 k/M/B（如 5,000,000→"5M"），Mac 千位分组为已注册产品
+    /// 决策，divergence P12-[q]）。
     static func planInfo(for config: DepotMaintainConfiguration, inventory: [String: Int]?,
                          chipConversion: Bool, formulas: [String: [String: Int]],
                          dropName: (String) -> String, stageDisplay: (String) -> String) -> String? {
@@ -256,7 +258,8 @@ enum DepotMaintainPlanner {
         return conversion > 0 ? "\(grouped(raw)) (+\(grouped(conversion)))" : grouped(raw)
     }
 
-    /// 千位分组（WPF FormatNumber(false) 同口径；固定逗号分组符，不随 locale 漂移）。
+    /// 千位分组（与 WPF FormatNumber(false) 不同口径：WPF 对 ≥10,000 缩写 k/M/B；
+    /// 固定逗号分组符不随 locale 漂移，divergence P12-[q]）。
     static func grouped(_ value: Int) -> String {
         guard value >= 0 else { return String(value) }
         let text = String(value)

@@ -3486,7 +3486,7 @@ extension MAAViewModel {
 
     /// 当前进行中且至少含一个已知掉落关卡的活动预设（键与显示名，显示名取
     /// StageName 缺省回退活动键）。时间口径沿用统一左闭右开 ActivityPeriod.contains
-    /// （与 upstream 端点闭区间的瞬时差异入档 P12-[j]）。
+    /// （与 upstream 端点闭区间的瞬时差异入档 P12-[s]）。
     func depotActivityPresets(at date: Date = .now) -> [(key: String, display: String)] {
         guard let activities = stageActivity?.sideStoryStage else { return [] }
         return activities.compactMap { key, stage in
