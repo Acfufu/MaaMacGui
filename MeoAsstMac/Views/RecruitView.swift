@@ -10,6 +10,8 @@ import SwiftUI
 struct RecruitView: View {
     @EnvironmentObject private var viewModel: MAAViewModel
     @State private var lv3ShortTime = false
+    /// 最近一次干员识别的持有潜能表（id → 1-6）；无快照或读取失败时为 nil。
+    @State private var potentialByID: [String: Int]?
 
     var body: some View {
         VStack {
@@ -28,6 +30,12 @@ struct RecruitView: View {
             .padding(.top)
         }
         .padding()
+        .task(id: viewModel.inventoryScope) { reloadPotential() }
+        .onChange(of: viewModel.operBoxHistoryRevision) { _, _ in reloadPotential() }
+        .onChange(of: viewModel.recruitConfig.showPotential) { _, enabled in
+            // 关闭开关立即清空缓存；重新开启由 revision/scope 变化或重进页面兜底刷新。
+            if !enabled { potentialByID = nil } else { reloadPotential() }
+        }
     }
 
     @ViewBuilder private func configView() -> some View {
@@ -56,10 +64,28 @@ struct RecruitView: View {
         Text(recruit.tags.joined(separator: ", "))
         List(recruit.result, id: \.tags.hashValue) { result in
             Section {
-                Text(result.opers.map(\.name).joined(separator: ", "))
+                ForEach(result.annotatedOpers(
+                    potentialByID: potentialByID,
+                    showPotential: viewModel.recruitConfig.showPotential
+                )) { annotated in
+                    Text(verbatim: annotated.oper.name + (annotated.annotation?.displayText ?? ""))
+                }
             } header: {
                 Text("\(result.level)★ \(result.tags.joined(separator: " "))")
             }
+        }
+    }
+
+    /// 持有数据与工具页历史干员快照同源（OperBoxHistoryStore，按账号/区服隔离）：
+    /// 损坏或缺失快照按无数据降级为不标注，不阻断公招识别展示。
+    private func reloadPotential() {
+        guard viewModel.recruitConfig.showPotential else {
+            potentialByID = nil
+            return
+        }
+        let snapshot = try? viewModel.operBoxHistoryStore.load(scope: viewModel.inventoryScope)
+        potentialByID = snapshot?.operators.ownedOperators.reduce(into: [:]) {
+            $0[$1.id] = $1.potential
         }
     }
 

@@ -15,6 +15,7 @@ PY
 xcrun swiftc \
     Tests/RecruitConfigurationTestSupport.swift \
     'MeoAsstMac/Task Configurations/RecruitConfiguration.swift' \
+    'MeoAsstMac/Model/MAARecruit.swift' \
     Packages/LegacyUserTasks/Sources/LegacyUserTasks/Recruit.swift \
     "$test_dir/main.swift" -o "$test_dir/recruit-tests"
 "$test_dir/recruit-tests" "$@"

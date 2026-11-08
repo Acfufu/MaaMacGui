@@ -8230,6 +8230,22 @@
         }
       }
     },
+    "公招结果按最近一次干员识别的持有数据标注潜能与新增干员；数据按账号/区服隔离，未识别时不标注。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annotate recruit results with potential and new-operator marks from the latest operator recognition; data is isolated per account and server, and nothing is annotated before recognition."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "공개 모집 결과에 최신 오퍼레이터 식별의 보유 데이터로 잠재 및 신규 오퍼레이터 표시를 붙입니다. 데이터는 계정/서버별로 격리되며, 식별 전에는 표시되지 않습니다."
+          }
+        }
+      }
+    },
     "公招词条" : {
       "localizations" : {
         "ko" : {
@@ -12118,6 +12134,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "명일방주 툴박스"
+          }
+        }
+      }
+    },
+    "显示已持有干员潜能" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show potential for owned operators"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보유 오퍼레이터 잠재 표시"
           }
         }
       }
