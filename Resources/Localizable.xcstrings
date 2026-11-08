@@ -4620,6 +4620,22 @@
         }
       }
     },
+    "ID" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID"
+          }
+        }
+      }
+    },
     "IP请求频率过快，请稍后再试" : {
       "localizations" : {
         "ko" : {
@@ -9512,6 +9528,22 @@
         }
       }
     },
+    "名称" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이름"
+          }
+        }
+      }
+    },
     "后台定时交接记录无法读取；已暂停交接。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -9728,6 +9760,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "실행 후 정리가 진행 중입니다. 완료될 때까지 기다려 주세요."
+          }
+        }
+      }
+    },
+    "否" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아니요"
           }
         }
       }
@@ -10357,6 +10405,70 @@
         }
       }
     },
+    "导出 CSV" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export CSV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CSV 내보내기"
+          }
+        }
+      }
+    },
+    "导出 Markdown" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Markdown"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markdown 내보내기"
+          }
+        }
+      }
+    },
+    "导出失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export failed: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보내기 실패: %@"
+          }
+        }
+      }
+    },
+    "导出干员资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export operator data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 데이터 내보내기"
+          }
+        }
+      }
+    },
     "将删除无法读取的定时记录文件并重建空记录；刚触发过且仍在触发窗口内的定时可能再执行一次。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -10646,6 +10758,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "보유 오퍼레이터: %lld"
+          }
+        }
+      }
+    },
+    "已持有" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Owned"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보유"
           }
         }
       }
@@ -12298,6 +12426,38 @@
         }
       }
     },
+    "星级" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rarity"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "희귀도"
+          }
+        }
+      }
+    },
+    "是" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "예"
+          }
+        }
+      }
+    },
     "显示已持有干员潜能" : {
       "localizations" : {
         "en" : {
@@ -13518,6 +13678,22 @@
         }
       }
     },
+    "潜能" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potential"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "잠재"
+          }
+        }
+      }
+    },
     "激活此作业集" : {},
     "点击加号按钮" : {
       "localizations" : {
@@ -14467,6 +14643,22 @@
         }
       }
     },
+    "等级" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레벨"
+          }
+        }
+      }
+    },
     "策略" : {
       "localizations" : {
         "ko" : {
@@ -14543,6 +14735,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "精英%1$lld 等级%2$lld 潜能%3$lld"
+          }
+        }
+      }
+    },
+    "精英化" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elite"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정예화"
           }
         }
       }
@@ -17250,6 +17458,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "일유류에서 %lld명의 오퍼레이터를 가져왔습니다"
+          }
+        }
+      }
+    },
+    "已导出：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exported: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보냄: %@"
           }
         }
       }

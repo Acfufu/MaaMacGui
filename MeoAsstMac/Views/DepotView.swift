@@ -7,6 +7,7 @@
 
 import JBird
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct DepotView: View {
     @Environment(NewViewModel.self) private var viewModel
@@ -19,6 +20,7 @@ struct DepotView: View {
 
     @State private var nameTaskToken: UUID?
     @State private var items = [Item]()
+    @State private var exportMessage: String?
 
     var body: some View {
         VStack(spacing: 20) {
@@ -62,6 +64,18 @@ struct DepotView: View {
                 }
             }
             .disabled(viewModel.depot?.done != true)
+
+            // T07 仓库 Markdown/CSV 导出（WPF ExportToMarkdown/ExportToCsv 同构：
+            // 空集不产生文件；CSV 按 RFC 4180 转义；无 BOM UTF-8）。
+            HStack(spacing: 20) {
+                Text("导出仓库文件：")
+                Button("导出 Markdown") { exportDepot(markdown: true) }
+                Button("导出 CSV") { exportDepot(markdown: false) }
+            }
+            .disabled(items.isEmpty)
+            if let exportMessage {
+                Text(exportMessage).font(.caption).foregroundStyle(.secondary)
+            }
         }
         .animation(.default, value: items)
         .padding()
@@ -72,6 +86,22 @@ struct DepotView: View {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         return pasteboard.setString(text, forType: .string)
+    }
+
+    private func exportDepot(markdown: Bool) {
+        let rows = items.sorted { $0.id < $1.id }.map { (id: $0.id, name: $0.name, count: $0.have) }
+        let lines = markdown ? DataExport.depotMarkdownLines(rows: rows) : DataExport.depotCsvLines(rows: rows)
+        guard let content = DataExport.joinedLines(lines) else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [markdown ? UTType.plainText : UTType.commaSeparatedText]
+        panel.nameFieldStringValue = markdown ? "Arknights_Depot_Export.md" : "Arknights_Depot_Export.csv"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try DataExport.write(content, to: url, withBOM: false)
+            exportMessage = String(localized: "已导出：\(url.path)")
+        } catch {
+            exportMessage = String(localized: "导出失败：\(error.localizedDescription)")
+        }
     }
 
     private var arkntoolsPayload: String? {
