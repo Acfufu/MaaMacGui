@@ -5,6 +5,7 @@ enum DailyTaskCallbackUpdate {
     case infrastructurePlanIndex(Int)
     case creditFightDate(Date)
     case friendVisitDate(Date)
+    case userDataSync(UserDataKind, UserDataSyncReceipt)
 
     func applying(to current: MAATask, expecting original: MAATask) -> MAATask? {
         switch (self, current, original) {
@@ -22,6 +23,19 @@ enum DailyTaskCallbackUpdate {
             guard latest.friendVisitDate == expected.friendVisitDate else { return nil }
             latest.friendVisitDate = date
             return .mall(latest)
+        case (.userDataSync(let kind, let receipt), .userdataupdate(var latest), .userdataupdate(let expected)):
+            guard latest.triggerInterval == expected.triggerInterval else { return nil }
+            switch kind {
+            case .depot:
+                guard latest.updateDepot, expected.updateDepot,
+                      latest.lastDepotSync == expected.lastDepotSync else { return nil }
+                latest.lastDepotSync = receipt
+            case .operBox:
+                guard latest.updateOperBox, expected.updateOperBox,
+                      latest.lastOperBoxSync == expected.lastOperBoxSync else { return nil }
+                latest.lastOperBoxSync = receipt
+            }
+            return .userdataupdate(latest)
         default:
             return nil
         }
@@ -40,6 +54,11 @@ enum DailyRunProfilePatchStore {
         guard !profileID.isEmpty, ![".", ".."].contains(profileID),
               URL(fileURLWithPath: profileID).lastPathComponent == profileID else {
             throw CocoaError(.fileWriteInvalidFileName)
+        }
+        if case .userDataSync(_, let receipt) = update {
+            guard receipt.scope.profile == profileID,
+                  !receipt.scope.account.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  (Date.distantPast...Date.distantFuture).contains(receipt.completedAt) else { return nil }
         }
         let url = directory.appendingPathComponent(profileID).appendingPathExtension("plist")
         var latest: [DailyTask]

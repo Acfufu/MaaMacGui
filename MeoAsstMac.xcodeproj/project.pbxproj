@@ -166,6 +166,9 @@
 		83C75A212DD9000100000021 /* CustomSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C75A202DD9000100000020 /* CustomSettingsView.swift */; };
 		F11000000000000000000002 /* DepotHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11000000000000000000001 /* DepotHistoryStore.swift */; };
 		F11200000000000000000002 /* OperBoxHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11200000000000000000001 /* OperBoxHistoryStore.swift */; };
+		F11300000000000000000002 /* UserDataUpdateConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11300000000000000000001 /* UserDataUpdateConfiguration.swift */; };
+		F11300000000000000000102 /* UserDataUpdateSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11300000000000000000101 /* UserDataUpdateSettingsView.swift */; };
+		F11300000000000000000202 /* UserDataUpdateRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11300000000000000000201 /* UserDataUpdateRun.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -361,6 +364,9 @@
 		83C75A202DD9000100000020 /* CustomSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSettingsView.swift; sourceTree = "<group>"; };
 		F11000000000000000000001 /* DepotHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepotHistoryStore.swift; sourceTree = "<group>"; };
 		F11200000000000000000001 /* OperBoxHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperBoxHistoryStore.swift; sourceTree = "<group>"; };
+		F11300000000000000000001 /* UserDataUpdateConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataUpdateConfiguration.swift; sourceTree = "<group>"; };
+		F11300000000000000000101 /* UserDataUpdateSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataUpdateSettingsView.swift; sourceTree = "<group>"; };
+		F11300000000000000000201 /* UserDataUpdateRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataUpdateRun.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -452,6 +458,7 @@
 				2EB6BA32DAB8DA18E4B8B297 /* SwitchThemeConfiguration.swift */,
 				8341194F29EC249E00044F45 /* RoguelikeConfiguration.swift */,
 				83C75A102DD9000100000010 /* CustomConfiguration.swift */,
+				F11300000000000000000001 /* UserDataUpdateConfiguration.swift */,
 				8341195429EC55C600044F45 /* CopilotConfiguration.swift */,
 				832985AF29EEF483009F7ED5 /* ReclamationConfiguration.swift */,
 				83782A2A2CFFAF2900A32BDD /* LegacyConfigurations.swift */,
@@ -471,6 +478,7 @@
 				714ED6EEFCEED065D64918F3 /* SwitchThemeSettingsView.swift */,
 				83D3283828F3048E00018D10 /* RoguelikeSettingsView.swift */,
 				83C75A202DD9000100000020 /* CustomSettingsView.swift */,
+				F11300000000000000000101 /* UserDataUpdateSettingsView.swift */,
 				83264A2529EBC9C10074E33A /* ReclamationSettingsView.swift */,
 			);
 			path = "Configuration Views";
@@ -632,6 +640,7 @@
 				C70000000000000000000001 /* InventoryTarget.swift */,
 				F11000000000000000000001 /* DepotHistoryStore.swift */,
 				F11200000000000000000001 /* OperBoxHistoryStore.swift */,
+				F11300000000000000000201 /* UserDataUpdateRun.swift */,
 				C80000000000000000000001 /* AchievementDefinition.swift */,
 				C80000000000000000000002 /* AchievementEngine.swift */,
 				C80000000000000000000003 /* AchievementEventAdapter.swift */,
@@ -890,6 +899,7 @@
 				C70000000000000000000002 /* InventoryTarget.swift in Sources */,
 				F11000000000000000000002 /* DepotHistoryStore.swift in Sources */,
 				F11200000000000000000002 /* OperBoxHistoryStore.swift in Sources */,
+				F11300000000000000000202 /* UserDataUpdateRun.swift in Sources */,
 				C81000000000000000000001 /* AchievementDefinition.swift in Sources */,
 				C81000000000000000000002 /* AchievementEngine.swift in Sources */,
 				C81000000000000000000003 /* AchievementEventAdapter.swift in Sources */,
@@ -925,7 +935,9 @@
 				83264A2F29EBEE140074E33A /* RecruitConfiguration.swift in Sources */,
 				8341195029EC249E00044F45 /* RoguelikeConfiguration.swift in Sources */,
 				83C75A112DD9000100000011 /* CustomConfiguration.swift in Sources */,
+				F11300000000000000000002 /* UserDataUpdateConfiguration.swift in Sources */,
 				83C75A212DD9000100000021 /* CustomSettingsView.swift in Sources */,
+				F11300000000000000000102 /* UserDataUpdateSettingsView.swift in Sources */,
 				83264A2B29EBED780074E33A /* StartupConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

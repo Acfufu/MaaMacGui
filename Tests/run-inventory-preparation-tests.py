@@ -23,7 +23,9 @@ struct Closedown: Sendable, Equatable { var client_type = "CN" }
 // P08.2 起抽取面携带基建周计划门控与时间轮换；直接编译真 InfrastConfiguration
 // （单一事实源，见下方 swiftc 编译列表）。
 extension InfrastConfiguration: Sendable {}
-enum MAATask: Sendable, Equatable { case fight(FightConfiguration), startup(Startup), closedown(Closedown), mall(MallConfiguration), roguelike(RoguelikeSeedCfgStub), infrast(InfrastConfiguration), other }
+struct UserDataUpdateConfiguration: Sendable, Equatable {}
+struct UserDataUpdateRun { mutating func beginExecution() {} }
+enum MAATask: Sendable, Equatable { case fight(FightConfiguration), startup(Startup), closedown(Closedown), mall(MallConfiguration), roguelike(RoguelikeSeedCfgStub), infrast(InfrastConfiguration), userdataupdate(UserDataUpdateConfiguration), other }
 extension FightConfiguration: Sendable {}
 extension FightConfiguration.Params: Sendable {}
 extension FightConfiguration.Params { func jsonString() throws -> String {
@@ -130,6 +132,9 @@ actor FakeHandle {
  var logs: [String] = []
  var connectionRequests = 0
  func invalidateInventory() { inventory.invalidate() }
+ var userDataUpdateRun = UserDataUpdateRun()
+ func cancelDailyUserDataUpdates() {}
+ func appendDailyUserDataUpdate(task: DailyTask, config: UserDataUpdateConfiguration, runID: UUID, scope: InventoryScope) async throws -> [Int32] { throw InventoryTargetError.stalePreparation }
  func logInfo(_ message: String) { logs.append(message) }
  func logWarn(_ message: String) { logs.append(message) }
  func logTrace(verbatim message: String) { logs.append(message) }
@@ -178,7 +183,7 @@ main='''@main struct Main {
   let reached = try make(10); let reachedCore = reached.handle!
   try await reached.runStartTasks()
   let skippedBatches = await reachedCore.started
-  check(skippedBatches.count == 1 && skippedBatches[0].isEmpty, "reached target never appends drops=0 Fight")
+  check(skippedBatches.isEmpty, "reached target never starts an empty or drops=0 Fight batch")
   check(reached.logs.contains("Inventory.AlreadyReached"), "reached target is visible after ensureHandle")
   let missing = Probe(); missing.tasks = [.init(id: UUID(), task: .fight(config), enabled: true)]
   let missingCore = missing.handle!

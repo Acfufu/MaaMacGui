@@ -14,5 +14,5 @@ for name in ['Startup','Closedown','Recruit','Infrast','Fight','Mall','Award','S
     placeholders += 'typealias ' + name + 'Configuration = PlaceholderConfiguration\n'
 Path(sys.argv[1]).write_text(placeholders + model + daily + Path('Tests/PipelineConfigurationTests.swift').read_text())
 PYTEST
-xcrun swiftc 'MeoAsstMac/Task Configurations/CustomConfiguration.swift' "$test_dir/main.swift" -o "$test_dir/tests"
+xcrun swiftc MeoAsstMac/Model/InventoryTarget.swift MeoAsstMac/Utils/HGCalendar.swift 'MeoAsstMac/Task Configurations/UserDataUpdateConfiguration.swift' 'MeoAsstMac/Task Configurations/CustomConfiguration.swift' "$test_dir/main.swift" -o "$test_dir/tests"
 "$test_dir/tests"

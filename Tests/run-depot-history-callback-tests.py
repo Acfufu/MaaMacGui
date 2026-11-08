@@ -54,6 +54,8 @@ final class MAAViewModel {
  var pendingInventoryDepot:MAADepot?
  var errors=[String]()
  var logStore:TestRecognitionStore?=TestRecognitionStore()
+ func receiveDailyDepot(_ value:MAADepot?,coreID:Int32?) -> Bool {false}
+ func receiveDailyOperators(_ value:MAAOperBox?,coreID:Int32?) -> Bool {false}
  func logError(_ text:String) { errors.append(text) }
 ''' + invalidate + r'''
  func process(_ message:Message,_ info:Info) {
@@ -139,6 +141,14 @@ with tempfile.TemporaryDirectory(prefix='maa-depot-history-callback-') as d:
  p=Path(d);(p/'main.swift').write_text(probe)
  model=(root/'MeoAsstMac/Model/MAAViewModel.swift').read_text();marker='// MARK: - Depot history integration'
  assert model.count(marker)==1
- (p/'Integration.swift').write_text('import Foundation\n'+model[model.index(marker):])
+ def extension_at(marker):
+  start=model.index('extension MAAViewModel {',model.index(marker));body=model.index('{',start);depth=0
+  for end in range(body,len(model)):
+   if model[end]=='{':depth+=1
+   elif model[end]=='}':
+    depth-=1
+    if depth==0:return model[start:end+1]
+  raise RuntimeError(marker)
+ (p/'Integration.swift').write_text('import Foundation\n'+extension_at('// MARK: - Depot history integration')+'\n'+extension_at('// MARK: - Operator history integration'))
  subprocess.run(['xcrun','swiftc',str(root/'MeoAsstMac/Model/InventoryTarget.swift'),str(root/'MeoAsstMac/Model/DepotHistoryStore.swift'),str(root/'MeoAsstMac/Model/OperBoxHistoryStore.swift'),str(p/'Integration.swift'),str(p/'main.swift'),'-o',str(p/'tests')],check=True)
  subprocess.run([str(p/'tests')],check=True)

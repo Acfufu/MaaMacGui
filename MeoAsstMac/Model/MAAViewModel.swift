@@ -203,9 +203,12 @@ import SwiftUI
         case failure
         case running
         case success
+        case skipped
     }
 
     @Published var taskStatus: [UUID: TaskStatus] = [:]
+    var userDataUpdateRun = UserDataUpdateRun()
+    private var userDataCallbackDeadline: ContinuousClock.Instant?
 
     var tasksDirectory: URL {
         Self.userDirectory.appendingPathComponent("DailyTasks", isDirectory: true)
@@ -391,6 +394,7 @@ extension MAAViewModel {
         secretFrontRun = SecretFrontRun()
         logStore?.clearLogs(upTo: sessionBaseline)
         taskIDMap.removeAll()
+        userDataUpdateRun.reset()
         fightTaskParams.removeAll()
         taskStatus.removeAll()
 
@@ -487,6 +491,7 @@ extension MAAViewModel {
         // Revoke recognition ownership before awaiting native stop: late complete
         // callbacks cannot publish or persist a refresh the user cancelled.
         invalidateInventory()
+        cancelDailyUserDataUpdates()
         let achievementWasRunning = await handle?.running == true
         let achievementRunID = dailyRunCoordinator.active?.id
 
@@ -655,6 +660,15 @@ extension MAAViewModel {
                 return true
             }
         }
+        // Native idle can become visible before MainActor drains the terminal
+        // callback stream. Keep run ownership briefly; missing refresh callbacks
+        // must end as failure rather than consume runOnce on a false success.
+        if userDataUpdateRun.hasPending(runID: context.id) {
+            if userDataCallbackDeadline == nil { userDataCallbackDeadline = ContinuousClock.now.advanced(by: .seconds(2)) }
+            if let deadline = userDataCallbackDeadline, ContinuousClock.now < deadline { return false }
+            failIncompleteDailyUserDataUpdates(runID: context.id)
+        }
+        userDataCallbackDeadline = nil
         // Failed journal writes keep ownership and must not spin on duplicate callbacks.
         guard dailyFinishAttemptedRunID != context.id else { return true }
         dailyFinishAttemptedRunID = context.id
@@ -1113,6 +1127,7 @@ extension MAAViewModel {
             dailyRunOutcome = .completed
             dailyRunChainFailed = false
             dailyRunTasks = snapshot.tasks
+            userDataCallbackDeadline = nil
             startupCancellationRequested = false
             startupCancellationLocked = false
             defer {
@@ -1145,6 +1160,9 @@ extension MAAViewModel {
                 try Task.checkCancellation()
                 try dailyRunCoordinator.transition(.connecting, for: runID)
                 try await startTasks(snapshot: snapshot, runID: runID, recoverGame: recoverGame, recoveryCurrent: recoveryCurrent)
+                // Poll this exact owner even if a global completion callback is
+                // lost. The refresh-specific drain gate below prevents premature success.
+                waitForDailyRunCompletion(runID: runID)
                 if origin == .schedule {
                     AchievementStore.shared.record(.init(runID: runID, metric: .scheduledStart))
                 }
@@ -1385,6 +1403,11 @@ extension MAAViewModel {
                 try Task.checkCancellation()
                 guard task.enabled else { continue }
 
+                if case .userdataupdate(let config) = task.task {
+                    let ids = try await appendDailyUserDataUpdate(task: task, config: config, runID: runID, scope: scope)
+                    appendedAnyTask = appendedAnyTask || !ids.isEmpty
+                    continue
+                }
                 let coreID: Int32?
                 if case .fight(let config) = task.task {
                     let now = Date.now
@@ -1481,11 +1504,15 @@ extension MAAViewModel {
             if let plan = frozenPlan {
                 logTrace(verbatim: "Inventory generation=\(plan.generation) run=\(inventoryRunID) base=\(plan.startInventory) drops=\(plan.requiredDrops)")
             }
-            try await startCoreTasks(recordDailyTaskStart: true)
+            if appendedAnyTask {
+                userDataUpdateRun.beginExecution()
+                try await startCoreTasks(recordDailyTaskStart: true)
+            }
         } catch {
+            cancelDailyUserDataUpdates()
             if await handle?.running == true {
                 status = .busy
-            } else if appendedAnyTask {
+            } else if appendedAnyTask || !taskIDMap.isEmpty {
                 // Assistant::stop clears m_tasks_list, including tasks appended
                 // while idle. A rejected preparation must never leak into a later run.
                 do { try await handle?.stop() }
@@ -2173,5 +2200,185 @@ extension MAAViewModel {
             try operBoxHistoryStore.save(payload, scope: scope)
             operBoxHistoryRevision = UUID()
         } catch { logError("干员历史快照保存失败。") }
+    }
+}
+
+// MARK: - Daily user-data composite
+
+extension MAAViewModel {
+    func appendDailyUserDataUpdate(task: DailyTask, config: UserDataUpdateConfiguration,
+                                   runID: UUID, scope: InventoryScope) async throws -> [Int32] {
+        guard let context = dailyRunCoordinator.active, context.id == runID, inventoryScope == scope else { throw CancellationError() }
+        let runScope = InventoryScope(connection: scope.connection, server: scope.server,
+                                      profile: context.profileID, account: scope.account)
+        var admission = config
+        if config.triggerInterval != .everyTime {
+            // A successful manual recognition counts too, but only in this
+            // exact scope. Missing/corrupt caches force a repair refresh.
+            for kind in UserDataKind.allCases where kind == .depot ? config.updateDepot : config.updateOperBox {
+                let receipt: UserDataSyncReceipt?
+                do { receipt = try successfulUserDataReceipt(kind, scope: runScope) }
+                catch {
+                    receipt = nil
+                    logWarn("历史资料不可用，将重新识别。")
+                }
+                if kind == .depot { admission.lastDepotSync = receipt }
+                else { admission.lastOperBoxSync = receipt }
+            }
+        }
+        let due = admission.dueKinds(scope: runScope, calendar: clientChannel.calendar, at: .now)
+        guard !due.isEmpty else {
+            taskStatus[task.id] = .skipped
+            // This entry did not execute; a successful surrounding run must not
+            // consume its runOnce flag.
+            if let index = dailyRunTasks?.firstIndex(where: { $0.id == task.id }), let frozen = dailyRunTasks?[index] {
+                dailyRunTasks?[index] = DailyTask(id: frozen.id, task: frozen.task, enabled: false, runOnce: frozen.runOnce)
+            }
+            logInfo("更新资料未到执行间隔或未选择识别内容，已跳过。")
+            return []
+        }
+        if scope.account.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            logInfo("未绑定本地账号标识，资料识别仍会执行，但不会按历史成功时间跳过后续更新。")
+        }
+        var ids = [Int32]()
+        for kind in due {
+            try Task.checkCancellation()
+            guard dailyRunCoordinator.active?.id == runID, inventoryScope == scope else { throw CancellationError() }
+            let type: MAATaskType = kind == .depot ? .Depot : .OperBox
+            guard let id = try await handle?.appendTask(type: type, params: "{}") else { throw MaaCoreError.appendTaskFailed }
+            taskIDMap[id] = task.id
+            try userDataUpdateRun.register(id, owner: .init(runID: runID, taskID: task.id, scope: runScope, kind: kind, observedProfile: scope.profile))
+            achievementEvents.register(taskID: id, runID: runID)
+            ids.append(id)
+        }
+        return ids
+    }
+
+    func successfulUserDataReceipt(_ kind: UserDataKind, scope: InventoryScope) throws -> UserDataSyncReceipt? {
+        let date: Date?
+        switch kind {
+        case .depot: date = try depotHistoryStore.load(scope: scope)?.capturedAt
+        case .operBox: date = try operBoxHistoryStore.load(scope: scope)?.capturedAt
+        }
+        return date.map { .init(scope: scope, completedAt: $0) }
+    }
+
+    private func acceptsDailyUserData(_ coreID: Int32, kind: UserDataKind) -> Bool {
+        guard userDataUpdateRun.executionSubmitted,
+              let entry = userDataUpdateRun.entries[coreID], entry.owner.kind == kind,
+              entry.owner.runID == dailyRunCoordinator.active?.id,
+              entry.owner.scope.connection == inventoryScope.connection,
+              entry.owner.scope.server == inventoryScope.server,
+              entry.owner.scope.account == inventoryScope.account,
+              entry.owner.observedProfile == inventoryScope.profile,
+              [.pending, .running].contains(entry.progress) else { return false }
+        return true
+    }
+
+    func receiveDailyDepot(_ depot: MAADepot?, coreID: Int32?) -> Bool {
+        guard let coreID, userDataUpdateRun.entries[coreID] != nil else { return false }
+        guard acceptsDailyUserData(coreID, kind: .depot) else { return true }
+        userDataUpdateRun.record(depot.map { .depot(items: $0.items, complete: $0.done) }, coreID: coreID)
+        if userDataUpdateRun.entries[coreID]?.owner.scope.profile == inventoryScope.profile { logStore?.setDepot(depot) }
+        if userDataUpdateRun.entries[coreID]?.completionObserved == true { processDailyUserDataTerminal(coreID: coreID, code: 10002, taskchain: "Depot") }
+        return true
+    }
+
+    func receiveDailyOperators(_ operators: MAAOperBox?, coreID: Int32?) -> Bool {
+        guard let coreID, userDataUpdateRun.entries[coreID] != nil else { return false }
+        guard acceptsDailyUserData(coreID, kind: .operBox) else { return true }
+        userDataUpdateRun.record(operators.map { .operators($0.historyPayload) }, coreID: coreID)
+        if userDataUpdateRun.entries[coreID]?.owner.scope.profile == inventoryScope.profile { logStore?.setOperBox(operators) }
+        if userDataUpdateRun.entries[coreID]?.completionObserved == true { processDailyUserDataTerminal(coreID: coreID, code: 10002, taskchain: "OperBox") }
+        return true
+    }
+
+    func processDailyUserDataTerminal(coreID: Int32, code: Int, taskchain: String) {
+        guard userDataUpdateRun.executionSubmitted,
+              let entry = userDataUpdateRun.entries[coreID],
+              entry.owner.runID == dailyRunCoordinator.active?.id,
+              taskchain == (entry.owner.kind == .depot ? "Depot" : "OperBox"),
+              [.pending, .running].contains(entry.progress) else { return }
+        switch code {
+        case 10001:
+            userDataUpdateRun.finish(coreID, as: .running)
+        case 10000:
+            userDataUpdateRun.finish(coreID, as: .failed)
+            markDailyRunFailed()
+        case 10004:
+            cancelDailyUserDataUpdates()
+            if !dailyRunChainFailed { dailyRunOutcome = .cancelled }
+        case 10002:
+            do {
+                guard acceptsDailyUserData(coreID, kind: entry.owner.kind) else { throw InventoryTargetError.recognitionRequired }
+                userDataUpdateRun.observeCompletion(coreID)
+                guard let payload = entry.payload, payload.isComplete else {
+                    // A terminal callback and the final recognition payload can
+                    // arrive on adjacent MainActor turns. The idle drain gate
+                    // bounds this wait and fails it if no complete payload arrives.
+                    userDataUpdateRun.finish(coreID, as: .running)
+                    publishUserDataProgress(taskID: entry.owner.taskID)
+                    return
+                }
+                let now = Date.now
+                let bound = !entry.owner.scope.account.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                switch payload {
+                case .depot(let items, let complete):
+                    try inventory.capture(items: items, complete: complete, scope: entry.owner.scope, now: now)
+                    if bound { try depotHistoryStore.save(items: items, complete: complete, scope: entry.owner.scope, now: now) }
+                case .operators(let operators):
+                    if bound {
+                        try operBoxHistoryStore.save(operators, scope: entry.owner.scope, now: now)
+                        operBoxHistoryRevision = UUID()
+                    }
+                }
+                if bound {
+                    guard applyDailyTaskCallback(.userDataSync(entry.owner.kind, .init(scope: entry.owner.scope, completedAt: now)),
+                                                 coreID: coreID) else { throw CocoaError(.fileWriteUnknown) }
+                }
+                userDataUpdateRun.finish(coreID, as: .succeeded)
+            } catch {
+                userDataUpdateRun.finish(coreID, as: .failed)
+                markDailyRunFailed()
+                logError("更新资料未完整完成或保存失败：\(error.localizedDescription)")
+            }
+        default: return
+        }
+        publishUserDataProgress(taskID: entry.owner.taskID)
+    }
+
+    private func publishUserDataProgress(taskID: UUID) {
+        switch userDataUpdateRun.aggregate(for: taskID) {
+        case .failed: taskStatus[taskID] = .failure
+        case .cancelled: taskStatus[taskID] = .cancel
+        case .succeeded: taskStatus[taskID] = .success
+        case .running: taskStatus[taskID] = .running
+        case .pending, nil: break
+        }
+    }
+
+    func failIncompleteDailyUserDataUpdates(runID: UUID) {
+        let unfinished = userDataUpdateRun.entries.filter {
+            $0.value.owner.runID == runID && [.pending, .running].contains($0.value.progress)
+        }
+        guard !unfinished.isEmpty else { return }
+        for (id, entry) in unfinished {
+            userDataUpdateRun.finish(id, as: .failed)
+            publishUserDataProgress(taskID: entry.owner.taskID)
+        }
+        userDataUpdateRun.cancelPending()
+        markDailyRunFailed()
+        logError("资料更新缺少完整结束回调，本轮按失败收口。")
+    }
+
+    func cancelDailyUserDataUpdates() {
+        userDataUpdateRun.cancelPending()
+        for taskID in Set(userDataUpdateRun.entries.values.map { $0.owner.taskID }) { publishUserDataProgress(taskID: taskID) }
+    }
+
+    /// Composite progress is handled exclusively by the owned subtask tracker.
+    func updateDailyTaskStatus(_ value: TaskStatus, coreID: Int32?) {
+        guard let coreID, userDataUpdateRun.entries[coreID] == nil, let id = taskIDMap[coreID] else { return }
+        taskStatus[id] = value
     }
 }

@@ -23,6 +23,7 @@ enum MAATask: Codable, Equatable {
     case reclamation(ReclamationConfiguration)
     case custom(CustomConfiguration)
     case operProgress(OperProgressConfiguration)
+    case userdataupdate(UserDataUpdateConfiguration)
 }
 
 let defaultTaskConfigurations: [any MAATaskConfiguration] = [
@@ -37,6 +38,7 @@ let defaultTaskConfigurations: [any MAATaskConfiguration] = [
     ReclamationConfiguration(),
     CustomConfiguration(),
     OperProgressConfiguration(),
+    UserDataUpdateConfiguration(),
     ClosedownConfiguration(),
 ]
 
@@ -77,6 +79,8 @@ extension MAATaskType: Codable, CustomStringConvertible {
             return String(localized: "干员识别")
         case .Custom:
             return String(localized: "自定任务")
+        case .UserDataUpdate:
+            return String(localized: "更新资料")
         case .OperProgress:
             return String(localized: "干员养成计划")
         }
@@ -114,7 +118,7 @@ struct DailyTask: Codable, Equatable, Identifiable {
 extension DailyTask {
     init<T: MAATaskConfiguration>(config: T) {
         switch config.type {
-        case .Roguelike, .Reclamation, .Custom, .OperProgress:
+        case .Roguelike, .Reclamation, .Custom, .OperProgress, .UserDataUpdate:
             self.init(id: UUID(), task: config.projectedTask, enabled: false)
         default:
             self.init(id: UUID(), task: config.projectedTask, enabled: true)

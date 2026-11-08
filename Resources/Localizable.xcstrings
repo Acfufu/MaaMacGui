@@ -9060,6 +9060,38 @@
         }
       }
     },
+    "历史资料不可用，下一次将重新识别。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historical data is unavailable. The next update will recognize again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 자료를 사용할 수 없어 다음 업데이트에서 다시 인식합니다."
+          }
+        }
+      }
+    },
+    "历史资料不可用，将重新识别。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historical data is unavailable. Recognition will run again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 자료를 사용할 수 없어 다시 인식합니다."
+          }
+        }
+      }
+    },
     "历史资料读取失败；请重新识别。" : {
       "localizations" : {
         "en" : {
@@ -9294,6 +9326,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "같은 일괄 예약에서는 하나만 실행하므로 이번 예약을 건너뛰었습니다."
+          }
+        }
+      }
+    },
+    "同一身份下的手动识别也计入更新间隔。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual recognition under the same identity also counts toward the refresh interval."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "같은 계정에서 수동으로 인식한 자료도 갱신 주기에 포함됩니다."
           }
         }
       }
@@ -10219,6 +10267,22 @@
         }
       }
     },
+    "尚未绑定本地账号标识：将每次识别。可在仓库或干员工具页绑定，以使用按天、按周的成功记录。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No local account label is bound, so recognition runs every time. Bind a label in the depot or operator tool to use daily or weekly success records."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로컬 계정 이름이 연결되지 않아 매번 인식합니다. 창고 또는 오퍼레이터 도구에서 계정 이름을 연결하면 일별 또는 주별 성공 기록을 사용할 수 있습니다."
+          }
+        }
+      }
+    },
     "尽可能多选四星以上的Tag" : {
       "localizations" : {
         "en" : {
@@ -11031,6 +11095,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Current resources use the legacy multiplier UI; series battles are limited to 6x."
+          }
+        }
+      }
+    },
+    "当前身份上次成功更新" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last successful update for this identity"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 계정의 마지막 성공 업데이트"
           }
         }
       }
@@ -12082,6 +12162,54 @@
         }
       }
     },
+    "更新资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자료 업데이트"
+          }
+        }
+      }
+    },
+    "更新资料未到执行间隔或未选择识别内容，已跳过。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data refresh skipped: the interval has not elapsed or no data was selected."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자료 갱신 주기가 지나지 않았거나 인식 내용을 선택하지 않아 건너뛰었습니다."
+          }
+        }
+      }
+    },
+    "更新资料未完整完成或保存失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data refresh was incomplete or could not be saved: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자료 갱신이 완료되지 않았거나 저장하지 못했습니다: %@"
+          }
+        }
+      }
+    },
     "最多投资数量" : {
       "localizations" : {
         "ko" : {
@@ -12311,6 +12439,22 @@
         }
       }
     },
+    "未绑定本地账号标识，资料识别仍会执行，但不会按历史成功时间跳过后续更新。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No local account label is bound. Recognition will run without using historical success times to skip future updates."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로컬 계정 이름이 연결되지 않았습니다. 인식은 실행되지만 과거 성공 시간을 기준으로 이후 업데이트를 건너뛰지 않습니다."
+          }
+        }
+      }
+    },
     "未编号物" : {
       "localizations" : {
         "en" : {
@@ -12351,6 +12495,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "선택된 파일 없음"
+          }
+        }
+      }
+    },
+    "未选择识别内容，此任务将跳过。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No data selected. This task will be skipped."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 인식 내용이 없어 이 작업을 건너뜁니다."
           }
         }
       }
@@ -15096,6 +15256,22 @@
       }
     },
     "解析 %@[%@] 成功" : {},
+    "触发间隔" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh interval"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "갱신 주기"
+          }
+        }
+      }
+    },
     "触控模式" : {
       "localizations" : {
         "ko" : {
@@ -15622,6 +15798,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "무역소 - 용문폐"
+          }
+        }
+      }
+    },
+    "资料更新缺少完整结束回调，本轮按失败收口。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data refresh ended without complete callbacks. This run is recorded as failed."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자료 갱신의 완료 콜백이 누락되어 이번 실행을 실패로 기록합니다."
           }
         }
       }
@@ -16722,6 +16914,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "주간 일정 사용"
+          }
+        }
+      }
+    },
+    "按区服游戏日凌晨四点与周一四点判断间隔。识别完整成功并保存后才更新对应记录；失败、取消或切换身份不会提前记为成功。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intervals use the server game day at 04:00 and Monday at 04:00. Each record updates only after complete recognition and successful saving; failure, cancellation or identity changes cannot premark success."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "주기는 서버 기준 오전 4시와 월요일 오전 4시를 사용합니다. 각 기록은 인식이 완전히 성공하고 저장된 후에만 갱신되며 실패, 취소 또는 계정 변경을 미리 성공으로 기록하지 않습니다."
           }
         }
       }

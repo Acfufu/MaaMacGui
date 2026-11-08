@@ -194,6 +194,12 @@ struct GameConfiguration: Equatable {
     var client_type = ClientChannel.official
     var start_game_enabled = false
 }
+struct UserDataUpdateConfiguration: Equatable {}
+struct UserDataUpdateRun {
+    var pending = false
+    mutating func beginExecution() {}
+    func hasPending(runID: UUID) -> Bool { pending }
+}
 struct DailyTask: Equatable {
     enum Kind: Equatable {
         case startup(GameConfiguration)
@@ -205,6 +211,7 @@ struct DailyTask: Equatable {
         // InfrastConfiguration（单一事实源，见 run-daily-preparation-tests.py swiftc 列表）。
         case infrast(InfrastConfiguration)
         case fixture
+        case userdataupdate(UserDataUpdateConfiguration)
     }
     var id = UUID()
     var task: Kind
@@ -221,6 +228,12 @@ struct DailyTask: Equatable {
     func logError(verbatim value: String) { errors.append(value) }
     // G18 开关在桩世界以普通存储面替代（@AppStorage 属 SwiftUI，桩不引入）。
     var roguelikeDelayAbortUntilCombatComplete = false
+    var userDataUpdateRun = UserDataUpdateRun()
+    var userDataCallbackDeadline: ContinuousClock.Instant?
+    func failIncompleteDailyUserDataUpdates(runID: UUID) { userDataUpdateRun.pending = false; dailyRunOutcome = .failed }
+    // Composite refresh is covered by the active user-data suites, not this legacy boundary.
+    func appendDailyUserDataUpdate(task: DailyTask, config: UserDataUpdateConfiguration, runID: UUID, scope: InventoryScope) async throws -> [Int32] { throw FixtureError.connection }
+    func cancelDailyUserDataUpdates() { userDataUpdateRun.pending = false }
     // PRODUCTION_MODEL_MEMBERS
     enum DailyTasksDetailMode { case log }
     struct DailyTaskTimer {
@@ -234,7 +247,9 @@ struct DailyTask: Equatable {
     private var forceRecoveryAbortRequested = false
     var handle: Core? = Core()
     var logStore: TestLogStore? = TestLogStore()
-    var tasks: [DailyTask] = []
+    // Most scenarios need an actual queued run. Empty/all-skipped queues now
+    // finish without AsstStart; those cases set an empty list explicitly.
+    var tasks: [DailyTask] = [.init(task: .fixture)]
     var clientChannel = ClientChannel.official
     var connectionAddress = "127.0.0.1:5555"
     var adbPath = "/test/adb"

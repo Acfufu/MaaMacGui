@@ -15,4 +15,6 @@ enum MAATaskType {
 }
 // P08.2 起抽取面携带基建周计划门控与时间轮换；直接编译真 InfrastConfiguration
 // （单一事实源，见 run-medicine-log-tests.sh swiftc 列表）。
-enum MAATask { case fight(FightConfiguration), infrast(InfrastConfiguration), other }
+struct UserDataUpdateConfiguration {}
+struct UserDataUpdateRun { mutating func reset() {} }
+enum MAATask { case fight(FightConfiguration), infrast(InfrastConfiguration), userdataupdate(UserDataUpdateConfiguration), other }

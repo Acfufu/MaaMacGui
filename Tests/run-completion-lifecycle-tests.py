@@ -22,6 +22,8 @@ members = '\n'.join(declaration(r'^    (?:private )?func ' + name + r'\b') for n
                     ['resetStatus', 'waitForDailyRunCompletion', 'finishDailyRunIfStopped'])
 header = '''import Foundation
 struct DailyTask {}
+// Composite callback state is exercised by the daily-user-data suite.
+struct UserDataUpdateRun { func hasPending(runID: UUID) -> Bool { false } }
 @MainActor final class Gate {
  var entered = false; var continuation: CheckedContinuation<Void, Never>?
  func wait() async { entered = true; await withCheckedContinuation { continuation = $0 } }
@@ -49,6 +51,9 @@ struct DailyTask {}
  var logStore: LogStore? = LogStore()
  let dailyRunCoordinator: DailyRunCoordinator
  init(journalURL: URL? = nil) { dailyRunCoordinator = DailyRunCoordinator(journalURL: journalURL) }
+ var userDataUpdateRun = UserDataUpdateRun()
+ var userDataCallbackDeadline: ContinuousClock.Instant?
+ func failIncompleteDailyUserDataUpdates(runID: UUID) {}
  var dailyRunOutcome = DailyRunOutcome.completed
  var isStartStopInFlight = false
  var forceRecoveryCleanupPending = false; var forceRecoveryJournalFailureRunID: UUID? = nil

@@ -427,6 +427,8 @@ extension MAAViewModel {
             invalidateInventory()
         }
 
+        processDailyUserDataTerminal(coreID: info.taskid, code: message.code, taskchain: info.taskchain)
+
         if info.taskchain == "CloseDown" {
             // WPF retains this task-chain callback but currently performs no operation.
             return
@@ -450,9 +452,7 @@ extension MAAViewModel {
 
         switch message.code {
         case .TaskChainStopped:
-            if let id = taskID(coreID: info.taskid) {
-                taskStatus[id] = .cancel
-            }
+            updateDailyTaskStatus(.cancel, coreID: info.taskid)
 
         case .TaskChainError:
             // TODO: (LogCard) Update the task-error log card.
@@ -461,9 +461,7 @@ extension MAAViewModel {
             // TODO: (Notification) Show the task-error notification.
             // TODO: (ExternalNotification) Send the task-error event.
             // TODO: (Achievement) Record Copilot task errors.
-            if let id = taskID(coreID: info.taskid) {
-                taskStatus[id] = .failure
-            }
+            updateDailyTaskStatus(.failure, coreID: info.taskid)
             let error: String? = try? message.details["details"]["error"]
             if error == "OutOfMemory" {
                 logError(.outOfMemoryError(name: taskchainName))
@@ -477,9 +475,7 @@ extension MAAViewModel {
         case .TaskChainStart:
             // macOS task items do not currently support custom display names.
             // TODO: (ViewState) Switch the overlay log source for Copilot and daily tasks.
-            if let id = taskID(coreID: info.taskid) {
-                taskStatus[id] = .running
-            }
+            updateDailyTaskStatus(.running, coreID: info.taskid)
             logTrace(.startTask(name: taskchainName))
 
         case .TaskChainCompleted:
@@ -515,9 +511,7 @@ extension MAAViewModel {
                     }
                 }
             }
-            if let id = taskID(coreID: info.taskid) {
-                taskStatus[id] = .success
-            }
+            updateDailyTaskStatus(.success, coreID: info.taskid)
             if info.taskchain == "Fight", let report = logStore?.sanityReport {
                 logTrace(.completeTaskWithSanity(name: taskchainName, cur: report.current, max: report.maximum))
             } else {
@@ -1050,19 +1044,23 @@ extension MAAViewModel {
             break
 
         case "Depot":
+            let decodedDepot = MAADepot(json: info.details, context: "Depot")
+            if info.what == "DepotInfo", receiveDailyDepot(decodedDepot, coreID: info.taskid) { break }
             guard let ownedID = inventoryDepotTaskID, info.taskid == ownedID,
                   inventoryDepotScope == inventoryScope else { break }
             // Persist only after the owned chain completes, below the partial UI updates.
-            let depot = MAADepot(json: info.details, context: "Depot")
+            let depot = decodedDepot
             logStore?.setDepot(depot)
             if info.what == "DepotInfo", info.taskid == inventoryDepotTaskID {
                 pendingInventoryDepot = depot
             }
 
         case "OperBox":
+            let decodedOperators = MAAOperBox(json: info.details, context: "OperBox")
+            if info.what == "OperBoxInfo", receiveDailyOperators(decodedOperators, coreID: info.taskid) { break }
             guard let ownedID = operBoxHistoryTaskID, info.taskid == ownedID,
                   operBoxHistoryScope == inventoryScope else { break }
-            let operators = MAAOperBox(json: info.details, context: "OperBox")
+            let operators = decodedOperators
             logStore?.setOperBox(operators)
             if info.what == "OperBoxInfo", info.taskid == operBoxHistoryTaskID {
                 pendingOperBoxHistory = operators?.historyPayload

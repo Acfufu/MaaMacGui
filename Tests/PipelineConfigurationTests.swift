@@ -8,8 +8,9 @@ protocol MAATaskConfiguration: Codable, Hashable, Sendable {
 extension MAATaskConfiguration {
     init() { self = try! JSONDecoder().decode(Self.self, from: Data("{}".utf8)) }
 }
-enum MAATaskType { case Custom, OperProgress, Roguelike, Reclamation; var description: String { "pipeline" } }
+enum MAATaskType { case Custom, OperProgress, Roguelike, Reclamation, UserDataUpdate; var description: String { "pipeline" } }
 
+enum MAAClientChannel { case Official, Bilibili, txwy, YoStarEN, YoStarJP, YoStarKR }
 var checks = 0
 func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
     checks += 1; precondition(condition(), message)
@@ -51,7 +52,7 @@ for action in ["\"elite\":1", "\"elite\":2", "\"skill_level\":2", "\"skill_level
 var broken = OperProgressConfiguration();broken.plansJSON = "unfinished edit"
 expect(try! JSONDecoder().decode(OperProgressConfiguration.self, from: JSONEncoder().encode(broken)) == broken, "Invalid edits remain recoverable after save")
 do { _ = try JSONEncoder().encode(broken.params);preconditionFailure("Invalid params encoded") } catch { checks += 1 }
-for task in [DailyTask(config: custom), DailyTask(config: broken)] {
+for task in [DailyTask(config: custom), DailyTask(config: broken), DailyTask(config: UserDataUpdateConfiguration())] {
     expect(!task.enabled, "Advanced pipelines are disabled when added")
     var once = task; once.enabled = true; once.runOnce = true
     expect(try! JSONDecoder().decode(DailyTask.self, from: JSONEncoder().encode(once)) == once, "Production DailyTask enum JSON preserves config, ID and runOnce")

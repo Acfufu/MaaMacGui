@@ -35,12 +35,18 @@ final class RecordingHandle {
         switch task {
         case .fight(let config): return try await appendTask(type: .Fight, params: config.params.jsonString())
         case .infrast: return try await appendTask(type: .Fight, params: "{}")
+        case .userdataupdate: throw CocoaError(.coderInvalidValue)
         case .other: return try await appendTask(type: .Fight, params: "{}")
         }
     }
 }
 
 final class MedicineLogHarness {
+    var userDataUpdateRun = UserDataUpdateRun()
+    var appendedAnyTask = false
+    let runID = UUID()
+    let scope = InventoryScope(connection: "fixture", server: "CN", profile: "fixture")
+    func appendDailyUserDataUpdate(task: QueuedTask, config: UserDataUpdateConfiguration, runID: UUID, scope: InventoryScope) async throws -> [Int32] { throw CocoaError(.coderInvalidValue) }
     var tasks: [QueuedTask] = []
     var taskIDMap: [Int32: UUID] = [:]
     var fightTaskParams: [Int32: FightConfiguration.Params] = [:]

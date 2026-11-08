@@ -409,6 +409,54 @@ import Foundation
         check(iso.dailyTaskProfile == ProfileStore.defaultProfileID, "switch proceeds once the run fully closed")
         check(try load(isoRoot.appendingPathComponent("Default.plist")) == iso.tasks,
               "switch loads the target profile's stored tasks")
+        // P11.3: scope-bound receipts patch the run's source profile, never a
+        // same-ID clone or a user's mid-run frequency/selection edit.
+        do {
+            var update = UserDataUpdateConfiguration()
+            update.triggerInterval = .daily
+            let ownerScope = InventoryScope(connection: "adb", server: "CN", profile: "A", account: "account")
+            let depotReceipt = UserDataSyncReceipt(scope: ownerScope, completedAt: event)
+            let operatorReceipt = UserDataSyncReceipt(scope: ownerScope, completedAt: edited)
+            let original = DailyTask(id: id, task: .userdataupdate(update), enabled: true, runOnce: true)
+            try save([original], aURL)
+            let refresh = try configure(original)
+            check(refresh.applyDailyTaskCallback(.userDataSync(.depot, depotReceipt), coreID: 42), "successful depot updates source profile receipt")
+            guard case .userdataupdate(let depotSaved) = try load(aURL)[0].task else { fatalError() }
+            check(depotSaved.lastDepotSync == depotReceipt && depotSaved.lastOperBoxSync == nil, "one data kind does not premark another")
+            check(try load(aURL)[0].runOnce && load(aURL)[0].enabled, "receipt patch preserves runOnce and enabled")
+            check(try refresh.tasks == b && Data(contentsOf: bURL) == bBefore, "receipt cannot update selected clone profile")
+            check(refresh.applyDailyTaskCallback(.userDataSync(.operBox, operatorReceipt), coreID: 42), "second successful kind patches independently")
+            guard case .userdataupdate(let bothSaved) = try load(aURL)[0].task else { fatalError() }
+            check(bothSaved.lastDepotSync == depotReceipt && bothSaved.lastOperBoxSync == operatorReceipt, "both success receipts retained")
+
+            var frequencyEdit = update; frequencyEdit.triggerInterval = .weekly
+            try save([DailyTask(id: id, task: .userdataupdate(frequencyEdit), enabled: true)], aURL)
+            let beforeFrequency = try Data(contentsOf: aURL)
+            let stale = try configure(original)
+            check(!stale.applyDailyTaskCallback(.userDataSync(.depot, depotReceipt), coreID: 42), "user frequency edit wins over late receipt")
+            check(try Data(contentsOf: aURL) == beforeFrequency, "frequency edit remains byte-identical")
+            var deselected = update; deselected.updateDepot = false
+            try save([DailyTask(id: id, task: .userdataupdate(deselected), enabled: true)], aURL)
+            check(!stale.applyDailyTaskCallback(.userDataSync(.depot, depotReceipt), coreID: 42), "user deselection wins")
+            var otherSelection = update; otherSelection.updateOperBox = false
+            try save([DailyTask(id: id, task: .userdataupdate(otherSelection), enabled: true)], aURL)
+            check(stale.applyDailyTaskCallback(.userDataSync(.depot, depotReceipt), coreID: 42), "unrelated data selection preserved while selected kind updates")
+            guard case .userdataupdate(let partialSelection) = try load(aURL)[0].task else { fatalError() }
+            check(!partialSelection.updateOperBox, "callback does not restore user's other toggle")
+
+            try save([original], aURL)
+            let foreignScope = InventoryScope(connection: "adb", server: "CN", profile: "B", account: "account")
+            let originalBytes = try Data(contentsOf: aURL)
+            let foreign = try configure(original)
+            check(!foreign.applyDailyTaskCallback(.userDataSync(.depot, .init(scope: foreignScope, completedAt: event)), coreID: 42), "receipt profile must match journal source profile")
+            let unbound = InventoryScope(connection: "adb", server: "CN", profile: "A")
+            check(!foreign.applyDailyTaskCallback(.userDataSync(.depot, .init(scope: unbound, completedAt: event)), coreID: 42), "anonymous receipt cannot suppress a later refresh")
+            check(!foreign.applyDailyTaskCallback(.userDataSync(.depot, .init(scope: ownerScope, completedAt: Date(timeIntervalSince1970: -1e100))), coreID: 42), "malformed receipt clock rejected")
+            check(try Data(contentsOf: aURL) == originalBytes, "rejected identity/clock writes leave source profile unchanged")
+            let active = foreign.dailyRunCoordinator.active!.id
+            try foreign.dailyRunCoordinator.finish(active, outcome: .completed, cleanupSucceeded: true)
+            check(!foreign.applyDailyTaskCallback(.userDataSync(.depot, depotReceipt), coreID: 42), "late terminal receipt refused after run ownership released")
+        }
         print("RunProfilePatchTests: \(checks) assertions passed")
     }
 }

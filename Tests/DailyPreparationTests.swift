@@ -322,6 +322,41 @@ import Foundation
   let admittedID=await freshEntry.requestDailyRun(origin:.schedule)
   check(admittedID != nil && freshEntry.dailyRunCoordinator.active?.id == admittedID, "admitted entry returns the coordinator run ID")
   check(await freshEntry.requestStopRun() == true && freshEntry.dailyRunCoordinator.lastTerminal?.id == admittedID, "the admitted run ID tracks stop routing into the terminal record")
+  do {
+   let empty = MAAViewModel(); empty.tasks = []
+   let core = empty.handle!
+   check(await empty.startDailyTasks() == .started, "empty queue closes through normal coordinator lifecycle")
+   check(core.startCount == 0 && empty.dailyRunCoordinator.lastTerminal?.outcome == .completed, "empty queue does not submit a native empty task list")
+  }
+  // P11.3: native idle precedes callback delivery. The production finish gate
+  // retains ownership until callbacks drain, and missing callbacks fail closed.
+  do {
+   let drain = MAAViewModel(); drain.tasks = [.init(task: .fixture)]
+   check(await drain.startDailyTasks() == .started, "callback-drain fixture starts")
+   drain.userDataUpdateRun.pending = true
+   drain.handle!.isRunning = false
+   for _ in 0..<50 {
+    if drain.userDataCallbackDeadline != nil { break }
+    try? await Task.sleep(for: .milliseconds(20))
+   }
+   check(drain.userDataCallbackDeadline != nil && drain.dailyRunCoordinator.active != nil, "idle Core retains run while data callbacks pending")
+   drain.userDataUpdateRun.pending = false
+   for _ in 0..<50 {
+    if drain.dailyRunCoordinator.active == nil { break }
+    try? await Task.sleep(for: .milliseconds(20))
+   }
+   check(drain.dailyRunCoordinator.lastTerminal?.outcome == .completed, "drained callbacks allow owned run to finish")
+
+   let missing = MAAViewModel(); missing.tasks = [.init(task: .fixture)]
+   check(await missing.startDailyTasks() == .started, "missing-callback fixture starts")
+   missing.userDataUpdateRun.pending = true
+   missing.handle!.isRunning = false
+   for _ in 0..<200 {
+    if missing.dailyRunCoordinator.active == nil { break }
+    try? await Task.sleep(for: .milliseconds(20))
+   }
+   check(missing.dailyRunCoordinator.lastTerminal?.outcome == .failed, "missing callbacks reach failed terminal after bounded grace")
+  }
   print("DailyPreparationTests: \(count) production async assertions passed")
  }
 }

@@ -170,6 +170,7 @@ actor MAAHandle {
     }
 
     func appendTask(type: MAATaskType, params: String) throws -> Int32 {
+        guard type != .UserDataUpdate else { throw MaaCoreError.appendTaskFailed }
         let taskID = AsstAppendTask(handle, type.rawValue, params)
         if taskID == 0 {
             throw MaaCoreError.appendTaskFailed
@@ -318,6 +319,8 @@ enum MAATaskType: String {
     case VideoRecognition
     case OperBox
     case OperProgress
+    /// GUI-only composite, explicitly rejected by appendTask(type:params:).
+    case UserDataUpdate
     case Custom
 }
 
