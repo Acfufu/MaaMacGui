@@ -186,6 +186,7 @@
 		F12800000000000000000002 /* PostActionRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12800000000000000000001 /* PostActionRunner.swift */; };
 		F12900000000000000000002 /* ExternalNotificationProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12900000000000000000001 /* ExternalNotificationProviders.swift */; };
 		F13000000000000000000002 /* ExternalNotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13000000000000000000001 /* ExternalNotificationSettingsView.swift */; };
+		F13100000000000000000002 /* ExternalNotificationTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13100000000000000000001 /* ExternalNotificationTrigger.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -401,6 +402,7 @@
 		F12800000000000000000001 /* PostActionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostActionRunner.swift; sourceTree = "<group>"; };
 		F12900000000000000000001 /* ExternalNotificationProviders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalNotificationProviders.swift; sourceTree = "<group>"; };
 		F13000000000000000000001 /* ExternalNotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalNotificationSettingsView.swift; sourceTree = "<group>"; };
+		F13100000000000000000001 /* ExternalNotificationTrigger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalNotificationTrigger.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -684,6 +686,7 @@
 				F12100000000000000000001 /* OperBoxHistoryPayload.swift */,
 				F12200000000000000000001 /* CopilotFileOperations.swift */,
 				F12900000000000000000001 /* ExternalNotificationProviders.swift */,
+				F13100000000000000000001 /* ExternalNotificationTrigger.swift */,
 				F12500000000000000000001 /* StartupAutoRun.swift */,
 				F11400000000000000000001 /* YituliuOperBoxService.swift */,
 				F11500000000000000000001 /* DataExport.swift */,
@@ -868,6 +871,7 @@
 				175E0E7F43434EA4845EFF97 /* HookRunner.swift in Sources */,
 				F12800000000000000000002 /* PostActionRunner.swift in Sources */,
 				F12900000000000000000002 /* ExternalNotificationProviders.swift in Sources */,
+				F13100000000000000000002 /* ExternalNotificationTrigger.swift in Sources */,
 				F13000000000000000000002 /* ExternalNotificationSettingsView.swift in Sources */,
 				7B1B36888B12496B9DA5C1DB /* HookConfiguration.swift in Sources */,
 				BCAD46240D494C047C5532E9 /* BackgroundScheduleSettingsView.swift in Sources */,

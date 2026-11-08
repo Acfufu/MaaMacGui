@@ -12,6 +12,8 @@ struct ExternalNotificationSettingsView: View {
             Toggle("启用外部通知", isOn: $viewModel.externalNotificationEnabled)
             Text("任务完成/公招识别出错/作业完成等事件按下方启用配置逐渠道发送；错误反馈不回显密钥。凭据以明文保存在本机偏好。")
                 .font(.caption).foregroundStyle(.secondary)
+            ExternalNotificationTriggerPolicyView(store: viewModel.externalNotificationPolicyStore,
+                                                  viewModel: viewModel)
             ForEach($store.configs) { $config in
                 ExternalNotificationConfigEditor(config: $config)
             }
@@ -24,6 +26,52 @@ struct ExternalNotificationSettingsView: View {
         }
         .formStyle(.grouped)
         .frame(minWidth: 520, minHeight: 420)
+    }
+}
+
+/// P25/E03-E05: 触发策略与停滞检测配置（WPF DeliverySettings+NotificationSettings 同位）。
+struct ExternalNotificationTriggerPolicyView: View {
+    @ObservedObject var store: ExternalNotificationDeliveryPolicyStore
+    @ObservedObject var viewModel: MAAViewModel
+
+    var body: some View {
+        Section("触发策略") {
+            Toggle("完成时发送", isOn: $store.policy.sendWhenComplete)
+            Toggle("错误时发送", isOn: $store.policy.sendWhenError)
+            Toggle("停滞时发送", isOn: $store.policy.sendWhenStalled)
+            Toggle("定时开始前发送", isOn: $store.policy.sendBeforeScheduledStart)
+            Toggle("按日志条数发送", isOn: $store.policy.sendAfterLogCount)
+            if store.policy.sendAfterLogCount {
+                Stepper(value: $store.policy.newLogCount, in: 1...1000) {
+                    Text("累计 \(store.policy.newLogCount) 条日志后发送")
+                }
+            }
+            Toggle("按内容匹配发送", isOn: $store.policy.sendWhenContentMatches)
+            if store.policy.sendWhenContentMatches {
+                TextField("白名单（每行一个正则）", text: $store.policy.whitelist, axis: .vertical)
+                    .lineLimit(2...4)
+            }
+            Toggle("附带最近日志", isOn: $store.policy.includePreviousLogs)
+            if store.policy.includePreviousLogs {
+                Stepper(value: $store.policy.maxEntries, in: 0...50) {
+                    Text("最多附带 \(store.policy.maxEntries) 条")
+                }
+                Stepper(value: $store.policy.timeMinutes, in: 0...1440) {
+                    Text("时间窗 \(store.policy.timeMinutes) 分钟")
+                }
+                Toggle("过滤最近日志（黑名单）", isOn: $store.policy.filterPreviousLogs)
+                if store.policy.filterPreviousLogs {
+                    TextField("黑名单（每行一个正则）", text: $store.policy.blacklist, axis: .vertical)
+                        .lineLimit(2...4)
+                }
+            }
+            Toggle("停滞检测", isOn: $viewModel.notifyStallTimeoutEnabled)
+            if viewModel.notifyStallTimeoutEnabled {
+                Stepper(value: $viewModel.notifyStallTimeoutMinutes, in: 1...11451) {
+                    Text("无输出 \(viewModel.notifyStallTimeoutMinutes) 分钟后告警，按同间隔重复")
+                }
+            }
+        }
     }
 }
 

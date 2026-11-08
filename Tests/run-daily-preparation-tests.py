@@ -15,6 +15,10 @@ model = re.sub(_strip_pattern, '\n', model, count=1)
 _p22_arm = r'\n *// P22/S16: 启动成功后武装运行时长上限计时。\n *armDurationLimit\(runID: runID\)\n'
 assert len(re.findall(_p22_arm, model, re.M)) == 1, 'P22 armDurationLimit call drifted'
 model = re.sub(_p22_arm, '\n', model, count=1)
+# P25 停滞武装（externalStallMonitor.arm）属通知域，由 trigger 套件覆盖；剥离并 fail-loudly。
+_p25_arm = r'\n *// P25/E05: 停滞检测武装（开关关或分钟为 0 时不监控）。\n *if notifyStallTimeoutEnabled \{\n(?:.*?\n)*? *(?:self\?\.)?notifyExternalStalled\(initialMinutes: initial, accumulatedMinutes: accumulated\)\n *\}\n *\}\n'
+assert len(re.findall(_p25_arm, model, re.M)) == 1, 'P25 stall arm block drifted'
+model = re.sub(_p25_arm, '\n', model, count=1)
 
 message=(source_root/'MeoAsstMac/Core/MaaMessage.swift').read_text()
 def declaration(source,pattern):

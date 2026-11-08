@@ -21,6 +21,14 @@ struct DailyTask {
     func schedule(id: String, title: String, body: String, fireDate: Date, at now: Date = Date()) async {}
 }
 
+// P25 提取桩：停滞监控与外部通知触发面（真实实现由 trigger 套件覆盖）。
+enum ExternalNotificationEventKind { case complete, error, stalled, scheduledStart }
+@MainActor final class ExternalStallMonitor {
+    func activity() {}
+    func stop() {}
+    func arm(timeoutMinutes: Int, onStalled: @escaping @MainActor (Int, Int) -> Void) {}
+}
+
 extension Notification.Name {
     static let MAAPreventSystemSleepingChanged = Notification.Name("MAAPreventSystemSleepingChanged")
 }
@@ -44,6 +52,8 @@ extension Notification.Name {
     let localNotifications = LocalNotificationService()
     var switchedProfiles: [String] = []
     func switchProfile(_ profileID: String) { switchedProfiles.append(profileID) }
+    // P25 提取桩：外部通知触发面。
+    func notifyExternal(title: String, body: String, kind: ExternalNotificationEventKind) {}
     // 全局探针:任何实例的启动调用都会落账,weak 失效窗口内必须保持静默。
     static var startOrigins: [DailyRunOrigin] = []
 

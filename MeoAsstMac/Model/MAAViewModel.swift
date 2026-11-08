@@ -427,28 +427,51 @@ import SwiftUI
     /// S08: 提前分钟数（WPF ScheduledStartNotificationMinutes 缺省 5）。
     @AppStorage("MAAScheduledStartNotificationMinutes") var scheduledStartNotificationMinutes = 5
 
-    // MARK: - External Notifications (P24/E02+E06)
+    // MARK: - External Notifications (P24/E02+E06 + P25/E03-E05)
 
     let externalNotificationSettings = ExternalNotificationSettingsStore()
     let externalNotificationSender = ExternalNotificationSender()
+    let externalNotificationTrigger = ExternalNotificationTrigger()
+    let externalNotificationHistory = ExternalNotificationHistory()
+    let externalNotificationPolicyStore = ExternalNotificationDeliveryPolicyStore()
+    let externalStallMonitor = ExternalStallMonitor()
     /// WPF DeliverySettings.Enable 同位（缺省关零暗改）。
     @AppStorage("MAAExternalNotificationEnabled") var externalNotificationEnabled = false
+    /// E05: 停滞检测开关与超时（WPF EnableStallTimeout/StallTimeoutMinutes 同位，钳 0-11451）。
+    @AppStorage("MAANotifyStallTimeoutEnabled") var notifyStallTimeoutEnabled = false
+    @AppStorage("MAANotifyStallTimeoutMinutes") var notifyStallTimeoutMinutes = 30
 
-    /// P24: 按启用配置逐渠道投递；触发过滤（完成/错误/停滞/日志匹配）归 P25，
-    /// 当前以本机通知同款三触发点直发（WPF Notify→SendExternal 简化面）。
-    func notifyExternal(title: String, body: String) {
-        guard externalNotificationEnabled, !externalNotificationSettings.configs.isEmpty else { return }
+    /// P25 触发判定 + 历史打包后的逐渠道投递（WPF Notify→ProcessLog→SendExternal 同构）。
+    func notifyExternal(title: String, body: String, kind: ExternalNotificationEventKind = .complete) {
+        externalNotificationHistory.add(.init(timestamp: .now, content: body))
+        guard externalNotificationEnabled, !externalNotificationSettings.configs.isEmpty else {
+            externalNotificationTrigger.reset()
+            return
+        }
+        let policy = externalNotificationPolicyStore.policy
+        guard externalNotificationTrigger.shouldSend(policy: policy, kind: kind, content: body) else { return }
+        let bundled = externalNotificationHistory.bundle(current: body, at: .now, policy: policy)
         let configs = externalNotificationSettings.configs.filter(\.enabled)
         guard !configs.isEmpty else { return }
         Task { [sender = externalNotificationSender] in
             for config in configs {
-                let result = await sender.send(config: config, title: title, content: body)
+                let result = await sender.send(config: config, title: title, content: bundled)
                 if !result.success {
                     // 错误反馈不携带凭据（发送面已截断 key-in-path）。
                     self.logError(verbatim: "外部通知(\(config.displayName))发送失败：\(result.detail)")
                 }
             }
         }
+    }
+
+    /// E03: 停滞告警回调（WPF OnStalled 同构：忙时且同运行才发）。
+    func notifyExternalStalled(initialMinutes: Int, accumulatedMinutes: Int) {
+        guard dailyRunCoordinator.active != nil else { return }
+        notifyExternal(
+            title: String(localized: "任务疑似停滞"),
+            body: String(localized: "任务已 \(initialMinutes) 分钟无输出，累计 \(accumulatedMinutes) 分钟。"),
+            kind: .stalled
+        )
     }
 
     // MARK: - Initializer
@@ -867,6 +890,7 @@ extension MAAViewModel {
             // 时长上限到点的停止按 RunDurationLimitExecutePostActions 门控；
             // 其余路径（自然完成/用户手动停止）总是执行。
             cancelDurationLimit()
+            externalStallMonitor.stop()
             let policyAllows = stopInitiatedByDurationLimit ? runDurationLimitExecutePostActions : true
             stopInitiatedByDurationLimit = false
             await executePostActions(runID: id, hasError: outcome == .failed || outcome == .timedOut,
@@ -1341,6 +1365,13 @@ extension MAAViewModel {
                 await finishDailyRunIfStopped(allowInFlight: true)
                 // P22/S16: 启动成功后武装运行时长上限计时。
                 armDurationLimit(runID: runID)
+                // P25/E05: 停滞检测武装（开关关或分钟为 0 时不监控）。
+                if notifyStallTimeoutEnabled {
+                    externalStallMonitor.arm(timeoutMinutes: max(0, notifyStallTimeoutMinutes)) {
+                        [weak self] initial, accumulated in
+                        self?.notifyExternalStalled(initialMinutes: initial, accumulatedMinutes: accumulated)
+                    }
+                }
                 return .started
             } catch {
                 let recoveryCleanupFailed = error is ForcedRecoveryCleanupFailure

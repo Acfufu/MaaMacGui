@@ -340,6 +340,8 @@ private struct TaskChainMessage {
 
 extension MAAViewModel {
     private func processTaskChainMessage(_ message: MaaMessage) {
+        // P25/E05: 消息活动喂活停滞监控（WPF NotifyOutputActivity 同位）。
+        externalStallMonitor.activity()
         if message.code == .AllTasksCompleted {
             // TODO: (LogCard) Update the all-tasks-completed log card.
             // TODO: (ExternalNotification) Send the all-tasks-completed event.

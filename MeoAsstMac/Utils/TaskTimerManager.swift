@@ -22,6 +22,8 @@ import Foundation
     }
 
     private var handoff: ScheduleHandoff<ScheduleSnapshot>?
+    // P25/E03: 到点时刻的外部通知任务（计划变更即撤）。
+    private var advanceExternalTask: Task<Void, Never>?
 
     private func makeHandoff() -> ScheduleHandoff<ScheduleSnapshot> {
         ScheduleHandoff<ScheduleSnapshot>(
@@ -162,9 +164,11 @@ import Foundation
 
     /// P21/S08: 定时开始前的提前通知（WPF NotifyBeforeScheduledStart 同位，
     /// 缺省 5 分钟）。计划变更/停用/时刻已过都会撤下待投递提醒。
+    /// P25/E03: 到点时刻按策略 sendBeforeScheduledStart 另发外部通知。
     private func rescheduleAdvanceNotification(next: Date?, now: Date) {
         guard let viewModel else { return }
         let id = "scheduled-start-advance"
+        advanceExternalTask?.cancel()
         guard viewModel.notifyBeforeScheduledStart, let next else {
             viewModel.localNotifications.cancelPending(id: id)
             return
@@ -179,6 +183,17 @@ import Foundation
             title: String(localized: "定时任务即将开始"),
             body: String(localized: "MAA 将按计划开始日常任务"),
             fireDate: fireAt, at: now)
+        }
+        advanceExternalTask = Task { [weak self] in
+            let delay = fireAt.timeIntervalSince(now)
+            guard delay > 0 else { return }
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled, let self, let viewModel = self.viewModel else { return }
+            viewModel.notifyExternal(
+                title: String(localized: "定时任务即将开始"),
+                body: String(localized: "MAA 将按计划开始日常任务"),
+                kind: .scheduledStart
+            )
         }
     }
 
