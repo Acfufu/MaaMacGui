@@ -65,6 +65,72 @@
         }
       }
     },
+    "作业下载失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copilot download failed: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 다운로드 실패: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作业下载失败：%@"
+          }
+        }
+      }
+    },
+    "作业集无法激活：清单损坏或成员类型不一致。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The copilot set cannot be activated: the manifest is corrupted or member kinds are inconsistent."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 세트를 활성화할 수 없습니다: 목록이 손상되었거나 멤버 유형이 일치하지 않습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作业集无法激活：清单损坏或成员类型不一致。"
+          }
+        }
+      }
+    },
+    "作业集已激活，部分成员无法加载：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copilot set activated, but some members could not be loaded: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 세트가 활성화되었지만 일부 항목을 불러올 수 없습니다: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作业集已激活，部分成员无法加载：%@"
+          }
+        }
+      }
+    },
     "导入预设" : {
       "localizations" : {
         "en" : {
@@ -77,6 +143,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "프리셋 가져오기"
+          }
+        }
+      }
+    },
+    "导航覆盖" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nav Override"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내비 덮어쓰기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导航覆盖"
           }
         }
       }
@@ -129,6 +217,28 @@
         }
       }
     },
+    "技能等级" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skill rank"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스킬 랭크"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "技能等级"
+          }
+        }
+      }
+    },
     "指定第二、第三顺位干员" : {
       "localizations" : {
         "en" : {
@@ -141,6 +251,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "두 번째 및 세 번째 시작 오퍼레이터 지정"
+          }
+        }
+      }
+    },
+    "突袭" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raid"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "돌격"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "突袭"
+          }
+        }
+      }
+    },
+    "普通" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일반"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "普通"
+          }
+        }
+      }
+    },
+    "添加干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add operator"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 추가"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加干员"
+          }
+        }
+      }
+    },
+    "覆盖导航识别名，作业无法导航到关卡时使用。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overrides the navigation name, for when the copilot cannot navigate to the stage."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내비게이션 인식 이름을 덮어씁니다. 작업이 스테이지로 내비게이션하지 못할 때 사용합니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "覆盖导航识别名，作业无法导航到关卡时使用。"
           }
         }
       }
@@ -11736,7 +11934,28 @@
         }
       }
     },
-    "干员名称" : {},
+    "干员名称" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operator name"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 이름"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "干员名称"
+          }
+        }
+      }
+    },
     "干员寻访" : {
       "localizations" : {
         "ko" : {
@@ -17947,6 +18166,28 @@
       }
     },
     "额外绘制间隔" : {},
+    "额外自选干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add custom operators"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "커스텀 오퍼레이터 추가"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "额外自选干员"
+          }
+        }
+      }
+    },
     "饱和度" : {},
     "额外标签策略" : {
       "localizations" : {
@@ -18100,7 +18341,50 @@
       }
     },
     "龙门币-6/5" : {},
-    "（突袭）" : {},
+    "（磨难）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(Adverse)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(가혹)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "（磨难）"
+          }
+        }
+      }
+    },
+    "（突袭）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(Raid)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(돌격)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "（突袭）"
+          }
+        }
+      }
+    },
     "启用备选关卡" : {
       "localizations" : {
         "en" : {

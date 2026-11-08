@@ -257,6 +257,40 @@ struct CopilotPersistenceTests {
         let context9 = CopilotContext()
         check(context9.config.loop_times == 7, "configuration restores into a fresh context")
 
+        // MARK: - G. C08 gate and config carry-through (P13-[c] regression)
+
+        clearStore()
+        let contextG1 = CopilotContext()
+        contextG1.config.user_additional = [.init(name: "Amiya", skill: 3)]
+        contextG1.config.loop_times = 5
+        check(
+            CopilotCompiler.Input(context: contextG1).config.user_additional.isEmpty,
+            "gate off drops user_additional from the compiler input")
+        check(
+            CopilotCompiler.Input(context: contextG1).config.loop_times == 5,
+            "context configuration carries into the compiler input")
+        contextG1.enableUserAdditional = true
+        check(
+            CopilotCompiler.Input(context: contextG1).config.user_additional == [.init(name: "Amiya", skill: 3)],
+            "gate on keeps user_additional")
+
+        // MARK: - H. PRTS code parsing (C02)
+
+        func parseCode(_ string: String) -> PRTSCode? {
+            string.prtsCode
+        }
+        check(parseCode("12345") == .copilot(12345), "bare digits parse as copilot id")
+        check(parseCode("prts://12345") == .copilot(12345), "prts:// parses as copilot id")
+        check(parseCode("prts://s12345") == .set(12345), "prts://s parses as set id")
+        check(parseCode("s12345") == .set(12345), "bare s-prefix parses as set id")
+        check(parseCode("maa://12345") == .copilot(12345), "maa:// parses as copilot id (WPF parity)")
+        check(parseCode("maa://abc") == nil, "maa:// with non-digits rejects")
+        check(parseCode("prts://") == nil, "empty prts code rejects")
+        check(parseCode("prts://s") == nil, "set prefix without digits rejects")
+        check(parseCode("  prts://12345  ") == .copilot(12345), "surrounding whitespace trims")
+        check(parseCode("99999999999999999999999") == nil, "overflowing id rejects instead of crashing")
+        check(parseCode("not-a-code") == nil, "non-numeric input rejects")
+
         if failures.isEmpty {
             print("ALL \(checkIndex) CHECKS PASSED")
         } else {

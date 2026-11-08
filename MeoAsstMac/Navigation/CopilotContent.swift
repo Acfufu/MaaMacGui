@@ -105,8 +105,27 @@ struct CopilotContent: View {
             }
             context.selection = .init(url: url, isRaid: nil)
             if url.isDirectory {
-                await context.updateSet(at: url)
-                context.category = .list
+                // C09/C02：导入作业集的激活失败/部分成员跳过不再静默。
+                if let listing = await context.updateSet(at: url) {
+                    context.category = .list
+                    if !listing.skipped.isEmpty {
+                        newModel.appendLog(
+                            .init(
+                                date: .now,
+                                content: String(
+                                    localized:
+                                        "作业集已激活，部分成员无法加载：\(listing.skipped.joined(separator: "、"))"
+                                ),
+                                color: .warning))
+                    }
+                } else {
+                    newModel.appendLog(
+                        .init(
+                            date: .now,
+                            content: String(
+                                localized: "作业集无法激活：清单损坏或成员类型不一致。"),
+                            color: .error))
+                }
             } else {
                 await refreshItem(at: \.$externalRoot)
                 context.category = .external

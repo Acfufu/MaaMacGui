@@ -39,8 +39,9 @@ struct CopilotConfiguration: Codable, Hashable {
     var formation_index = 0
 
     struct UserUnit: Codable, Hashable {
-        let name: String
-        let skill: Int
+        /// C08 编辑面需要可变（params 编码面不变：仍只含 name/skill）。
+        var name: String
+        var skill: Int
     }
 
     var user_additional = [UserUnit]()
@@ -155,12 +156,18 @@ enum CopilotCompiler {
             /// 激活期 mapLevelCode 的结果（集合列表自带）；nil = 无映射语境
             /// （直构/测试），此时 kind 判定回退到 `Kind(of:)` 前缀推断。
             var stageCode: String?
+            /// 单行导航识别名覆盖（C10）；nil/空 = 不覆盖。
+            var navOverride: String?
 
-            init(url: URL, isOn: Bool, isRaid: Bool? = nil, stageCode: String? = nil) {
+            init(
+                url: URL, isOn: Bool, isRaid: Bool? = nil, stageCode: String? = nil,
+                navOverride: String? = nil
+            ) {
                 self.url = url
                 self.isOn = isOn
                 self.isRaid = isRaid
                 self.stageCode = stageCode
+                self.navOverride = navOverride
             }
         }
 
@@ -214,9 +221,15 @@ enum CopilotCompiler {
             config.filename = nil
             switch kind {
             case .regular:
-                // CopilotTask 消费 copilot_list（每项可带 nav/is_raid）。
+                // CopilotTask 消费 copilot_list（每项可带 nav/is_raid；C10 单行
+                // 编辑的突袭与导航覆盖在这里透传）。
                 config.copilot_list = zip(enabled, filenames).map { item, filename in
-                    .init(filename: filename, nav_name_override: nil, is_raid: item.isRaid ?? false)
+                    .init(
+                        filename: filename,
+                        nav_name_override: item.navOverride.flatMap {
+                            $0.isEmpty ? nil : $0
+                        },
+                        is_raid: item.isRaid ?? false)
                 }
                 return .success([Output(type: kind.taskType, config: config)])
             case .paradox:
@@ -256,20 +269,32 @@ enum CopilotCompiler {
 }
 
 extension CopilotCompiler.Input {
-    /// Summarizes the live copilot tab for the compiler.
+    /// Summarizes the live copilot tab for the compiler. The context's live
+    /// configuration（循环次数/编队/吃药/助战/自选干员）必须随行——此前委托
+    /// 初始化只带 selection、config 落回默认值，UI 设置从未进入下发参数
+    /// （P13-[c]，本增量修复）。
     init(context: CopilotContext) {
+        // C08 门控（WPF EnableUserAdditional 同构）：关闭时不下发自选干员，
+        // 名单本身保留在设置里。
+        var carriedConfig = context.config
+        if !context.enableUserAdditional {
+            carriedConfig.user_additional = []
+        }
+
         if context.category == .list {
             self.init(
                 selection: .list(
                     kind: context.copilotSet?.kind,
                     items: context.copilotList.map { item in
-                        .init(url: item.url, isOn: item.isOn, isRaid: item.isRaid,
-                              stageCode: item.stageCode)
-                    }))
+                        .init(
+                            url: item.url, isOn: item.isOn, isRaid: item.isRaid,
+                            stageCode: item.stageCode, navOverride: item.navOverride)
+                    }),
+                config: carriedConfig)
         } else if case .copilot(let url, let kind, _) = context.content {
-            self.init(selection: .single(url: url, kind: kind))
+            self.init(selection: .single(url: url, kind: kind), config: carriedConfig)
         } else {
-            self.init(selection: .other)
+            self.init(selection: .other, config: carriedConfig)
         }
     }
 }
@@ -293,6 +318,12 @@ enum CopilotCategory: String, CaseIterable {
     @ObservationIgnored
     @Defaults("CopilotContentCategory")
     var category = CopilotCategory.bundled
+
+    /// C08 额外自选干员下发门控（WPF EnableUserAdditional 同构，GUI 侧开关，
+    /// 不进任务参数；名单本身持久化在 CopilotConfiguration 里）。
+    @ObservationIgnored
+    @Defaults("CopilotEnableUserAdditional")
+    var enableUserAdditional = false
 
     init() {
         config = CopilotPersistence.loadConfiguration() ?? CopilotConfiguration()
@@ -415,11 +446,12 @@ extension CopilotContext {
         return listing
     }
 
-    nonisolated(nonsending) func updateSet(at url: URL) async {
+    @discardableResult
+    nonisolated(nonsending) func updateSet(at url: URL) async -> CopilotSetData.SetListing? {
         guard let set = CopilotSetData(atDirectory: url) else {
-            return
+            return nil
         }
-        await updateSet(at: url, set: set)
+        return await updateSet(at: url, set: set)
     }
 
     /// C09 跨启动恢复：重建上次激活的作业集并套用持久化的行状态与顺序。
@@ -619,5 +651,49 @@ extension MAACopilot.Kind {
         case .paradox:
             return String(localized: "悖论模拟作业")
         }
+    }
+}
+
+// MARK: - PRTS 神秘代码（C02）
+
+/// 作业站神秘代码：纯数字与 `prts://` 前缀为作业，`s`/`prts://s` 前缀为
+/// 作业集；`maa://` 为仅作业的老格式（WPF 同构）。
+enum PRTSCode: Hashable {
+    case copilot(Int)
+    case set(Int)
+}
+
+extension StringProtocol {
+    var prtsCode: PRTSCode? {
+        let string = trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if string.hasPrefix("maa://") {
+            guard let digits = string.trimmingPrefix("maa://").digits, let id = Int(digits) else {
+                return nil
+            }
+            return .copilot(id)
+        }
+
+        let trimmed = string.trimmingPrefix("prts://")
+        if trimmed.starts(with: "s") {
+            guard let digits = trimmed.trimmingPrefix("s").digits, let id = Int(digits) else {
+                return nil
+            }
+            return .set(id)
+        }
+        guard let digits = trimmed.digits, let id = Int(digits) else {
+            return nil
+        }
+        return .copilot(id)
+    }
+
+    private var digits: Self? {
+        guard !isEmpty else {
+            return nil
+        }
+        let predicate = allSatisfy { char in
+            char.isASCII && char.isNumber
+        }
+        return predicate ? self : nil
     }
 }

@@ -215,10 +215,22 @@ extension NewViewModel {
             case .copilot(let id):
                 lastImportedCopilot = try await MAACopilot.download(id: id, toDirectory: .externalCopilotDirectory)
             case .set(let setID):
-                lastImportedCopilot = try await CopilotSetData.download(id: setID, progress: progress)
+                do {
+                    lastImportedCopilot = try await CopilotSetData.download(id: setID, progress: progress)
+                } catch {
+                    // C02 半成品清理：中断/失败后残留的集合目录不再误导重试。
+                    try? FileManager.default.removeItem(
+                        at: URL.externalCopilotDirectory.appending(path: "s\(setID)/"))
+                    throw error
+                }
             }
         } catch {
-            print(error)
+            // C02：下载失败给可见日志（此前只有 print，用户无从得知）。
+            appendLog(
+                .init(
+                    date: .now,
+                    content: String(localized: "作业下载失败：\(error.localizedDescription)"),
+                    color: .error))
         }
     }
 }

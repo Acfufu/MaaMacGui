@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CopilotView: View {
     let context: CopilotContext
+    @Environment(NewViewModel.self) private var newModel
 
     var body: some View {
         @Bindable var context = context
@@ -16,7 +17,10 @@ struct CopilotView: View {
             if let set = context.copilotSet {
                 switch context.content {
                 case .copilot(_, let kind, let copilot):
-                    CopilotConfigView(kind: kind, config: $context.config) {
+                    CopilotConfigView(
+                        kind: kind, config: $context.config,
+                        userAdditionalEnabled: $context.enableUserAdditional
+                    ) {
                         CopilotDescriptionView(pilot: copilot)
                     }
                 case .invalid:
@@ -24,7 +28,10 @@ struct CopilotView: View {
                 case .pending:
                     ProgressView().controlSize(.small)
                 default:
-                    CopilotConfigView(kind: set.kind, config: $context.config) {
+                    CopilotConfigView(
+                        kind: set.kind, config: $context.config,
+                        userAdditionalEnabled: $context.enableUserAdditional
+                    ) {
                         CopilotSetDescriptionView(set: set.data)
                     }
                 }
@@ -34,14 +41,36 @@ struct CopilotView: View {
         } else {
             switch context.content {
             case .copilot(_, let kind, let copilot):
-                CopilotConfigView(kind: kind, config: $context.config) {
+                CopilotConfigView(
+                    kind: kind, config: $context.config,
+                    userAdditionalEnabled: $context.enableUserAdditional
+                ) {
                     CopilotDescriptionView(pilot: copilot)
                 }
             case .set(let url, let set):
                 Button("激活此作业集") {
                     Task {
-                        await context.updateSet(at: url, set: set)
-                        context.category = .list
+                        // C09/C02：激活失败与部分成员跳过不再静默。
+                        if let listing = await context.updateSet(at: url, set: set) {
+                            context.category = .list
+                            if !listing.skipped.isEmpty {
+                                newModel.appendLog(
+                                    .init(
+                                        date: .now,
+                                        content: String(
+                                            localized:
+                                                "作业集已激活，部分成员无法加载：\(listing.skipped.joined(separator: "、"))"
+                                        ),
+                                        color: .warning))
+                            }
+                        } else {
+                            newModel.appendLog(
+                                .init(
+                                    date: .now,
+                                    content: String(
+                                        localized: "作业集无法激活：清单损坏或成员类型不一致。"),
+                                    color: .error))
+                        }
                     }
                 }
                 .buttonStyle(.borderedProminent)
@@ -64,12 +93,17 @@ private struct CopilotConfigView<D: View>: View {
     let kind: MAACopilot.Kind
 
     @Binding var config: CopilotConfiguration
+    @Binding var userAdditionalEnabled: Bool
 
     let description: D
 
-    init(kind: MAACopilot.Kind, config: Binding<CopilotConfiguration>, @ViewBuilder description: () -> D) {
+    init(
+        kind: MAACopilot.Kind, config: Binding<CopilotConfiguration>,
+        userAdditionalEnabled: Binding<Bool>, @ViewBuilder description: () -> D
+    ) {
         self.kind = kind
         self._config = config
+        self._userAdditionalEnabled = userAdditionalEnabled
         self.description = description()
     }
 
@@ -77,7 +111,7 @@ private struct CopilotConfigView<D: View>: View {
         VStack(spacing: 12) {
             switch kind {
             case .regular:
-                RegularCopilotConfigView(config: $config)
+                RegularCopilotConfigView(config: $config, userAdditionalEnabled: $userAdditionalEnabled)
                 Divider()
             case .sss:
                 SSSCopilotConfigView(config: $config)
@@ -98,6 +132,7 @@ private struct CopilotConfigView<D: View>: View {
 
 private struct RegularCopilotConfigView: View {
     @Binding var config: CopilotConfiguration
+    @Binding var userAdditionalEnabled: Bool
 
     var body: some View {
         HStack {
@@ -129,7 +164,55 @@ private struct RegularCopilotConfigView: View {
             }
             .animation(.default, value: config.support_unit_usage)
         }
+        // C08 额外自选干员：门控开关（GUI 侧）+ 名单编辑。
+        Toggle("额外自选干员", isOn: $userAdditionalEnabled)
+        if userAdditionalEnabled {
+            UserAdditionalEditor(config: $config)
+        }
         SSSCopilotConfigView(config: $config)
+    }
+}
+
+private struct UserAdditionalEditor: View {
+    @Binding var config: CopilotConfiguration
+
+    var body: some View {
+        VStack(spacing: 6) {
+            ForEach(config.user_additional.indices, id: \.self) { index in
+                HStack {
+                    TextField(
+                        "干员名称",
+                        text: Binding(
+                            get: { config.user_additional[index].name },
+                            set: { config.user_additional[index].name = $0 }
+                        )
+                    )
+                    .frame(maxWidth: 160)
+                    Picker(
+                        "技能等级",
+                        selection: Binding(
+                            get: { config.user_additional[index].skill },
+                            set: { config.user_additional[index].skill = $0 }
+                        )
+                    ) {
+                        ForEach(1...3, id: \.self) { rank in
+                            Text("\(rank)").tag(rank)
+                        }
+                    }
+                    .frame(maxWidth: 84)
+                    Button {
+                        config.user_additional.remove(at: index)
+                    } label: {
+                        Image(systemName: "minus.circle")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("移除")
+                }
+            }
+            Button("添加干员") {
+                config.user_additional.append(.init(name: "", skill: 1))
+            }
+        }
     }
 }
 

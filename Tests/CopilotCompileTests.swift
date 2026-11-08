@@ -115,6 +115,20 @@ struct CopilotCompileTests {
                 .init(filename: secondRegularURL.path(percentEncoded: false), nav_name_override: nil, is_raid: false),
             ])
 
+        // C10: per-row nav override passes through to copilot_list; an empty
+        // override compiles as no override.
+        expectSuccess(
+            "nav override passthrough",
+            .init(selection: .list(kind: .regular, items: [
+                .init(url: regularURL, isOn: true, isRaid: false, navOverride: ""),
+                .init(url: secondRegularURL, isOn: true, isRaid: false, navOverride: "OF-EX"),
+            ])),
+            type: .Copilot, filename: nil,
+            list: [
+                .init(filename: regularURL.path(percentEncoded: false), nav_name_override: nil, is_raid: false),
+                .init(filename: secondRegularURL.path(percentEncoded: false), nav_name_override: "OF-EX", is_raid: false),
+            ])
+
         // 3. Empty selection: no entry at all, or every entry toggled off.
         expectFailure(
             "empty item list", .init(selection: .list(kind: .regular, items: [])), .emptyList)

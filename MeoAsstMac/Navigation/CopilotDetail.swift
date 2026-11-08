@@ -191,37 +191,3 @@ struct AddPopover_Previews: PreviewProvider {
             .environment(NewViewModel(parent: MAAViewModel()))
     }
 }
-
-// MARK: - Value Extensions
-
-enum PRTSCode: Hashable {
-    case copilot(Int)
-    case set(Int)
-}
-
-extension StringProtocol {
-    fileprivate var prtsCode: PRTSCode? {
-        let string = trimmingCharacters(in: .whitespacesAndNewlines)
-            .trimmingPrefix("prts://")
-
-        if string.starts(with: "s") {
-            if let s = string.trimmingPrefix("s").digits {
-                return .set(Int(s)!)
-            }
-        } else if let s = string.digits {
-            return .copilot(Int(s)!)
-        }
-
-        return nil
-    }
-
-    private var digits: Self? {
-        guard !isEmpty else {
-            return nil
-        }
-        let predicate = allSatisfy { char in
-            char.isASCII && char.isNumber
-        }
-        return predicate ? self : nil
-    }
-}
