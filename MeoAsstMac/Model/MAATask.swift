@@ -21,6 +21,30 @@ enum MAATask: Codable, Equatable {
     case switchTheme(SwitchThemeConfiguration)
     case roguelike(RoguelikeConfiguration)
     case reclamation(ReclamationConfiguration)
+    case custom(CustomConfiguration)
+    case operProgress(OperProgressConfiguration)
+    case userdataupdate(UserDataUpdateConfiguration)
+    case depotMaintain(DepotMaintainConfiguration)
+
+    /// P26 远控子集启动按类型过滤消费（WPF LinkStart-<name> 的 OfType<T> 同位）。
+    var maataskType: MAATaskType {
+        switch self {
+        case .startup: .StartUp
+        case .closedown: .CloseDown
+        case .recruit: .Recruit
+        case .infrast: .Infrast
+        case .fight: .Fight
+        case .mall: .Mall
+        case .award: .Award
+        case .switchTheme: .SwitchTheme
+        case .roguelike: .Roguelike
+        case .reclamation: .Reclamation
+        case .custom: .Custom
+        case .operProgress: .OperProgress
+        case .userdataupdate: .UserDataUpdate
+        case .depotMaintain: .DepotMaintain
+        }
+    }
 }
 
 let defaultTaskConfigurations: [any MAATaskConfiguration] = [
@@ -28,11 +52,15 @@ let defaultTaskConfigurations: [any MAATaskConfiguration] = [
     RecruitConfiguration(),
     InfrastConfiguration(),
     FightConfiguration(),
+    DepotMaintainConfiguration(),
     MallConfiguration(),
     AwardConfiguration(),
     SwitchThemeConfiguration(),
     RoguelikeConfiguration(),
     ReclamationConfiguration(),
+    CustomConfiguration(),
+    OperProgressConfiguration(),
+    UserDataUpdateConfiguration(),
     ClosedownConfiguration(),
 ]
 
@@ -72,7 +100,13 @@ extension MAATaskType: Codable, CustomStringConvertible {
         case .OperBox:
             return String(localized: "干员识别")
         case .Custom:
-            return String(localized: "自定义")
+            return String(localized: "自定任务")
+        case .UserDataUpdate:
+            return String(localized: "更新资料")
+        case .OperProgress:
+            return String(localized: "干员养成计划")
+        case .DepotMaintain:
+            return String(localized: "库存保持")
         }
     }
 }
@@ -108,7 +142,7 @@ struct DailyTask: Codable, Equatable, Identifiable {
 extension DailyTask {
     init<T: MAATaskConfiguration>(config: T) {
         switch config.type {
-        case .Roguelike, .Reclamation:
+        case .Roguelike, .Reclamation, .Custom, .OperProgress, .UserDataUpdate, .DepotMaintain:
             self.init(id: UUID(), task: config.projectedTask, enabled: false)
         default:
             self.init(id: UUID(), task: config.projectedTask, enabled: true)
@@ -117,6 +151,18 @@ extension DailyTask {
 }
 
 extension Array where Element == DailyTask {
+    /// D08: 按行移动一个任务（WPF MoveTask 一行同构；越界返回 nil=无操作）。
+    func moved(id: UUID, by delta: Int) -> [DailyTask]? {
+        guard let index = firstIndex(where: { $0.id == id }) else { return nil }
+        let target = index + delta
+        guard indices.contains(target) else { return nil }
+        var copy = self
+        let entry = copy.remove(at: index)
+        copy.insert(entry, at: target)
+        return copy
+    }
+
+
     subscript(_ id: UUID) -> MAATask? {
         get {
             first { $0.id == id }?.task

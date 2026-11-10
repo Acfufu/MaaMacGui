@@ -40,6 +40,11 @@ struct ReclamationSettingsView: View {
                     }
                 }
             }
+
+            // T03：仅 Tales 无存档（mode 0）下 Core 消费 clear_store。
+            if config.theme == .tales, config.mode == 0 {
+                Toggle("刷分结束后清空商店：", isOn: $config.clear_store)
+            }
         }
         .animation(.default, value: config.theme)
         .animation(.default, value: config.mode)

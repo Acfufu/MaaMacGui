@@ -321,7 +321,9 @@ extension MAAViewModel {
 // MARK: - Process TaskChain
 
 extension NewViewModel.SanityReport {
-    fileprivate func fullRecoveryTime() -> Date? {
+    /// 理智回满时刻（WPF SanityRecoveryTimer 同构：报告时刻 + 缺口×6 分钟）。
+    /// P23 起通知面（MAAViewModel）也消费，故为 internal。
+    func fullRecoveryTime() -> Date? {
         guard let reportedAt else {
             return nil
         }
@@ -338,14 +340,13 @@ private struct TaskChainMessage {
 
 extension MAAViewModel {
     private func processTaskChainMessage(_ message: MaaMessage) {
+        // P25/E05: 消息活动喂活停滞监控（WPF NotifyOutputActivity 同位）。
+        externalStallMonitor.activity()
         if message.code == .AllTasksCompleted {
             // TODO: (LogCard) Update the all-tasks-completed log card.
-            // TODO: (Notification) Show the all-tasks-completed notification.
             // TODO: (ExternalNotification) Send the all-tasks-completed event.
-            // TODO: (Notification) Schedule the sanity-recovery notification.
             // TODO: (PostAction) Execute the configured completion action.
             // TODO: (ViewState) Show the April Fools completion animation when applicable.
-            // TODO: (Notification) Show completion feedback for standalone Copilot tasks.
             // TODO: (Persistence) Record the credit-store easter-egg date when applicable.
             // TODO: (Dialog) Present the credit-store easter-egg dialog when applicable.
             // TODO: (ViewState) Apply the easter-egg language after confirmation.
@@ -353,6 +354,9 @@ extension MAAViewModel {
             defer {
                 resetStatus()
             }
+            // S15: 作业运行的 after-hook（WPF CopilotWithScript 终态同位）；
+            // 手动停止不执行——与 WPF Copilot 停止路径无脚本同构。
+            runCopilotPostHookIfEnabled()
             guard let ids: [Int32] = try? message.details["finished_tasks"] else {
                 return
             }
@@ -376,7 +380,8 @@ extension MAAViewModel {
                 } else {
                     sanitySuffix = ""
                 }
-                logTrace(.allTasksComplete(duration: duration, sanity: sanitySuffix))
+                logTrace(.allTasksComplete(duration: duration, sanity: sanitySuffix), cardSplit: .after)
+                notifyAllTasksCompleted(body: duration + sanitySuffix)
                 break
             }
             return
@@ -385,7 +390,7 @@ extension MAAViewModel {
         if message.code == .TaskChainStopped {
             invalidateInventory()
             resetStatus()
-            logTrace(.stopped)
+            logTrace(.stopped, cardSplit: .after)
         }
 
         guard let info = TaskChainMessage(json: message.details, context: "TaskChain") else {
@@ -398,19 +403,58 @@ extension MAAViewModel {
         if message.code == .TaskChainError || message.code == .TaskChainStopped {
             invalidateInventory()
         }
+        if info.taskchain == "VideoRecognition" {
+            // C13：取消/失败路径 Core 不清残留，GUI 侧统一丢弃缓存产物。
+            switch message.code {
+            case .TaskChainError:
+                logError("视频识别失败：无法完成识别，请检查视频文件是否受支持。")
+                VideoRecognitionImport.discardLeftoverCacheFiles(userDirectory: Self.userDirectory)
+            case .TaskChainStopped:
+                VideoRecognitionImport.discardLeftoverCacheFiles(userDirectory: Self.userDirectory)
+            default:
+                break
+            }
+        }
         if info.taskchain == "Depot", info.taskid == inventoryDepotTaskID {
             if message.code == .TaskChainCompleted, let depot = pendingInventoryDepot,
                let scope = inventoryDepotScope, scope == inventoryScope {
-                do { try inventory.capture(items: depot.items, complete: depot.done, scope: scope) }
+                do {
+                    try inventory.capture(items: depot.items, complete: depot.done, scope: scope)
+                    persistDepotHistory(items: depot.items, scope: scope)
+                }
                 catch { invalidateInventory(); logError("Inventory.RecognitionRequired") }
+            }
+            if message.code == .TaskChainCompleted {
+                // P12.4 识别回填复查：任一仓库识别完成后复查预检充足计划的缓存翻转。
+                reviewDepotMaintainSkippedPlans()
             }
             if message.code == .TaskChainCompleted || message.code == .TaskChainError {
                 inventoryDepotTaskID = nil
                 pendingInventoryDepot = nil
             }
         }
-        if message.code == .TaskChainStart, info.taskchain != "Fight", info.taskchain != "Depot" {
+        if info.taskchain == "OperBox", info.taskid == operBoxHistoryTaskID {
+            if message.code == .TaskChainCompleted, let payload = pendingOperBoxHistory,
+               let scope = operBoxHistoryScope, scope == inventoryScope {
+                persistOperBoxHistory(payload, scope: scope)
+            }
+            if message.code == .TaskChainCompleted || message.code == .TaskChainError {
+                operBoxHistoryTaskID = nil
+                operBoxHistoryScope = nil
+                pendingOperBoxHistory = nil
+            }
+        }
+        if message.code == .TaskChainStart, info.taskchain != "Fight", info.taskchain != "Depot", info.taskchain != "OperBox" {
             invalidateInventory()
+        }
+
+        processDailyUserDataTerminal(coreID: info.taskid, code: message.code, taskchain: info.taskchain)
+
+        // P12.4 中途重算（upstream OnTaskStatusChanged）：库存保持/冻结目标战斗链
+        // 启动时按最新快照重算缺口，正常完成未达标时记录临期药耗尽证明。未登记的
+        // 战斗链在钩子内直接返回。
+        if info.taskchain == "Fight" {
+            Task { await self.processDepotMaintainFight(coreID: info.taskid, code: message.code) }
         }
 
         if info.taskchain == "CloseDown" {
@@ -419,10 +463,8 @@ extension MAAViewModel {
         }
 
         if info.taskchain == "Recruit", message.code == .TaskChainError {
-            // TODO: (Notification) Show the recruit-recognition error notification.
             // TODO: (ViewState) Show the recruit-recognition error in RecruitView.
-            let resource = LocalizedStringResource.identifyTheMistakes
-            _ = resource
+            notifyRecruitRecognitionError()
         }
 
         let isCopilot = ["Copilot", "SSSCopilot"].contains(info.taskchain)
@@ -436,9 +478,7 @@ extension MAAViewModel {
 
         switch message.code {
         case .TaskChainStopped:
-            if let id = taskID(coreID: info.taskid) {
-                taskStatus[id] = .cancel
-            }
+            updateDailyTaskStatus(.cancel, coreID: info.taskid)
 
         case .TaskChainError:
             // TODO: (LogCard) Update the task-error log card.
@@ -447,15 +487,15 @@ extension MAAViewModel {
             // TODO: (Notification) Show the task-error notification.
             // TODO: (ExternalNotification) Send the task-error event.
             // TODO: (Achievement) Record Copilot task errors.
-            if let id = taskID(coreID: info.taskid) {
-                taskStatus[id] = .failure
-            }
+            updateDailyTaskStatus(.failure, coreID: info.taskid)
             let error: String? = try? message.details["details"]["error"]
             if error == "OutOfMemory" {
-                logError(.outOfMemoryError(name: taskchainName))
+                logError(.outOfMemoryError(name: taskchainName), cardSplit: .after)
             } else {
-                logError(.taskError(name: taskchainName))
+                logError(.taskError(name: taskchainName), cardSplit: .after)
             }
+            // U11: 错误卡挂载缩略图（WPF 错误卡截图同位）。
+            Task { await self.attachLogThumbnail() }
             if isCopilot {
                 logError(.combatError)
             }
@@ -463,17 +503,16 @@ extension MAAViewModel {
         case .TaskChainStart:
             // macOS task items do not currently support custom display names.
             // TODO: (ViewState) Switch the overlay log source for Copilot and daily tasks.
-            if let id = taskID(coreID: info.taskid) {
-                taskStatus[id] = .running
-            }
-            logTrace(.startTask(name: taskchainName))
+            updateDailyTaskStatus(.running, coreID: info.taskid)
+            // U11: 任务链开始=新卡片（WPF LogCardSplitMode.Before 同位）。
+            logTrace(.startTask(name: taskchainName), cardSplit: .before)
 
         case .TaskChainCompleted:
             // TODO: (Achievement) Mirror WPF task-completion achievement progress.
             if info.taskchain == "Infrast" {
                 if let task = dailyTask(coreID: info.taskid),
                     case .infrast(let config) = task,
-                    config.mode == .custom,
+                    config.mode == .custom, config.planSelection == .automatic,
                     let plan = try? MAAInfrast(path: config.filename),
                     plan.plans.indices.contains(config.plan_index)
                 {
@@ -501,13 +540,17 @@ extension MAAViewModel {
                     }
                 }
             }
-            if let id = taskID(coreID: info.taskid) {
-                taskStatus[id] = .success
-            }
+            updateDailyTaskStatus(.success, coreID: info.taskid)
             if info.taskchain == "Fight", let report = logStore?.sanityReport {
-                logTrace(.completeTaskWithSanity(name: taskchainName, cur: report.current, max: report.maximum))
+                logTrace(.completeTaskWithSanity(name: taskchainName, cur: report.current, max: report.maximum), cardSplit: .after)
             } else {
-                logTrace(.completeTask(name: taskchainName))
+                logTrace(.completeTask(name: taskchainName), cardSplit: .after)
+            }
+            // U11: 完成卡挂载缩略图（WPF updateCardImage 同位）。
+            Task { await self.attachLogThumbnail() }
+            // P23/E01：独立作业完成反馈（WPF runOwner==Copilot 的 TaskComplete 同位）。
+            if isCopilot {
+                notifyCopilotCompleted(chainName: taskchainName)
             }
 
         case .TaskChainExtraInfo:
@@ -1036,16 +1079,27 @@ extension MAAViewModel {
             break
 
         case "Depot":
-            // TODO: (Persistence) Persist Depot recognition results and synchronization metadata.
-            let depot = MAADepot(json: info.details, context: "Depot")
+            let decodedDepot = MAADepot(json: info.details, context: "Depot")
+            if info.what == "DepotInfo", receiveDailyDepot(decodedDepot, coreID: info.taskid) { break }
+            guard let ownedID = inventoryDepotTaskID, info.taskid == ownedID,
+                  inventoryDepotScope == inventoryScope else { break }
+            // Persist only after the owned chain completes, below the partial UI updates.
+            let depot = decodedDepot
             logStore?.setDepot(depot)
             if info.what == "DepotInfo", info.taskid == inventoryDepotTaskID {
                 pendingInventoryDepot = depot
             }
 
         case "OperBox":
-            // TODO: (Persistence) Persist OperBox recognition results and synchronization metadata.
-            logStore?.setOperBox(.init(json: info.details, context: "OperBox"))
+            let decodedOperators = MAAOperBox(json: info.details, context: "OperBox")
+            if info.what == "OperBoxInfo", receiveDailyOperators(decodedOperators, coreID: info.taskid) { break }
+            guard let ownedID = operBoxHistoryTaskID, info.taskid == ownedID,
+                  operBoxHistoryScope == inventoryScope else { break }
+            let operators = decodedOperators
+            logStore?.setOperBox(operators)
+            if info.what == "OperBoxInfo", info.taskid == operBoxHistoryTaskID {
+                pendingOperBoxHistory = operators?.historyPayload
+            }
 
         default:
             break
@@ -1212,12 +1266,15 @@ extension MAAViewModel {
         case "AccountSwitch":
             // Connection/server/profile can stay unchanged across game accounts.
             // Also discard pending Depot recognition and ownership of Fight drops.
+            userDataAccount = ""
             invalidateInventory()
             let accountName: String = (try? info.details["account_name"]) ?? ""
             logTrace(.accountSwitch(to: accountName))
 
         case "StageInfo":
-            // TODO: (ViewState) Mark delayed Roguelike aborts as waiting for combat to finish.
+            // G18：肉鸽战斗节点开始，进入战斗态；限定本轮下发了肉鸽任务，
+            // 避免 Copilot 等其他战斗回调误触发等待语义。
+            updateRoguelikeCombat(taskchain: info.taskchain, taskID: info.taskid, inCombat: true)
             guard let name: String = try? info.details["name"] else {
                 return
             }
@@ -1391,8 +1448,8 @@ extension MAAViewModel {
             )
 
         case "RoguelikeCombatEnd":
-            // TODO: (ViewState) Clear the delayed-abort and in-combat state.
-            break
+            // G18：肉鸽战斗结束（无论成败），清除战斗态并放行等待中的停止请求。
+            updateRoguelikeCombat(taskchain: info.taskchain, taskID: info.taskid, inCombat: false)
 
         case "RoguelikeEvent":
             guard let name: String = try? info.details["name"] else {
@@ -1652,13 +1709,15 @@ extension MAAViewModel {
             guard let filename: String = try? info.details["filename"] else {
                 return
             }
-            do {
-                let url = URL(filePath: filename)
-                let dst = try FileManager.default.moveCopilotToExternalDirectory(at: url)
+            // C13：产物先按作业格式回读校验再导入（无效产物删除，不误导为可执行）。
+            switch VideoRecognitionImport.importOutput(filename: filename) {
+            case .imported(let dst, let name):
                 logStore?.setLastImportedCopilot(dst)
-                logInfo("已添加：\(dst.deletingPathExtension().lastPathComponent)")
-            } catch {
-                logError("无法添加视频作业：\(error.localizedDescription)")
+                logInfo("已添加：\(name)")
+            case .discardedInvalid:
+                logError("识别产物不是有效的作业文件，已丢弃。")
+            case .failed(let reason):
+                logError("无法添加视频作业：\(reason)")
             }
 
         default:
@@ -1724,8 +1783,8 @@ extension MAAViewModel {
 // MARK: - Convenience Methods
 
 extension MAAViewModel {
-    func logTrace(_ resource: LocalizedStringResource) {
-        logTrace(verbatim: .init(localized: resource))
+    func logTrace(_ resource: LocalizedStringResource, cardSplit: MAALog.CardSplit = .none) {
+        logTrace(verbatim: .init(localized: resource), cardSplit: cardSplit)
     }
 
     func logInfo(_ resource: LocalizedStringResource) {
@@ -1740,12 +1799,12 @@ extension MAAViewModel {
         logRare(verbatim: .init(localized: resource))
     }
 
-    func logError(_ resource: LocalizedStringResource) {
-        logError(verbatim: .init(localized: resource))
+    func logError(_ resource: LocalizedStringResource, cardSplit: MAALog.CardSplit = .none) {
+        logError(verbatim: .init(localized: resource), cardSplit: cardSplit)
     }
 
-    func logTrace(verbatim content: String) {
-        writeLog(color: .trace, content)
+    func logTrace(verbatim content: String, cardSplit: MAALog.CardSplit = .none) {
+        writeLog(color: .trace, content, cardSplit: cardSplit)
     }
 
     func logInfo(verbatim content: String) {
@@ -1760,13 +1819,20 @@ extension MAAViewModel {
         writeLog(color: .rare, content)
     }
 
-    func logError(verbatim content: String) {
-        writeLog(color: .error, content)
+    func logError(verbatim content: String, cardSplit: MAALog.CardSplit = .none) {
+        writeLog(color: .error, content, cardSplit: cardSplit)
     }
 
-    private func writeLog(color: MAALog.LogColor, _ content: String) {
-        let entry = MAALog(date: Date(), content: content, color: color)
+    private func writeLog(color: MAALog.LogColor, _ content: String, cardSplit: MAALog.CardSplit = .none) {
+        let entry = MAALog(date: Date(), content: content, color: color, cardSplit: cardSplit)
         logStore?.appendLog(entry)
+    }
+
+    /// Reject late/foreign battle events before they can alter the stop boundary.
+    func updateRoguelikeCombat(taskchain: String, taskID: Int32?, inCombat: Bool) {
+        guard activeRunHasRoguelike, taskchain == "Roguelike",
+              let task = dailyTask(coreID: taskID), case .roguelike = task else { return }
+        roguelikeInCombat = inCombat
     }
 
     func dailyTask(coreID: Int32?) -> MAATask? {

@@ -17,8 +17,8 @@ def declaration(source, pattern):
 support='''import Foundation
 protocol MAATaskConfiguration: Codable, Hashable, Sendable { associatedtype Params: Encodable; var params: Params { get } }
 extension MAATaskConfiguration { init() { self = try! JSONDecoder().decode(Self.self, from: Data("{}".utf8)) } }
-enum MAATaskType { case Infrast, Mall, Fight; var description: String { "fixture" } }
-enum MAATask: Codable, Equatable { case infrast(InfrastConfiguration), mall(MallConfiguration), fight(FightConfiguration) }
+enum MAATaskType { case Infrast, Mall, Fight, UserDataUpdate; var description: String { "fixture" } }
+enum MAATask: Codable, Equatable { case infrast(InfrastConfiguration), mall(MallConfiguration), fight(FightConfiguration), userdataupdate(UserDataUpdateConfiguration) }
 // P08.2 起编真 MAAInfrast（时间轮换面依赖 period 解析；单一事实源）。
 // P03.2: FightConfiguration.params(at:stageActivity:) needs the activity context;
 // the real one lives in MeoAsstMac/Model/StageActivity.swift (activity-medicine suite).
@@ -47,6 +47,11 @@ def daily_task_array_subscript_extension():
     ext=declaration(tasks,r'^extension Array where Element == DailyTask')
     return ext[:ext.index('    mutating func append')]+'}'
 model=(root/'MeoAsstMac/Model/MAAViewModel.swift').read_text()
+# P22 收尾动作块（时长上限门控 + executePostActions）由 run-post-action-tests.py
+# 域外消费；本套件 finishDailyRun 提取面剥离该块，fail-loudly 防锚点漂移。
+_p22_finish=re.compile(r'\n *// P22: 收尾动作在清理契约之后执行（WPF CheckAfterCompleted 同序）。\n(?: *//[^\n]*\n)* *cancelDurationLimit\(\)\n(?:.*?\n)*? *policyAllows: policyAllows\)\n')
+assert len(_p22_finish.findall(model)) == 1, 'P22 post-action finish block drifted'
+model=_p22_finish.sub('\n',model,count=1)
 support+='''
 @MainActor final class MAAViewModel {
  let dailyRunCoordinator = DailyRunCoordinator()
@@ -99,7 +104,7 @@ with tempfile.TemporaryDirectory(prefix='maa-profile-patch-tests-') as temporary
     binary=tmp/'tests'
     subprocess.run(['xcrun','swiftc','-parse-as-library',str(tmp/'HGCalendar.swift'),str(tmp/'Support.swift'),
         str(root/'MeoAsstMac/Task Configurations/InfrastConfiguration.swift'),str(root/'MeoAsstMac/Model/MAAInfrast.swift'),str(tmp/'MallConfiguration.swift'),
-        str(root/'MeoAsstMac/Task Configurations/FightConfiguration.swift'),
+        str(root/'MeoAsstMac/Task Configurations/FightConfiguration.swift'),str(root/'MeoAsstMac/Task Configurations/UserDataUpdateConfiguration.swift'),
         str(root/'MeoAsstMac/Model/InventoryTarget.swift'),
         str(root/'MeoAsstMac/RunHooks/RunContext.swift'),str(root/'MeoAsstMac/RunHooks/DailyRunProfilePatch.swift'),
         str(root/'MeoAsstMac/RunHooks/HookConfiguration.swift'),

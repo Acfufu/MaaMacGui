@@ -14,9 +14,24 @@ struct MiniGameView: View {
     @State private var taskParams: Any?
     @AppStorage("SecretFrontEnding") private var secretFrontEnding = SecretFrontConfiguration.Ending.A
     @AppStorage("SecretFrontEvent") private var secretFrontEvent = SecretFrontConfiguration.Event.unspecified
+    @AppStorage("AutoRaisePotentialUseNormalToken") private var autoRaiseUseNormalToken = false
+    @AppStorage("EventShopBlacklistData") private var eventShopBlacklistData = Data()
     @State private var startError: String?
 
     private var isSecretFront: Bool { selectedGame.taskName == MiniGameOption.secretFront.taskName }
+    private var isAutoRaisePotential: Bool {
+        selectedGame.taskName == MiniGameOption.autoRaisePotential.taskName
+    }
+    private var isSideStoryStore: Bool {
+        selectedGame.taskName == MiniGameOption.sideStoryStore.taskName
+    }
+
+    /// T12 活动商店黑名单（UserDefaults JSON Data 持久化）。
+    private var eventShopBlacklist: Binding<[String]> {
+        Binding(
+            get: { (try? JSONDecoder().decode([String].self, from: eventShopBlacklistData)) ?? [] },
+            set: { eventShopBlacklistData = (try? JSONEncoder().encode($0)) ?? Data() })
+    }
 
 
     var body: some View {
@@ -61,6 +76,17 @@ struct MiniGameView: View {
                     Text(reason)
                         .foregroundStyle(.secondary)
                 }
+            }
+
+            if isAutoRaisePotential {
+                // T16：中控信物不足的确认弹窗默认放弃，开启后改消耗普通信物。
+                Toggle("不足时消耗普通信物", isOn: $autoRaiseUseNormalToken)
+                    .disabled(viewModel.status != .idle)
+            }
+
+            if isSideStoryStore {
+                // T12：活动商店商品黑名单（空名单=按默认流程购买）。
+                EditableTextList(title: "商品黑名单", texts: eventShopBlacklist)
             }
 
             Button("开始游戏") {
@@ -134,6 +160,16 @@ struct MiniGameView: View {
                     guard viewModel.secretFrontUnavailableReason == nil else { return }
                     let configuration = SecretFrontConfiguration(ending: secretFrontEnding, event: secretFrontEvent)
                     try await viewModel.miniGame(name: configuration.taskName, secretFront: configuration)
+                } else if isAutoRaisePotential {
+                    // T16：params.auto_raise_potential.use_normal_token（Core 双层嵌套契约）。
+                    try await viewModel.miniGame(
+                        name: selectedGame.taskName,
+                        params: MiniGameLaunch.autoRaisePotential(useNormalToken: autoRaiseUseNormalToken))
+                } else if isSideStoryStore {
+                    // T12：params.event_shop.blacklist；空名单不传（Core 走默认流程）。
+                    try await viewModel.miniGame(
+                        name: selectedGame.taskName,
+                        params: MiniGameLaunch.eventShop(blacklist: eventShopBlacklist.wrappedValue))
                 } else {
                     try await viewModel.miniGame(name: selectedGame.taskName, params: taskParams)
                 }
@@ -152,6 +188,9 @@ enum MiniGameOption: String, CaseIterable {
     case yellowTickerStore
     case reclamationStore
     case secretFront
+    case autoRaisePotential
+    case materialSynthesis
+    case pixelPaint
 
     var taskName: String {
         switch self {
@@ -165,6 +204,12 @@ enum MiniGameOption: String, CaseIterable {
             return "SS@Store@Begin"
         case .reclamationStore:
             return "RA@Store@Begin"
+        case .autoRaisePotential:
+            return "MiniGame@AutoRaisePotential@Begin"
+        case .materialSynthesis:
+            return "MiniGame@MaterialSynthesis@Begin"
+        case .pixelPaint:
+            return "MiniGame@PixelPaint@Begin"
         }
     }
 
@@ -180,6 +225,12 @@ enum MiniGameOption: String, CaseIterable {
             return String(localized: "活动商店")
         case .reclamationStore:
             return String(localized: "生息演算商店")
+        case .autoRaisePotential:
+            return String(localized: "自动提升潜能")
+        case .materialSynthesis:
+            return String(localized: "缺口材料合成")
+        case .pixelPaint:
+            return String(localized: "像素画")
         }
     }
 
@@ -214,6 +265,12 @@ enum MiniGameOption: String, CaseIterable {
                     """
                     请在活动商店页面开始。
                     """)
+        case .autoRaisePotential:
+            String(localized: "请进入干员潜能提升界面。中控信物不足时默认放弃提升，可开启「不足时消耗普通信物」改用普通信物。")
+        case .materialSynthesis:
+            String(localized: "请在合成站页面开始。任务会按缺口自动合成所需材料。")
+        case .pixelPaint:
+            String(localized: "导入图片并预览后开始绘制，绘制过程中可随时停止。")
         }
     }
 }

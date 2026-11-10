@@ -7,7 +7,9 @@ derived_data="${1:-}"
 # 汇总 passed/failed/skipped_architecture/not_run。任一套件 FAIL 时退出码非 0。
 ci_yml="$repo_root/.github/workflows/ci.yml"
 pin_file="$repo_root/MAACORE_PIN"
-resource_dir="$repo_root/../../resource"
+resource_dir="${MAA_INVENTORY_RESOURCE_DIR:-$repo_root/../../resource}"
+evidence_dir="${MAA_TEST_EVIDENCE_DIR:-}"
+[ -z "$evidence_dir" ] || mkdir -p "$evidence_dir"
 
 code_sha="$(git -C "$repo_root" rev-parse HEAD)"
 core_pin="$(tr -d '[:space:]' < "$pin_file")"
@@ -37,6 +39,16 @@ printf '  "os": "%s %s",\n' "$(uname -s)" "$(sw_vers -productVersion 2>/dev/null
 printf '  "derived_data": "%s",\n' "${derived_data:-<none>}"
 printf '  "suites": [\n'
 
+# Preserve every actual exit code and complete output when requested.
+run_captured() {
+    if out="$("$@" 2>&1)"; then suite_rc=0; else suite_rc=$?; fi
+    if [ -n "$evidence_dir" ]; then
+        printf '%s\n' "$out" > "$evidence_dir/$name.log"
+        printf '%s\n' "$suite_rc" > "$evidence_dir/$name.exit"
+    fi
+    return "$suite_rc"
+}
+
 first=1
 emit() { # emit <name> <status> <detail>
     [ "$first" -eq 1 ] || printf ',\n'
@@ -62,7 +74,7 @@ for script in "$repo_root"/Tests/run-*.sh "$repo_root"/Tests/run-*.py; do
             else
                 run_cmd=("${runner[@]}" "$script" "$derived_data")
             fi
-            if out="$("${run_cmd[@]}" 2>&1)"; then
+            if run_captured "${run_cmd[@]}"; then
                 emit "$name" PASS "$(printf '%s' "$out" | grep -E 'PASS|passed|checks' | tail -1 | cut -c1-120)"
                 pass=$((pass+1))
             else
@@ -75,7 +87,7 @@ for script in "$repo_root"/Tests/run-*.sh "$repo_root"/Tests/run-*.py; do
         fi
         continue
     fi
-    if out="$("${runner[@]}" "$script" 2>&1)"; then
+    if run_captured "${runner[@]}" "$script"; then
         if printf '%s' "$out" | grep -Eq "$arch_skip_re"; then
             emit "$name" "SKIP(architecture)" "$(printf '%s' "$out" | grep 'SKIP' | head -1 | cut -c1-120)"
             skip_arch=$((skip_arch+1))

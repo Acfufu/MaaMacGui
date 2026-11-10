@@ -34,6 +34,19 @@ import Foundation
         let edited = ScheduleCalendar.occurrence(for: editedRevision, on: date("2026-11-01T12:00:00Z"), calendar: cal)!
         check(edited.id == repeated.id, "revision not occurrence identity")
         check(edited.revision != repeated.revision, "revision changes")
+        // P21/S07+S08: profileID/oneShot 模型面——旧档案缺键解码缺省 + revision 纳入新字段。
+        let schedP21JSON = "{\"id\":\"\(id.uuidString)\",\"hour\":8,\"minute\":0,\"isEnabled\":true}"
+        let schedP21 = try JSONDecoder().decode(DailyTaskSchedule.self, from: Data(schedP21JSON.utf8))
+        check(schedP21.profileID == nil && schedP21.oneShot == false, "legacy schedule decodes without P21 fields")
+        check(schedP21.revision == "8:0:true:false:-:false", "revision carries P21 fields")
+        var withProfile = schedP21
+        withProfile.profileID = "p2"
+        check(withProfile.revision != schedP21.revision, "profile selection changes revision")
+        var withOneShot = schedP21
+        withOneShot.oneShot = true
+        check(withOneShot.revision != schedP21.revision, "one-shot changes revision")
+        let roundtrip = try JSONDecoder().decode(DailyTaskSchedule.self, from: try JSONEncoder().encode(withProfile))
+        check(roundtrip == withProfile, "P21 fields roundtrip")
         let next = ScheduleCalendar.nextDate(for: plan, after: date("2026-10-31T06:00:00Z"), calendar: cal)!
         check(next == date("2026-11-01T05:30:00Z"), "next first repeated time")
         plan.hour = -1
@@ -43,16 +56,17 @@ import Foundation
         let store = ScheduleOccurrenceStore(directory: dir)
         check(try store.claim(repeated), "first claim")
         check(try !store.claim(repeated), "duplicate claim")
-        try store.update(repeated.id, result: .started, runID: id)
+        try store.update(repeated.id, result: .started, runID: id, now: repeated.updatedAt)
         let records = try store.records()
         check(records.count == 1 && records[0].runID == id, "persisted claim")
-        try store.recoverInterrupted()
+        try store.recoverInterrupted(now: repeated.updatedAt)
         check(try store.records()[0].result == .interrupted, "crash does not replay")
         check(try !store.claim(repeated), "interrupted still claimed")
         var future = repeated
         let futurePlan = DailyTaskSchedule(id: repeated.planID, hour: 1, minute: 30, isEnabled: true)
-        future = ScheduleCalendar.occurrence(for: futurePlan, on: date("2027-12-01T12:00:00Z"), calendar: cal)!
+        future = ScheduleCalendar.occurrence(for: futurePlan, on: repeated.updatedAt.addingTimeInterval(30 * 86400), calendar: cal)!
         check(try store.claim(future), "future occurrence claim")
+        check(try store.records().map(\.id) == [future.id], "older record really pruned after retention window")
         check(try !store.claim(repeated), "clock rollback cannot replay pruned older occurrence")
         try Data("broken".utf8).write(to: dir.appendingPathComponent("occurrences.json"))
         do { _ = try store.claim(edited); fatalError("corrupt ledger allowed a start") }
@@ -78,6 +92,12 @@ import Foundation
         failedRecovery.chainFinish(44, success: false); failedRecovery.allFinished([44])
         check(!failedRecovery.verified, "task failure never verifies home")
 
+        // DST calendar/ledger fixtures remain historical. The production handoff
+        // checks real-time expiry, so give it a separate live validity window.
+        let handoffNow = Date.now
+        let handoffOccurrence = ScheduleOccurrence(id: repeated.id, planID: repeated.planID,
+            revision: repeated.revision, scheduledAt: handoffNow,
+            expiresAt: handoffNow.addingTimeInterval(300), updatedAt: handoffNow)
         var state = ScheduleHandoff<Int>.Occupancy.idle
         var terminal: ScheduleHandoff<Int>.Terminal?
         var starts = [Int]()
@@ -90,45 +110,45 @@ import Foundation
                 if snapshot == 4 { check(recover, "forced interrupted run requires recovery") } else if snapshot == 1 { check(!recover, "idle run needs no recovery") }
                 starts.append(snapshot); return .started(id)
             }, isCurrent: { _ in valid }, report: { _, result, reason, _ in reports.append((result, reason)) })
-        handoff.submit(repeated, force: false, snapshot: 1)
+        handoff.submit(handoffOccurrence, force: false, snapshot: 1)
         try await Task.sleep(for: .milliseconds(20))
         check(starts == [1] && stops == 0 && reports.last?.0 == .started, "idle starts once")
         state = .tool
-        handoff.submit(repeated, force: true, snapshot: 2)
+        handoff.submit(handoffOccurrence, force: true, snapshot: 2)
         check(starts == [1] && stops == 0 && reports.last?.1 == "utilityTaskBusy", "force leaves utility alone")
         state = .daily(id)
         eligible = false
-        handoff.submit(repeated, force: true, snapshot: 99)
+        handoff.submit(handoffOccurrence, force: true, snapshot: 99)
         check(stops == 0 && reports.last?.1 == "forceRecoveryUnavailable", "unsupported recovery is rejected before stop")
         eligible = true
-        handoff.submit(repeated, force: false, snapshot: 3)
+        handoff.submit(handoffOccurrence, force: false, snapshot: 3)
         check(stops == 0 && reports.last?.1 == "dailyTaskBusy", "ordinary schedule skips daily")
-        handoff.submit(repeated, force: true, snapshot: 4)
+        handoff.submit(handoffOccurrence, force: true, snapshot: 4)
         try await Task.sleep(for: .milliseconds(20))
         check(stops == 1 && starts == [1], "waits for actual terminal")
         state = .idle; terminal = .init(id: id, cleanupSucceeded: true)
         try await Task.sleep(for: .milliseconds(60))
         check(starts == [1, 4], "frozen snapshot starts after cleanup")
         state = .daily(id)
-        handoff.submit(repeated, force: true, snapshot: 5)
+        handoff.submit(handoffOccurrence, force: true, snapshot: 5)
         try await Task.sleep(for: .milliseconds(150))
         state = .idle; terminal = .init(id: id, cleanupSucceeded: true)
         try await Task.sleep(for: .milliseconds(60))
         check(starts == [1, 4] && reports.last?.1 == "handoffTimedOut", "late stop never revives timed out intent")
         state = .daily(id)
-        handoff.submit(repeated, force: true, snapshot: 6)
+        handoff.submit(handoffOccurrence, force: true, snapshot: 6)
         try await Task.sleep(for: .milliseconds(10))
         handoff.cancelPending()
         state = .idle
         try await Task.sleep(for: .milliseconds(60))
         check(starts == [1, 4] && reports.last?.0 == .cancelled, "user cancel")
         state = .daily(id)
-        handoff.submit(repeated, force: true, snapshot: 7)
+        handoff.submit(handoffOccurrence, force: true, snapshot: 7)
         valid = false; handoff.invalidateIfNeeded(); state = .idle
         try await Task.sleep(for: .milliseconds(60))
         check(starts == [1, 4] && reports.last?.1 == "scheduleChanged", "edited/deleted intent cancelled")
         valid = true; state = .daily(id)
-        handoff.submit(repeated, force: true, snapshot: 8)
+        handoff.submit(handoffOccurrence, force: true, snapshot: 8)
         try await Task.sleep(for: .milliseconds(10))
         terminal = .init(id: id, cleanupSucceeded: false); state = .idle
         try await Task.sleep(for: .milliseconds(60))
@@ -141,7 +161,7 @@ import Foundation
             canStop: { _ in false }, canForce: { _ in eligibleWhileWaiting }, stop: { _ in scopeStops += 1 },
             start: { _, _, _ in fatalError("changed scope started") }, isCurrent: { _ in true },
             report: { _, result, detail, _ in scopeReports.append((result, detail)) })
-        scopeHandoff.submit(repeated, force: true, snapshot: 1)
+        scopeHandoff.submit(handoffOccurrence, force: true, snapshot: 1)
         try await Task.sleep(for: .milliseconds(20))
         eligibleWhileWaiting = false
         try await Task.sleep(for: .milliseconds(80))
@@ -150,13 +170,13 @@ import Foundation
         let failedStart = ScheduleHandoff<Int>(occupancy: { .idle }, terminal: { nil }, canStop: { _ in true }, stop: { _ in },
             start: { _, _, _ in .failed }, isCurrent: { _ in true },
             report: { _, result, reason, _ in reports.append((result, reason)) })
-        failedStart.submit(repeated, force: false, snapshot: 1)
+        failedStart.submit(handoffOccurrence, force: false, snapshot: 1)
         try await Task.sleep(for: .milliseconds(10))
         check(reports.last?.0 == .failed, "start failure reported")
         let stopError = ScheduleHandoff<Int>(occupancy: { .daily(id) }, terminal: { nil }, canStop: { _ in true },
             stop: { _ in throw CancellationError() }, start: { _, _, _ in fatalError("stop failure starts") },
             isCurrent: { _ in true }, report: { _, result, reason, _ in reports.append((result, reason)) })
-        stopError.submit(repeated, force: true, snapshot: 1)
+        stopError.submit(handoffOccurrence, force: true, snapshot: 1)
         try await Task.sleep(for: .milliseconds(10))
         check(reports.last?.1 == "stopFailed", "stop failure reported")
         let replacementID = UUID()
@@ -169,7 +189,7 @@ import Foundation
                 replacementStops += 1
             }, start: { _, _, _ in fatalError("replaced run must not start scheduled task") },
             isCurrent: { _ in true }, report: { _, result, reason, _ in reports.append((result, reason)) })
-        replacement.submit(repeated, force: true, snapshot: 99)
+        replacement.submit(handoffOccurrence, force: true, snapshot: 99)
         try await Task.sleep(for: .milliseconds(10))
         state = .daily(replacementID); canStop = true
         try await Task.sleep(for: .milliseconds(60))

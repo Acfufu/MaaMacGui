@@ -74,18 +74,48 @@ struct RoguelikeSettingsView: View {
         }
         .disabled(config.usesBlackflowFastFlight)
 
-        TextField("开局干员（单个）", text: $config.core_char)
+        Toggle("指定第二、第三顺位干员", isOn: $config.useAdditionalStartingOpers)
             .disabled(config.usesBlackflowFastFlight)
-
-        HStack {
-            Toggle("“开局干员”使用助战", isOn: $config.use_support)
-                .disabled(config.start_with_elite_two || config.usesBlackflowFastFlight)
-            if config.use_support {
-                Toggle("可以使用非好友助战", isOn: $config.use_nonfriend_support)
-                    .disabled(config.usesBlackflowFastFlight)
+        ForEach(0..<(config.useAdditionalStartingOpers ? 3 : 1), id: \.self) { index in
+            HStack {
+                TextField(startingOperTitle(index), text: startingOperBinding(index).name)
+                Toggle("使用助战", isOn: startingOperBinding(index).useSupport)
+                    .disabled(index == 0 && config.start_with_elite_two)
             }
+            .disabled(config.usesBlackflowFastFlight)
+        }
+        if config.hasStartingSupport {
+            Toggle("可以使用非好友助战", isOn: $config.use_nonfriend_support)
+                .disabled(config.usesBlackflowFastFlight)
+        }
+        Text("请填写干员中文名。三名干员职业不能相同，建议希望消耗高的排在前面；空项会被跳过，后续非空项依次前移。未找到指定干员时由 Core 自动选择。")
+            .font(.caption).foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        if config.hasDuplicateStartingProfession() {
+            Text("开局干员职业重复，请调整顺位配置。")
+                .font(.caption).foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        if let tip = config.tip {
+            Text(verbatim: tip)
+                .font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
         }
 
+    }
+
+    private func startingOperTitle(_ index: Int) -> String {
+        switch index {
+        case 0: String(localized: "第一顺位干员")
+        case 1: String(localized: "第二顺位干员")
+        default: String(localized: "第三顺位干员")
+        }
+    }
+
+    private func startingOperBinding(_ index: Int) -> Binding<RoguelikeConfiguration.StartingOper> {
+        .init(get: { config.startingOper(at: index) }, set: { config.setStartingOper($0, at: index) })
     }
 
     @ViewBuilder private func startCollectibles() -> some View {

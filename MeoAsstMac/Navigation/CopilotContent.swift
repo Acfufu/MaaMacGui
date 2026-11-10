@@ -92,6 +92,10 @@ struct CopilotContent: View {
                 break
             }
         }
+        .task {
+            // C09 跨启动恢复：进作业页即尝试一次性恢复（内部有闸门）。
+            await newModel.restoreCopilotList()
+        }
         .task(id: newModel.lastImportedCopilot) {
             guard let url = newModel.lastImportedCopilot else {
                 return
@@ -101,15 +105,36 @@ struct CopilotContent: View {
             }
             context.selection = .init(url: url, isRaid: nil)
             if url.isDirectory {
-                await context.updateSet(at: url)
-                context.category = .list
+                // C09/C02：导入作业集的激活失败/部分成员跳过不再静默。
+                if let listing = await context.updateSet(at: url) {
+                    context.category = .list
+                    if !listing.skipped.isEmpty {
+                        newModel.appendLog(
+                            .init(
+                                date: .now,
+                                content: String(
+                                    localized:
+                                        "作业集已激活，部分成员无法加载：\(listing.skipped.joined(separator: "、"))"
+                                ),
+                                color: .warning))
+                    }
+                } else {
+                    newModel.appendLog(
+                        .init(
+                            date: .now,
+                            content: String(
+                                localized: "作业集无法激活：清单损坏或成员类型不一致。"),
+                            color: .error))
+                }
             } else {
                 await refreshItem(at: \.$externalRoot)
                 context.category = .external
             }
         }
         .onChange(of: context.copilotList.isEmpty, initial: true) {
-            if $1, context.category == .list {
+            // 恢复闸门：跨启动恢复尚未尝试（restoreAttempted == false）时列表
+            // 的短暂为空不触发分类回退，避免恢复被 UI 抢先切走。
+            if $1, context.category == .list, context.restoreAttempted {
                 context.category = .external
                 context.selection = nil
             }
@@ -332,27 +357,6 @@ struct CopilotContent_Previews: PreviewProvider {
     }
 }
 
-// MARK: - File Paths
-
-extension URL {
-    static let bundledCopilotDirectory = Bundle.main.resourceURL!
-        .appending(path: "resource/")
-        .appending(path: "copilot/")
-
-    static let externalCopilotDirectory = FileManager.default
-        .urls(for: .documentDirectory, in: .userDomainMask)
-        .first!
-        .appending(path: "copilot/")
-}
-
-// MARK: - State Wrappers
-
-extension URL {
-    fileprivate var isManagedCopilot: Bool {
-        path.starts(with: URL.externalCopilotDirectory.path)
-    }
-}
-
 extension CopilotContext {
     var isReady: Bool {
         if category == .list {
@@ -401,27 +405,5 @@ extension CopilotContent.Item {
             }
         }
         return nil
-    }
-}
-
-// MARK: - Convenience Methods
-
-extension FileManager {
-    func copyCopilotToExternalDirectory(at url: URL) throws -> URL {
-        let dest = try externalCopilotURL(for: url)
-        try FileManager.default.copyItemOverwriting(at: url, to: dest)
-        return dest
-    }
-
-    func moveCopilotToExternalDirectory(at url: URL) throws -> URL {
-        let dest = try externalCopilotURL(for: url)
-        try FileManager.default.moveItemOverwriting(at: url, to: dest)
-        return dest
-    }
-
-    private func externalCopilotURL(for url: URL) throws -> URL {
-        try createDirectory(at: .externalCopilotDirectory, withIntermediateDirectories: true)
-        let name = url.lastPathComponent
-        return URL.externalCopilotDirectory.appending(path: name)
     }
 }

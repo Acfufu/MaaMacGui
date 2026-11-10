@@ -15,6 +15,20 @@ struct DailyTask {
     var enabled = true
 }
 
+// P21 提取桩：TaskTimerManager 的提前通知面引用本服务；此处仅收口签名。
+@MainActor final class LocalNotificationService {
+    func cancelPending(id: String) {}
+    func schedule(id: String, title: String, body: String, fireDate: Date, at now: Date = Date()) async {}
+}
+
+// P25 提取桩：停滞监控与外部通知触发面（真实实现由 trigger 套件覆盖）。
+enum ExternalNotificationEventKind { case complete, error, stalled, scheduledStart }
+@MainActor final class ExternalStallMonitor {
+    func activity() {}
+    func stop() {}
+    func arm(timeoutMinutes: Int, onStalled: @escaping @MainActor (Int, Int) -> Void) {}
+}
+
 extension Notification.Name {
     static let MAAPreventSystemSleepingChanged = Notification.Name("MAAPreventSystemSleepingChanged")
 }
@@ -32,6 +46,14 @@ extension Notification.Name {
     var tasks = [DailyTask]()
     let dailyRunCoordinator = DailyRunCoordinator()
     var canStartTasks: Bool { status == .idle && !isStartStopInFlight && dailyRunCoordinator.active == nil }
+    // P21/S07+S08 提取桩：触发前切档与提前通知面（真实服务由 local-notification 套件覆盖）。
+    var notifyBeforeScheduledStart = false
+    var scheduledStartNotificationMinutes = 5
+    let localNotifications = LocalNotificationService()
+    var switchedProfiles: [String] = []
+    func switchProfile(_ profileID: String) { switchedProfiles.append(profileID) }
+    // P25 提取桩：外部通知触发面。
+    func notifyExternal(title: String, body: String, kind: ExternalNotificationEventKind) {}
     // 全局探针:任何实例的启动调用都会落账,weak 失效窗口内必须保持静默。
     static var startOrigins: [DailyRunOrigin] = []
 
@@ -65,7 +87,7 @@ extension Notification.Name {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("maa-timer-manager-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directory) }
-        let manager = TaskTimerManager.shared
+        let manager = TaskTimerManager(directory: directory.appendingPathComponent("legacy"))
         try manager.configureSharedDirectory(directory)
         manager.setBackgroundSchedulingEnabled(true) // grace 300:过去几分钟内的到期计划保持可领取
         let calendar = Calendar.current

@@ -39,8 +39,9 @@ struct CopilotConfiguration: Codable, Hashable {
     var formation_index = 0
 
     struct UserUnit: Codable, Hashable {
-        let name: String
-        let skill: Int
+        /// C08 编辑面需要可变（params 编码面不变：仍只含 name/skill）。
+        var name: String
+        var skill: Int
     }
 
     var user_additional = [UserUnit]()
@@ -61,6 +62,11 @@ struct CopilotConfiguration: Codable, Hashable {
 
     var support_unit_usage = SupportUnitUsage.none
     var support_unit_name = ""
+
+    /// C11 干员资料辅助编队：Core `OperBoxData.load` 消费的数据文件路径，
+    /// 空/nil = 禁用（Core `use_operbox = !path.empty()`）。仅普通作业任务
+    /// 下发（SSS/悖论任务不消费）。
+    var operbox_data_path: String?
 }
 
 extension CopilotConfiguration.SupportUnitUsage: Identifiable {
@@ -155,12 +161,18 @@ enum CopilotCompiler {
             /// 激活期 mapLevelCode 的结果（集合列表自带）；nil = 无映射语境
             /// （直构/测试），此时 kind 判定回退到 `Kind(of:)` 前缀推断。
             var stageCode: String?
+            /// 单行导航识别名覆盖（C10）；nil/空 = 不覆盖。
+            var navOverride: String?
 
-            init(url: URL, isOn: Bool, isRaid: Bool? = nil, stageCode: String? = nil) {
+            init(
+                url: URL, isOn: Bool, isRaid: Bool? = nil, stageCode: String? = nil,
+                navOverride: String? = nil
+            ) {
                 self.url = url
                 self.isOn = isOn
                 self.isRaid = isRaid
                 self.stageCode = stageCode
+                self.navOverride = navOverride
             }
         }
 
@@ -214,9 +226,15 @@ enum CopilotCompiler {
             config.filename = nil
             switch kind {
             case .regular:
-                // CopilotTask 消费 copilot_list（每项可带 nav/is_raid）。
+                // CopilotTask 消费 copilot_list（每项可带 nav/is_raid；C10 单行
+                // 编辑的突袭与导航覆盖在这里透传）。
                 config.copilot_list = zip(enabled, filenames).map { item, filename in
-                    .init(filename: filename, nav_name_override: nil, is_raid: item.isRaid ?? false)
+                    .init(
+                        filename: filename,
+                        nav_name_override: item.navOverride.flatMap {
+                            $0.isEmpty ? nil : $0
+                        },
+                        is_raid: item.isRaid ?? false)
                 }
                 return .success([Output(type: kind.taskType, config: config)])
             case .paradox:
@@ -256,20 +274,32 @@ enum CopilotCompiler {
 }
 
 extension CopilotCompiler.Input {
-    /// Summarizes the live copilot tab for the compiler.
+    /// Summarizes the live copilot tab for the compiler. The context's live
+    /// configuration（循环次数/编队/吃药/助战/自选干员）必须随行——此前委托
+    /// 初始化只带 selection、config 落回默认值，UI 设置从未进入下发参数
+    /// （P13-[c]，本增量修复）。
     init(context: CopilotContext) {
+        // C08 门控（WPF EnableUserAdditional 同构）：关闭时不下发自选干员，
+        // 名单本身保留在设置里。
+        var carriedConfig = context.config
+        if !context.enableUserAdditional {
+            carriedConfig.user_additional = []
+        }
+
         if context.category == .list {
             self.init(
                 selection: .list(
                     kind: context.copilotSet?.kind,
                     items: context.copilotList.map { item in
-                        .init(url: item.url, isOn: item.isOn, isRaid: item.isRaid,
-                              stageCode: item.stageCode)
-                    }))
+                        .init(
+                            url: item.url, isOn: item.isOn, isRaid: item.isRaid,
+                            stageCode: item.stageCode, navOverride: item.navOverride)
+                    }),
+                config: carriedConfig)
         } else if case .copilot(let url, let kind, _) = context.content {
-            self.init(selection: .single(url: url, kind: kind))
+            self.init(selection: .single(url: url, kind: kind), config: carriedConfig)
         } else {
-            self.init(selection: .other)
+            self.init(selection: .other, config: carriedConfig)
         }
     }
 }
@@ -281,13 +311,33 @@ enum CopilotCategory: String, CaseIterable {
 }
 
 @Observable final class CopilotContext {
-    var config = CopilotConfiguration()
+    var config: CopilotConfiguration {
+        didSet {
+            guard oldValue != config else {
+                return
+            }
+            CopilotPersistence.saveConfiguration(config)
+        }
+    }
 
     @ObservationIgnored
     @Defaults("CopilotContentCategory")
     var category = CopilotCategory.bundled
 
+    /// C08 额外自选干员下发门控（WPF EnableUserAdditional 同构，GUI 侧开关，
+    /// 不进任务参数；名单本身持久化在 CopilotConfiguration 里）。
+    @ObservationIgnored
+    @Defaults("CopilotEnableUserAdditional")
+    var enableUserAdditional = false
+
+    /// C11 干员资料辅助编队开关（WPF EnableOperBoxAssist 同构，GUI 侧；路径
+    /// 在开始作业时由会话/历史快照写出后进参数）。
+    @ObservationIgnored
+    @Defaults("CopilotEnableOperBoxAssist")
+    var enableOperBoxAssist = false
+
     init() {
+        config = CopilotPersistence.loadConfiguration() ?? CopilotConfiguration()
     }
 
     struct ItemID: Hashable {
@@ -330,16 +380,37 @@ enum CopilotCategory: String, CaseIterable {
     struct CopilotSet {
         let kind: MAACopilot.Kind
         let data: CopilotSetData
+        let url: URL
     }
 
     private(set) var copilotSet: CopilotSet?
 
+    /// 本会话是否已尝试过列表恢复（C09 跨启动恢复的一次性闸门；UI 侧用它在
+    /// 恢复完成前不把空的列表分类自动切走）。
+    @ObservationIgnored private(set) var restoreAttempted = false
+
     struct ListItem: Identifiable {
         let url: URL
         let stageCode: String
+        /// 持久化键：`copilotID#派生难度行`（0=常态行, 1=突袭/磨难行）。
+        /// 同文件双行（集合 difficulty 3）靠后缀区分；行内 isRaid 编辑不改键。
+        var memberID: String
         var isRaid: Bool?
-
         var isOn = false
+        /// 单行导航识别名覆盖（C10）；nil = 不覆盖。
+        var navOverride: String?
+
+        init(
+            url: URL, stageCode: String, memberID: String? = nil, isRaid: Bool? = nil,
+            isOn: Bool = false, navOverride: String? = nil
+        ) {
+            self.url = url
+            self.stageCode = stageCode
+            self.memberID = memberID ?? url.lastPathComponent
+            self.isRaid = isRaid
+            self.isOn = isOn
+            self.navOverride = navOverride
+        }
 
         var id: ItemID {
             .init(url: url, isRaid: isRaid)
@@ -351,25 +422,92 @@ enum CopilotCategory: String, CaseIterable {
             if copilotList.isEmpty {
                 copilotSet = nil
             }
+            CopilotPersistence.saveListState(
+                CopilotPersistence.capture(items: copilotList, setURL: copilotSet?.url))
         }
+    }
+
+    func canMoveRow(of id: ItemID, by delta: Int) -> Bool {
+        guard let index = copilotList.firstIndex(where: { $0.id == id }) else {
+            return false
+        }
+        return copilotList.indices.contains(index + delta)
+    }
+
+    func moveRow(of id: ItemID, by delta: Int) {
+        guard canMoveRow(of: id, by: delta),
+            let index = copilotList.firstIndex(where: { $0.id == id })
+        else {
+            return
+        }
+        copilotList.swapAt(index, index + delta)
+    }
+
+    /// C12 评价入口：当前选中的单个外部下载作业（文件名为纯数字，即作业站
+    /// id）；列表模式与内置/本地文件返回 nil（WPF CouldLikeWebJson = id>0 同构）。
+    var currentRateableCopilotID: Int? {
+        guard category != .list, case .copilot(let url, _, _) = content,
+            url.deletingLastPathComponent().standardizedFileURL
+                == URL.externalCopilotDirectory.standardizedFileURL
+        else {
+            return nil
+        }
+        let stem = url.deletingPathExtension().lastPathComponent
+        guard !stem.isEmpty, stem.allSatisfy({ $0.isASCII && $0.isNumber }), let id = Int(stem) else {
+            return nil
+        }
+        return id
     }
 }
 
 extension CopilotContext {
-    nonisolated(nonsending) func updateSet(at url: URL, set: CopilotSetData) async {
-        guard let (kind, list) = await set.copilotList(at: url) else {
-            return
+    /// 激活作业集；返回派生清单（含逐成员跳过原因），nil = 集合不可派生。
+    @discardableResult
+    nonisolated(nonsending) func updateSet(at url: URL, set: CopilotSetData) async -> CopilotSetData.SetListing? {
+        guard let listing = await set.copilotList(at: url) else {
+            return nil
         }
 
-        self.copilotSet = .init(kind: kind, data: set)
-        self.copilotList = list
+        self.copilotSet = .init(kind: listing.kind, data: set, url: url)
+        self.copilotList = listing.items
+        return listing
     }
 
-    nonisolated(nonsending) func updateSet(at url: URL) async {
+    @discardableResult
+    nonisolated(nonsending) func updateSet(at url: URL) async -> CopilotSetData.SetListing? {
         guard let set = CopilotSetData(atDirectory: url) else {
-            return
+            return nil
         }
-        await updateSet(at: url, set: set)
+        return await updateSet(at: url, set: set)
+    }
+
+    /// C09 跨启动恢复：重建上次激活的作业集并套用持久化的行状态与顺序。
+    /// 一次性（`restoreAttempted` 闸门）；用户已手工激活时不覆盖现场。
+    @discardableResult
+    nonisolated(nonsending) func restorePersistedList() async -> CopilotRestoreOutcome {
+        guard !restoreAttempted else {
+            return .none
+        }
+        restoreAttempted = true
+
+        guard copilotList.isEmpty else {
+            return .none
+        }
+        guard let state = CopilotPersistence.loadListState(), let setPath = state.setPath else {
+            return .none
+        }
+
+        let url = URL(fileURLWithPath: setPath)
+        guard let setData = CopilotSetData(atDirectory: url),
+            let listing = await setData.copilotList(at: url)
+        else {
+            return .failed(.setUnreadable)
+        }
+
+        copilotSet = .init(kind: listing.kind, data: setData, url: url)
+        let applied = CopilotPersistence.apply(state, to: listing.items)
+        copilotList = applied
+        return .restored(active: applied.filter(\.isOn).count, skipped: listing.skipped)
     }
 }
 
@@ -393,19 +531,35 @@ extension CopilotContext.Content {
 }
 
 extension CopilotSetData {
-    func copilotList(at url: URL) async -> (MAACopilot.Kind, [CopilotContext.ListItem])? {
+    /// 派生结果：集合类型 + 行清单 + 逐成员跳过原因（C09 损坏恢复——单个
+    /// 成员缺失/损坏/映射失败只跳过该成员，不再让整个集合激活失败）。
+    struct SetListing {
+        let kind: MAACopilot.Kind
+        let items: [CopilotContext.ListItem]
+        let skipped: [String]
+    }
+
+    func copilotList(at url: URL) async -> SetListing? {
         guard url.isDirectory else { return nil }
 
         var copilotList = [CopilotContext.ListItem]()
+        var skipped = [String]()
 
         var lastCopilotKind: MAACopilot.Kind?
 
         for copilotID in copilot_ids {
-            let url = url.appending(path: "\(copilotID).json")
-            guard let copilot = MAACopilot(url: url),
-                let code = await MAAProvider.shared.mapLevelCode(matching: copilot.stage_name)
-            else {
-                return nil
+            let memberURL = url.appending(path: "\(copilotID).json")
+            guard let copilot = MAACopilot(url: memberURL) else {
+                let reason = FileManager.default.fileExists(atPath: memberURL.path(percentEncoded: false))
+                    ? String(localized: "文件损坏")
+                    : String(localized: "文件缺失")
+                skipped.append("\(copilotID).json（\(reason)）")
+                continue
+            }
+            guard let code = await MAAProvider.shared.mapLevelCode(matching: copilot.stage_name) else {
+                skipped.append(
+                    "\(copilotID).json（\(String(localized: "导航名映射失败"))）")
+                continue
             }
 
             let kind = copilot.kind(code: code)
@@ -418,20 +572,38 @@ extension CopilotSetData {
 
             switch copilot.difficulty {
             case nil, 0:
-                copilotList.append(.init(url: url, stageCode: code, isOn: true))
+                copilotList.append(
+                    .init(url: memberURL, stageCode: code, memberID: "\(copilotID)#0", isOn: true))
             case 1:
-                copilotList.append(.init(url: url, stageCode: code, isRaid: false, isOn: true))
+                copilotList.append(
+                    .init(
+                        url: memberURL, stageCode: code, memberID: "\(copilotID)#0",
+                        isRaid: false, isOn: true))
             case 2:
-                copilotList.append(.init(url: url, stageCode: code, isRaid: true, isOn: true))
+                copilotList.append(
+                    .init(
+                        url: memberURL, stageCode: code, memberID: "\(copilotID)#1",
+                        isRaid: true, isOn: true))
             case 3:
-                copilotList.append(.init(url: url, stageCode: code, isRaid: false, isOn: true))
-                copilotList.append(.init(url: url, stageCode: code, isRaid: true, isOn: true))
+                copilotList.append(
+                    .init(
+                        url: memberURL, stageCode: code, memberID: "\(copilotID)#0",
+                        isRaid: false, isOn: true))
+                copilotList.append(
+                    .init(
+                        url: memberURL, stageCode: code, memberID: "\(copilotID)#1",
+                        isRaid: true, isOn: true))
             default:
                 continue
             }
         }
 
-        return (lastCopilotKind ?? .regular, copilotList)
+        // 空集合清单沿用旧的 regular 缺省；成员全灭（有 id 但无一可解析）视为
+        // 集合不可用，与旧行为一致。
+        if !copilot_ids.isEmpty && copilotList.isEmpty {
+            return nil
+        }
+        return SetListing(kind: lastCopilotKind ?? .regular, items: copilotList, skipped: skipped)
     }
 }
 
@@ -506,5 +678,49 @@ extension MAACopilot.Kind {
         case .paradox:
             return String(localized: "悖论模拟作业")
         }
+    }
+}
+
+// MARK: - PRTS 神秘代码（C02）
+
+/// 作业站神秘代码：纯数字与 `prts://` 前缀为作业，`s`/`prts://s` 前缀为
+/// 作业集；`maa://` 为仅作业的老格式（WPF 同构）。
+enum PRTSCode: Hashable {
+    case copilot(Int)
+    case set(Int)
+}
+
+extension StringProtocol {
+    var prtsCode: PRTSCode? {
+        let string = trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if string.hasPrefix("maa://") {
+            guard let digits = string.trimmingPrefix("maa://").digits, let id = Int(digits) else {
+                return nil
+            }
+            return .copilot(id)
+        }
+
+        let trimmed = string.trimmingPrefix("prts://")
+        if trimmed.starts(with: "s") {
+            guard let digits = trimmed.trimmingPrefix("s").digits, let id = Int(digits) else {
+                return nil
+            }
+            return .set(id)
+        }
+        guard let digits = trimmed.digits, let id = Int(digits) else {
+            return nil
+        }
+        return .copilot(id)
+    }
+
+    private var digits: Self? {
+        guard !isEmpty else {
+            return nil
+        }
+        let predicate = allSatisfy { char in
+            char.isASCII && char.isNumber
+        }
+        return predicate ? self : nil
     }
 }

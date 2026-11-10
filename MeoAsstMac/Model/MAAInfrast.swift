@@ -27,6 +27,14 @@ extension MAAInfrast {
         self = try JSONDecoder().decode(MAAInfrast.self, from: data)
     }
 
+    var hasPeriods: Bool {
+        plans.contains { $0.period?.isEmpty == false }
+    }
+
+    var hasMixedPeriods: Bool {
+        hasPeriods && plans.contains { $0.period?.isEmpty != false }
+    }
+
     var planList: some View {
         ForEach(Array(plans.enumerated()), id: \.offset) {
             Text($0.element.name ?? "\($0.offset)").tag($0.offset)

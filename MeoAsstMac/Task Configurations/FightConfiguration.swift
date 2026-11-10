@@ -282,10 +282,31 @@ struct FightConfiguration: MAATaskConfiguration {
         return prepared
     }
 
+    /// 已下发冻结目标战斗任务的会话档案（P12.4 中途重算）：战斗链启动时按最新
+    /// 快照重算缺口（upstream FightTask OnTaskStatusChanged 同构）。重算目标 =
+    /// startInventory + requiredDrops（= 目标总量）；不计双芯片折算（upstream 理智
+    /// 作战路径恒 false），正常完成且未达标同样记录临期药耗尽证明。
+    struct FrozenTargetDispatch {
+        /// 下发时的战斗配置（drops = {目标物品: requiredDrops}），重算按它重建参数。
+        let fight: FightConfiguration
+        let itemID: String
+        let target: Int
+    }
+
     // 掉落物品列表
     @MainActor static var dropItems: [(id: String, item: DropItem)] = []
     @MainActor static var inventoryDropItems: [(id: String, item: DropItem)] {
         dropItems.filter { InventoryTargetPlanner.supportsInventory(classification: $0.item.classifyType) }
+    }
+    /// 合成配方反查表（itemID → 配方）：库存保持双芯片折算（I10）的数据源，
+    /// 与 dropItems 同一 item_index.json 装载面。
+    @MainActor static var dropFormulaTable: [String: [String: Int]] {
+        var table: [String: [String: Int]] = [:]
+        for (id, item) in dropItems {
+            guard let formula = item.formula, !formula.isEmpty else { continue }
+            table[id] = formula
+        }
+        return table
     }
     @MainActor static var id2index: [String: Int] = [:]  // (id -> idx of dropItems)
     static let _excludedValues = Set([
@@ -345,6 +366,9 @@ struct DropItem: Codable, Equatable {
     let name: String
     let sortId: Int
     let usage: String?
+    /// 合成配方（材料ID → 消耗数），仅可合成物品携带（如双芯片含芯片助剂
+    /// 32001 与对应芯片组×2）。库存保持的双芯片折算（I10）以此重建产物反查表。
+    let formula: [String: Int]?
 }
 
 /// 活动关卡 Drop 字段的展示口径（P05.2）：纯数字按物品 ID 查已加载物品表；
@@ -408,3 +432,6 @@ extension FightConfiguration.Params {
         }
     }
 }
+
+/// 顶层别名：冻结目标战斗档案的会话态引用面保持裸名（P12.4 中途重算）。
+typealias FrozenTargetDispatch = FightConfiguration.FrozenTargetDispatch

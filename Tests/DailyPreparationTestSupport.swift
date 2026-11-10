@@ -38,6 +38,7 @@ extension MAATaskConfiguration { init() { self = try! JSONDecoder().decode(Self.
         }
     }
     var queued = [UUID]()
+    var appendedInfrast = [InfrastConfiguration]()
     var failAppendAt: Int?
     var startCount = 0
     var appendCount = 0
@@ -61,6 +62,7 @@ extension MAATaskConfiguration { init() { self = try! JSONDecoder().decode(Self.
         appendCount += 1
         if appendCount == failAppendAt { throw FixtureError.connection }
         queued.append(UUID())
+        if case .infrast(let config) = task { appendedInfrast.append(config) }
         return Int32(appendCount)
     }
     func start() async throws {
@@ -125,6 +127,12 @@ struct RoguelikeCfgStub: Equatable { func validateBlackflowStart(available: Bool
 struct DropItemStub {}
 struct InventoryTarget: Equatable { var itemID: String = ""; var quantity: Int = 0 }
 struct InventoryTargetPlan { var generation = 0; var startInventory = 0; var requiredDrops = 0 }
+// P12.4 冻结目标战斗档案（startTasks 登记引用；生产形状见 InventoryTarget.swift）。
+struct FrozenTargetDispatch {
+    var fight: FightConfiguration
+    var itemID: String
+    var target: Int
+}
 enum InventoryTargetError: Error { case recognitionRequired, unsafeOrder, stalePreparation }
 struct InventoryScope: Equatable { var connection: String }
 struct InventorySnapshot {}
@@ -155,6 +163,7 @@ struct FightConfiguration: Equatable {
     var useActivityMedicine = false
     var inventoryTarget: InventoryTarget? = nil
     var weeklyDays: [Int]? = nil
+    var drops: [String: Int]? = nil
     enum StagePlanOutcome: Equatable { case dispatch(stage: String); case skipAllClosed }
     struct StagePlanResolution: Equatable {
         var outcome: StagePlanOutcome
@@ -192,6 +201,12 @@ struct GameConfiguration: Equatable {
     var client_type = ClientChannel.official
     var start_game_enabled = false
 }
+struct UserDataUpdateConfiguration: Equatable {}
+struct UserDataUpdateRun {
+    var pending = false
+    mutating func beginExecution() {}
+    func hasPending(runID: UUID) -> Bool { pending }
+}
 struct DailyTask: Equatable {
     enum Kind: Equatable {
         case startup(GameConfiguration)
@@ -203,6 +218,7 @@ struct DailyTask: Equatable {
         // InfrastConfiguration（单一事实源，见 run-daily-preparation-tests.py swiftc 列表）。
         case infrast(InfrastConfiguration)
         case fixture
+        case userdataupdate(UserDataUpdateConfiguration)
     }
     var id = UUID()
     var task: Kind
@@ -217,6 +233,14 @@ struct DailyTask: Equatable {
     private(set) var dailyRunTasks: [DailyTask]?
     var dailyTaskProfile = "Fixture"
     func logError(verbatim value: String) { errors.append(value) }
+    // G18 开关在桩世界以普通存储面替代（@AppStorage 属 SwiftUI，桩不引入）。
+    var roguelikeDelayAbortUntilCombatComplete = false
+    var userDataUpdateRun = UserDataUpdateRun()
+    var userDataCallbackDeadline: ContinuousClock.Instant?
+    func failIncompleteDailyUserDataUpdates(runID: UUID) { userDataUpdateRun.pending = false; dailyRunOutcome = .failed }
+    // Composite refresh is covered by the active user-data suites, not this legacy boundary.
+    func appendDailyUserDataUpdate(task: DailyTask, config: UserDataUpdateConfiguration, runID: UUID, scope: InventoryScope) async throws -> [Int32] { throw FixtureError.connection }
+    func cancelDailyUserDataUpdates() { userDataUpdateRun.pending = false }
     // PRODUCTION_MODEL_MEMBERS
     enum DailyTasksDetailMode { case log }
     struct DailyTaskTimer {
@@ -230,7 +254,9 @@ struct DailyTask: Equatable {
     private var forceRecoveryAbortRequested = false
     var handle: Core? = Core()
     var logStore: TestLogStore? = TestLogStore()
-    var tasks: [DailyTask] = []
+    // Most scenarios need an actual queued run. Empty/all-skipped queues now
+    // finish without AsstStart; those cases set an empty list explicitly.
+    var tasks: [DailyTask] = [.init(task: .fixture)]
     var clientChannel = ClientChannel.official
     var connectionAddress = "127.0.0.1:5555"
     var adbPath = "/test/adb"
@@ -247,6 +273,9 @@ struct DailyTask: Equatable {
     var inventoryScope = InventoryScope(connection: "adb")
     var currentInventorySnapshot: InventorySnapshot? { nil }
     var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
+    // P12.4 中途重算会话态（startTasks 冻结目标登记引用）。
+    var frozenTargetFights: [Int32: FrozenTargetDispatch] = [:]
+    var pendingFrozenTarget: (itemID: String, target: Int)?
     var recruitTagNames: [String: String] = [:]
     func invalidateInventory() { inventory.invalidate() }
     func checkStartupCancellation() throws {}
@@ -310,7 +339,8 @@ struct DailyTask: Equatable {
     func logError(_ text: String) { errors.append(text) }
     func logInfo(_ text: String) { infos.append(text) }
     func logTrace(verbatim text: String) {}
-    func logWarn(_ text: String) {}
+    var warnings = [String]()
+    func logWarn(_ text: String) { warnings.append(text) }
     var startupCancellationRequested = false
     var dailyRunChainFailed = false
     func ensureHandle(requireConnect: Bool = true) async throws {

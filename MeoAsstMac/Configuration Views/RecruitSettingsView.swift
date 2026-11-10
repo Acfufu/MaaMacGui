@@ -78,6 +78,10 @@ struct RecruitSettingsView: View {
                     Text("尽可能多选四星以上的Tag").tag(2)
                 }
 
+                Toggle("显示已持有干员潜能", isOn: $config.showPotential)
+                Text("公招结果按最近一次干员识别的持有数据标注潜能与新增干员；数据按账号/区服隔离，未识别时不标注。")
+                    .font(.caption).foregroundStyle(.secondary)
+
                 Divider()
 
                 TextField(text: $config.penguin_id) {

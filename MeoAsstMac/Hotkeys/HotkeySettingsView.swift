@@ -20,10 +20,11 @@ struct HotkeySettingsView: View {
     var body: some View {
         Form {
             Toggle("启用全局热键", isOn: $draft.enabled)
-            Text("组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口。无需输入监控权限。")
+            Text("组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口；显隐主窗口切换主窗口可见性。无需输入监控权限。")
                 .font(.caption).foregroundStyle(.secondary)
             row(.start, title: "开始日常任务")
             row(.stop, title: "停止当前任务")
+            row(.showGui, title: "显示/隐藏主窗口")
             if let recording {
                 Text("按下组合键，Esc 取消").foregroundStyle(.secondary)
                 HotkeyCapture { event in
@@ -46,7 +47,8 @@ struct HotkeySettingsView: View {
                         recordingError = String(localized: "该组合为系统保留或通用编辑快捷键（如 ⌘Q、⌘C、⌃→、⌘⇧4），不能注册为全局热键")
                         return
                     }
-                    if recording == .start { draft.start = chord } else { draft.stop = chord }
+                    // 位于外层 `if let recording` 绑定内：此处 recording 已是非可选绑定。
+                    assign(chord, to: recording)
                     recordingError = nil
                     // Resume registration only after the primary key is released;
                     // re-registering a saved chord while held could fire a task.
@@ -66,7 +68,7 @@ struct HotkeySettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(minWidth: 480, minHeight: 290)
+        .frame(minWidth: 480, minHeight: 340)
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String))) { _ in
             layoutRevision += 1
         }
@@ -85,15 +87,39 @@ struct HotkeySettingsView: View {
         HStack {
             Text(title)
             Spacer()
-            Text((command == .start ? draft.start : draft.stop)?.displayName ?? String(localized: "未绑定"))
-                .id(layoutRevision).monospaced().accessibilityIdentifier(command == .start ? "hotkey.start.value" : "hotkey.stop.value")
+            Text(chord(for: command)?.displayName ?? String(localized: "未绑定"))
+                .id(layoutRevision).monospaced().accessibilityIdentifier(accessibilityID(for: command))
             Button("录制") {
                 recording = command
                 waitingForRelease = false
                 recordingError = nil
                 service.beginRecording()
             }
-            Button("清除热键") { if command == .start { draft.start = nil } else { draft.stop = nil } }
+            Button("清除热键") { assign(nil, to: command) }
+        }
+    }
+
+    private func chord(for command: HotkeyCommand) -> HotkeyChord? {
+        switch command {
+        case .start: draft.start
+        case .stop: draft.stop
+        case .showGui: draft.showGui
+        }
+    }
+
+    private func assign(_ value: HotkeyChord?, to command: HotkeyCommand) {
+        switch command {
+        case .start: draft.start = value
+        case .stop: draft.stop = value
+        case .showGui: draft.showGui = value
+        }
+    }
+
+    private func accessibilityID(for command: HotkeyCommand) -> String {
+        switch command {
+        case .start: "hotkey.start.value"
+        case .stop: "hotkey.stop.value"
+        case .showGui: "hotkey.showGui.value"
         }
     }
 

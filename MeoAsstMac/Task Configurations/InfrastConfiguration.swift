@@ -88,6 +88,14 @@ struct InfrastConfiguration: MAATaskConfiguration {
         }
     }
 
+    // Automatic preserves the existing period/cyclic behavior when decoding
+    // profiles that predate this preference. Fixed never rotates or advances.
+    enum PlanSelection: String, Codable, CaseIterable {
+        case automatic
+        case fixed
+    }
+
+    var planSelection: PlanSelection
     var filename: String
     var plan_index: Int
 
@@ -112,7 +120,7 @@ struct InfrastConfiguration: MAATaskConfiguration {
             return String(localized: "单设施最优解")
         }
 
-        if let plan = try? MAAInfrast(path: filename), plan_index < plan.plans.count {
+        if let plan = try? MAAInfrast(path: filename), plan.plans.indices.contains(plan_index) {
             return plan.plans[plan_index].name ?? "\(plan_index)"
         } else {
             return String(localized: "未知排班")
@@ -150,12 +158,13 @@ struct InfrastConfiguration: MAATaskConfiguration {
         weeklyDays?.contains(weekday) ?? true
     }
 
+    /// 仅自动模式按时间选班；固定模式始终保留手选班次。
     /// B11 时间轮换选班（WPF RefreshCustomInfrastPlanList 同构）：任一 plan 带
     /// period 时启用——端点闭匹配当前时刻所在段的 plan（`p[0] <= now <= p[1]`，
     /// 与上游 TimeOnly 比较一致，跨午夜段（p0 > p1）上游同样恒不匹配，不特判）；
     /// 无匹配回退第一个 plan；非 custom 或全无 period 返回 nil，保持用户手选。
     func resolvedPlanIndex(at date: Date, plan: MAAInfrast?) -> Int? {
-        guard mode == .custom, let plan, !plan.plans.isEmpty else { return nil }
+        guard mode == .custom, planSelection == .automatic, let plan, !plan.plans.isEmpty else { return nil }
         guard plan.plans.contains(where: { $0.period?.isEmpty == false }) else { return nil }
         let now = Self.minutesSinceMidnight(date)
         let matched = plan.plans.firstIndex { levels in
@@ -333,6 +342,7 @@ extension InfrastConfiguration {
         self.dorm_trust_enabled = try container.decodeIfPresent(Bool.self, forKey: .dorm_trust_enabled) ?? false
         self.filename = try container.decodeIfPresent(String.self, forKey: .filename) ?? ""
         self.plan_index = try container.decodeIfPresent(Int.self, forKey: .plan_index) ?? 0
+        self.planSelection = try container.decodeIfPresent(PlanSelection.self, forKey: .planSelection) ?? .automatic
         self.continue_training = try container.decodeIfPresent(Bool.self, forKey: .continue_training) ?? true
         self.reception_message_board =
             try container.decodeIfPresent(Bool.self, forKey: .reception_message_board) ?? true

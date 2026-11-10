@@ -5,10 +5,18 @@ struct InventoryTarget: Codable, Hashable, Sendable {
     var quantity: Int
 }
 
-struct InventoryScope: Equatable, Sendable {
+struct InventoryScope: Hashable, Codable, Sendable {
     let connection: String
     let server: String
     let profile: String
+    let account: String
+
+    init(connection: String, server: String, profile: String, account: String = "") {
+        self.connection = connection
+        self.server = server
+        self.profile = profile
+        self.account = account
+    }
 }
 
 struct InventorySnapshot: Equatable, Sendable {

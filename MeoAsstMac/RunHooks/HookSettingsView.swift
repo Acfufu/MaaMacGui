@@ -13,6 +13,14 @@ struct HookSettingsView: View {
             Toggle("启用日常任务脚本", isOn: $store.configuration.enabled)
             Text("仅作用于日常队列。前置脚本在连接前执行，后置脚本在完成、失败或取消后清理。脚本可修改设备设置，请仅选择可信的本地文件。")
                 .font(.caption).foregroundStyle(.secondary)
+            // S15: 作业运行也执行前后脚本（WPF ExecuteScriptOnCopilot 同位，缺省关）。
+            Toggle(isOn: $viewModel.executeScriptOnCopilot) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("作业也执行前后脚本")
+                    Text("作业（Copilot/保全/悖论）开始与完成时同样运行上方脚本；手动停止不执行")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
             commandEditor(before: true)
             commandEditor(before: false)
             Stepper(value: $store.configuration.timeoutSeconds, in: 1...300) {

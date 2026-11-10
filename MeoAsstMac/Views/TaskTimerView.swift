@@ -19,6 +19,15 @@ struct TaskTimerView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
             .padding(.horizontal)
+        // P21/S08: 定时开始前提醒（P23 本机通知门控授权）。
+        Toggle("定时开始前提醒", isOn: $viewModel.notifyBeforeScheduledStart)
+            .padding(.horizontal)
+        if viewModel.notifyBeforeScheduledStart {
+            Stepper(value: $viewModel.scheduledStartNotificationMinutes, in: 1...120) {
+                Text("提前 \(viewModel.scheduledStartNotificationMinutes) 分钟提醒")
+            }
+            .padding(.horizontal)
+        }
         if let failure = timerManager.failure {
             Text(failure).foregroundStyle(.red).padding(.horizontal)
         }
@@ -70,6 +79,7 @@ struct TaskTimerView: View {
 }
 
 struct TaskTimerItem: View {
+    @EnvironmentObject private var viewModel: MAAViewModel
     @Binding var taskTimer: MAAViewModel.DailyTaskTimer
     var onDelete: () -> Void
     var onEnabled: () -> Void
@@ -103,9 +113,26 @@ struct TaskTimerItem: View {
             }
             .frame(width: 90)
 
+            // P21/S07: 每定时项档案（WPF Timer.Config 同位）；「当前档案」＝nil。
+            Picker("档案", selection: Binding(
+                get: { taskTimer.profileID ?? "" },
+                set: { taskTimer.profileID = $0.isEmpty ? nil : $0 }
+            )) {
+                Text("当前档案").tag("")
+                ForEach(viewModel.profileIdentities) { identity in
+                    Text(identity.displayName).tag(identity.id)
+                }
+            }
+            .frame(width: 110)
+
             Toggle("强制开始", isOn: $taskTimer.forceStart)
                 .fixedSize()
                 .help("仅停止本应用的日常任务；等待停止和后置清理完成后开始，最多等待 30 秒。")
+
+            // P21/S08: 一次性启用（触发后自动停用，WPF 半选语义的显式化）。
+            Toggle("仅当次", isOn: $taskTimer.oneShot)
+                .fixedSize()
+                .help("开启后该定时在下一次触发后自动停用。")
 
             Toggle(isOn: $taskTimer.isEnabled, label: {
                 Text("开启")

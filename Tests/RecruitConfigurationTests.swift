@@ -268,3 +268,116 @@ check(
         "Custom DPS"
     ])
 print("PASS: Core custom replacement and custom-only resource overlays")
+
+// MARK: - R10 公招结果显示已持有干员潜能
+
+// showPotential is a GUI-only display switch (WPF Recruit.ShowPotential): it
+// defaults to true, persists through round trips, and never reaches Core params.
+check(defaults.showPotential)
+check(try decode([:]).showPotential)
+check(try decode(["showPotential": true]).showPotential)
+check(!(try decode(["showPotential": false]).showPotential))
+check(try params(defaults)["showPotential"] == nil)
+let potentialPersisted = try PropertyListDecoder().decode(
+    RecruitConfiguration.self, from: PropertyListEncoder().encode(forceOff))
+check(potentialPersisted.showPotential)
+var potentialOff = defaults
+potentialOff.showPotential = false
+check(
+    !(try PropertyListDecoder().decode(
+        RecruitConfiguration.self, from: PropertyListEncoder().encode(potentialOff)
+    ).showPotential))
+print("PASS: R10 showPotential defaults true, round trips, stays out of Core params")
+
+// Core RecruitResult shape (AutoRecruitTask.cpp:583-598): every oper carries
+// id/name/level; missing ids decode as nil and stay unannotated.
+let recruitJSON: [String: Any] = [
+    "tags": ["高级资深干员", "输出"],
+    "level": 6,
+    "result": [
+        [
+            "tags": ["输出", "群攻"],
+            "level": 4,
+            "opers": [
+                ["name": "银灰", "id": "char_291_aglina", "level": 6],
+                ["name": "幽灵鲨", "id": "char_143_ghost", "level": 5],
+                ["name": "米格鲁", "level": 3],
+            ],
+        ]
+    ],
+]
+let recruit = try JSONDecoder().decode(
+    MAARecruit.self, from: JSONSerialization.data(withJSONObject: recruitJSON))
+check(recruit.level == 6 && recruit.result.count == 1 && recruit.result[0].level == 4)
+check(recruit.result[0].opers[0].id == "char_291_aglina")
+check(recruit.result[0].opers[2].id == nil)
+let minimalJSON: [String: Any] = [
+    "tags": [], "level": 3,
+    "result": [["tags": ["支援"], "level": 3, "opers": [["name": "夜刀", "id": "char_002_amiya", "level": 2]]]],
+]
+check(
+    try JSONDecoder().decode(MAARecruit.self, from: JSONSerialization.data(withJSONObject: minimalJSON))
+        .result[0].opers[0].id == "char_002_amiya")
+print("PASS: R10 MAARecruit decodes per-oper ids, tolerating absent ids")
+
+let potentialTable = [
+    "char_291_aglina": 6,
+    "char_143_ghost": 2,
+    "char_002_amiya": 3,
+]
+
+func annotation(_ result: MAARecruit.Result, table: [String: Int]?, show: Bool) -> [RecruitPotentialAnnotation?] {
+    result.annotatedOpers(potentialByID: table, showPotential: show).map(\.annotation)
+}
+
+func names(_ result: MAARecruit.Result, table: [String: Int]?, show: Bool) -> [String] {
+    result.annotatedOpers(potentialByID: table, showPotential: show).map(\.oper.name)
+}
+
+let combo = recruit.result[0]
+
+// Gate off: no annotations at all, order falls back to level-descending stability.
+check(annotation(combo, table: potentialTable, show: false) == [nil, nil, nil])
+check(names(combo, table: potentialTable, show: false) == ["银灰", "幽灵鲨", "米格鲁"])
+// Gate on without owned data: WPF treats a nil map as "no annotation", never NEW.
+check(annotation(combo, table: nil, show: true) == [nil, nil, nil])
+check(annotation(combo, table: [:], show: true) == [.newOper, .newOper, nil])
+// Owned: rank with the WPF-exact literals; pot 6 collapses to MAX.
+check(combo.annotatedOpers(potentialByID: potentialTable, showPotential: true).map(\.annotation?.displayText)
+    == [" ( MAX )", " ( 2 )", nil])
+check(RecruitPotentialAnnotation.rank(5).displayText == " ( 5 )")
+check(RecruitPotentialAnnotation.rank(1).displayText == " ( 1 )")
+check(RecruitPotentialAnnotation.max.displayText == " ( MAX )")
+check(RecruitPotentialAnnotation.newOper.displayText == " ( !!! NEW !!! )")
+// Sort within the combination: level desc, then potential asc (-1 for NEW/nil);
+// ties keep the original relative order.
+check(names(combo, table: potentialTable, show: true) == ["银灰", "幽灵鲨", "米格鲁"])
+// Potential tiebreak only orders same-level operators: NEW (-1) before rank 2.
+let tieCombo = MAARecruit.Result(
+    tags: ["输出"], level: 4,
+    opers: [
+        MAARecruit.Operator(id: "char_143_ghost", name: "幽灵鲨", level: 4),
+        MAARecruit.Operator(id: "char_999_new", name: "新干员", level: 4),
+    ])
+check(names(tieCombo, table: potentialTable, show: true) == ["新干员", "幽灵鲨"])
+check(annotation(tieCombo, table: potentialTable, show: true) == [.newOper, .rank(2)])
+
+// Gate: combinations below 4★ only annotate 1★ operators; 4★+ annotate everyone.
+let lowCombo = MAARecruit.Result(
+    tags: ["近卫"], level: 3,
+    opers: [
+        MAARecruit.Operator(id: "char_143_ghost", name: "幽灵鲨", level: 5),
+        MAARecruit.Operator(id: "char_002_amiya", name: "阿米娅", level: 5),
+        MAARecruit.Operator(id: "char_512_wtstv", name: "温蒂", level: 4),
+        MAARecruit.Operator(id: "char_103_angel", name: "能天使", level: 6),
+    ])
+check(annotation(lowCombo, table: potentialTable, show: true) == [nil, nil, nil, nil])
+let oneStarInLowCombo = MAARecruit.Result(
+    tags: ["支援"], level: 3,
+    opers: [MAARecruit.Operator(id: "char_002_amiya", name: "阿米娅", level: 1)])
+check(annotation(oneStarInLowCombo, table: potentialTable, show: true) == [.rank(3)])
+let missingIDInFourStar = MAARecruit.Result(
+    tags: ["输出"], level: 4,
+    opers: [MAARecruit.Operator(id: nil, name: "无名", level: 3)])
+check(annotation(missingIDInFourStar, table: potentialTable, show: true) == [nil])
+print("PASS: R10 annotation gate, literals, ownership and sort order all WPF-isomorphic")

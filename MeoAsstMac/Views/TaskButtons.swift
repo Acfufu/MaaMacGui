@@ -19,18 +19,21 @@ struct TaskButtons: View {
         .keyboardShortcut("R", modifiers: .command)
         .disabled(!viewModel.canStartTasks)
 
-        Button("停止任务") {
+        Button(viewModel.roguelikeWaitingForCombat ? String(localized: "立即停止") : String(localized: "停止任务")) {
             Task {
                 try await viewModel.stop()
             }
         }
         .keyboardShortcut(".", modifiers: .command)
         .disabled(!viewModel.canStopTasks)
+        .help(viewModel.roguelikeWaitingForCombat
+              ? String(localized: "正在等待当前肉鸽战斗结束；再次停止将立即中断。")
+              : String(localized: "停止当前任务；肉鸽战斗中先等待战斗结束，最多 10 分钟。"))
 
         Button("全部启用") {
             for (index, task) in viewModel.tasks.enumerated() {
                 switch task.task {
-                case .roguelike, .reclamation:
+                case .roguelike, .reclamation, .custom, .operProgress:
                     continue
                 default:
                     viewModel.tasks[index].enabled = true

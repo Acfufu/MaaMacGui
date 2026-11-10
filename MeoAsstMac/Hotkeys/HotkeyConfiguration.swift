@@ -72,13 +72,16 @@ struct HotkeyConfiguration: Codable, Equatable {
     var enabled = false
     var start: HotkeyChord?
     var stop: HotkeyChord?
+    // S13: 旧档案无该键，解码为 nil 保持向后兼容。
+    var showGui: HotkeyChord?
     var isValid: Bool {
-        (start?.isValid ?? true) && (stop?.isValid ?? true) && (start == nil || start != stop)
+        let chords = [start, stop, showGui].compactMap { $0 }
+        return chords.allSatisfy(\.isValid) && Set(chords).count == chords.count
     }
 
     var hasReservedChord: Bool {
-        (start?.isSystemReserved ?? false) || (stop?.isSystemReserved ?? false)
+        (start?.isSystemReserved ?? false) || (stop?.isSystemReserved ?? false) || (showGui?.isSystemReserved ?? false)
     }
 }
 
-enum HotkeyCommand: UInt32 { case start = 1, stop = 2 }
+enum HotkeyCommand: UInt32 { case start = 1, stop = 2, showGui = 3 }

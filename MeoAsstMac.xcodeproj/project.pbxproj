@@ -162,6 +162,38 @@
 		94C59E20479606E44D4FB124 /* ScheduleAgent.plist in LaunchAgents */ = {isa = PBXBuildFile; fileRef = 6250DA9C76813DDBFE5B7EA8; };
 		9B6C185C8729497448935CB7 /* ScheduleAgentLocation.swift in Agent Sources */ = {isa = PBXBuildFile; fileRef = 1C3AC5D910863BF71F8DC4B6; };
 		F6E08C4FEE9346A7A5D4B12D /* DailyRunProfilePatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DD9F10173EA49D5B595D506 /* DailyRunProfilePatch.swift */; };
+		83C75A112DD9000100000011 /* CustomConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C75A102DD9000100000010 /* CustomConfiguration.swift */; };
+		83C75A212DD9000100000021 /* CustomSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C75A202DD9000100000020 /* CustomSettingsView.swift */; };
+		F11000000000000000000002 /* DepotHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11000000000000000000001 /* DepotHistoryStore.swift */; };
+		F11200000000000000000002 /* OperBoxHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11200000000000000000001 /* OperBoxHistoryStore.swift */; };
+		F11300000000000000000002 /* UserDataUpdateConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11300000000000000000001 /* UserDataUpdateConfiguration.swift */; };
+		F11300000000000000000102 /* UserDataUpdateSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11300000000000000000101 /* UserDataUpdateSettingsView.swift */; };
+		F11300000000000000000202 /* UserDataUpdateRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11300000000000000000201 /* UserDataUpdateRun.swift */; };
+		F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11400000000000000000001 /* YituliuOperBoxService.swift */; };
+		F11500000000000000000002 /* DataExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11500000000000000000001 /* DataExport.swift */; };
+		F11600000000000000000002 /* DepotMaintainConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11600000000000000000001 /* DepotMaintainConfiguration.swift */; };
+		F11700000000000000000002 /* DepotMaintainPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11700000000000000000001 /* DepotMaintainPlanner.swift */; };
+		F11800000000000000000002 /* DepotMaintainSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11800000000000000000001 /* DepotMaintainSettingsView.swift */; };
+		F11900000000000000000002 /* CopilotPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11900000000000000000001 /* CopilotPersistence.swift */; };
+		F12000000000000000000002 /* OperBoxAssistExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12000000000000000000001 /* OperBoxAssistExport.swift */; };
+		F12100000000000000000002 /* OperBoxHistoryPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12100000000000000000001 /* OperBoxHistoryPayload.swift */; };
+		F12200000000000000000002 /* CopilotFileOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12200000000000000000001 /* CopilotFileOperations.swift */; };
+		F12300000000000000000002 /* VideoRecognitionImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12300000000000000000001 /* VideoRecognitionImport.swift */; };
+		F12400000000000000000002 /* MiniGameLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12400000000000000000001 /* MiniGameLaunch.swift */; };
+		F12500000000000000000002 /* StartupAutoRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12500000000000000000001 /* StartupAutoRun.swift */; };
+		F12600000000000000000002 /* MainWindowVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12600000000000000000001 /* MainWindowVisibility.swift */; };
+		F12700000000000000000002 /* LocalNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12700000000000000000001 /* LocalNotificationService.swift */; };
+		F12800000000000000000002 /* PostActionRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12800000000000000000001 /* PostActionRunner.swift */; };
+		F12900000000000000000002 /* ExternalNotificationProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12900000000000000000001 /* ExternalNotificationProviders.swift */; };
+		F13000000000000000000002 /* ExternalNotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13000000000000000000001 /* ExternalNotificationSettingsView.swift */; };
+		F13100000000000000000002 /* ExternalNotificationTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13100000000000000000001 /* ExternalNotificationTrigger.swift */; };
+		F13200000000000000000002 /* RemoteControlService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13200000000000000000001 /* RemoteControlService.swift */; };
+		F13300000000000000000002 /* RemoteControlSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13300000000000000000001 /* RemoteControlSettingsView.swift */; };
+		F13400000000000000000002 /* ResourceUpdateNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13400000000000000000001 /* ResourceUpdateNetwork.swift */; };
+		F13500000000000000000002 /* UpdateFeedPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13500000000000000000001 /* UpdateFeedPolicy.swift */; };
+		F13600000000000000000002 /* DiagnosticsReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13600000000000000000001 /* DiagnosticsReport.swift */; };
+		F13700000000000000000002 /* DiagnosticsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13700000000000000000001 /* DiagnosticsSettingsView.swift */; };
+		F13800000000000000000002 /* LogCardBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13800000000000000000001 /* LogCardBuilder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -353,6 +385,38 @@
 		1C3AC5D910863BF71F8DC4B6 /* ScheduleAgentLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleAgentLocation.swift; sourceTree = "<group>"; };
 		26E08575B7270EEEA23DC4E3 /* Agent Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Agent Info.plist"; path = Info.plist; sourceTree = "<group>"; };
 		3DD9F10173EA49D5B595D506 /* DailyRunProfilePatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyRunProfilePatch.swift; sourceTree = "<group>"; };
+		83C75A102DD9000100000010 /* CustomConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomConfiguration.swift; sourceTree = "<group>"; };
+		83C75A202DD9000100000020 /* CustomSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSettingsView.swift; sourceTree = "<group>"; };
+		F11000000000000000000001 /* DepotHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepotHistoryStore.swift; sourceTree = "<group>"; };
+		F11200000000000000000001 /* OperBoxHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperBoxHistoryStore.swift; sourceTree = "<group>"; };
+		F11300000000000000000001 /* UserDataUpdateConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataUpdateConfiguration.swift; sourceTree = "<group>"; };
+		F11300000000000000000101 /* UserDataUpdateSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataUpdateSettingsView.swift; sourceTree = "<group>"; };
+		F11300000000000000000201 /* UserDataUpdateRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataUpdateRun.swift; sourceTree = "<group>"; };
+		F11400000000000000000001 /* YituliuOperBoxService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YituliuOperBoxService.swift; sourceTree = "<group>"; };
+		F11500000000000000000001 /* DataExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExport.swift; sourceTree = "<group>"; };
+		F11600000000000000000001 /* DepotMaintainConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepotMaintainConfiguration.swift; sourceTree = "<group>"; };
+		F11700000000000000000001 /* DepotMaintainPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepotMaintainPlanner.swift; sourceTree = "<group>"; };
+		F11800000000000000000001 /* DepotMaintainSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepotMaintainSettingsView.swift; sourceTree = "<group>"; };
+		F11900000000000000000001 /* CopilotPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotPersistence.swift; sourceTree = "<group>"; };
+		F12000000000000000000001 /* OperBoxAssistExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperBoxAssistExport.swift; sourceTree = "<group>"; };
+		F12100000000000000000001 /* OperBoxHistoryPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperBoxHistoryPayload.swift; sourceTree = "<group>"; };
+		F12200000000000000000001 /* CopilotFileOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopilotFileOperations.swift; sourceTree = "<group>"; };
+		F12300000000000000000001 /* VideoRecognitionImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecognitionImport.swift; sourceTree = "<group>"; };
+		F12400000000000000000001 /* MiniGameLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniGameLaunch.swift; sourceTree = "<group>"; };
+		F12500000000000000000001 /* StartupAutoRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupAutoRun.swift; sourceTree = "<group>"; };
+		F12600000000000000000001 /* MainWindowVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowVisibility.swift; sourceTree = "<group>"; };
+		F12700000000000000000001 /* LocalNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNotificationService.swift; sourceTree = "<group>"; };
+		F12800000000000000000001 /* PostActionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostActionRunner.swift; sourceTree = "<group>"; };
+		F12900000000000000000001 /* ExternalNotificationProviders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalNotificationProviders.swift; sourceTree = "<group>"; };
+		F13000000000000000000001 /* ExternalNotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalNotificationSettingsView.swift; sourceTree = "<group>"; };
+		F13100000000000000000001 /* ExternalNotificationTrigger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalNotificationTrigger.swift; sourceTree = "<group>"; };
+		F13200000000000000000001 /* RemoteControlService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlService.swift; sourceTree = "<group>"; };
+		F13300000000000000000001 /* RemoteControlSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlSettingsView.swift; sourceTree = "<group>"; };
+		F13400000000000000000001 /* ResourceUpdateNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceUpdateNetwork.swift; sourceTree = "<group>"; };
+		F13500000000000000000001 /* UpdateFeedPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateFeedPolicy.swift; sourceTree = "<group>"; };
+		F13600000000000000000001 /* DiagnosticsReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsReport.swift; sourceTree = "<group>"; };
+		F13700000000000000000001 /* DiagnosticsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsSettingsView.swift; sourceTree = "<group>"; };
+		F13800000000000000000001 /* LogCardBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogCardBuilder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -399,6 +463,7 @@
 				B7743B34F2704668B4E0A0E9 /* RunContext.swift */,
 				9A6855ABEC964286B70706AC /* HookConfiguration.swift */,
 				3621885B42794A3E8940DB36 /* HookRunner.swift */,
+				F12800000000000000000001 /* PostActionRunner.swift */,
 				0FC2C19F5DD0469BBD8F1A7F /* HookSettingsView.swift */,
 				3DD9F10173EA49D5B595D506 /* DailyRunProfilePatch.swift */,
 				E78B60E254D04E2E91F4FA92 /* HotkeySettingsView.swift */,
@@ -443,7 +508,14 @@
 				83264A3429EBEE8D0074E33A /* AwardConfiguration.swift */,
 				2EB6BA32DAB8DA18E4B8B297 /* SwitchThemeConfiguration.swift */,
 				8341194F29EC249E00044F45 /* RoguelikeConfiguration.swift */,
+				83C75A102DD9000100000010 /* CustomConfiguration.swift */,
+				F11300000000000000000001 /* UserDataUpdateConfiguration.swift */,
+				F11600000000000000000001 /* DepotMaintainConfiguration.swift */,
 				8341195429EC55C600044F45 /* CopilotConfiguration.swift */,
+				F11900000000000000000001 /* CopilotPersistence.swift */,
+				F12000000000000000000001 /* OperBoxAssistExport.swift */,
+				F12300000000000000000001 /* VideoRecognitionImport.swift */,
+				F12400000000000000000001 /* MiniGameLaunch.swift */,
 				832985AF29EEF483009F7ED5 /* ReclamationConfiguration.swift */,
 				83782A2A2CFFAF2900A32BDD /* LegacyConfigurations.swift */,
 			);
@@ -461,6 +533,9 @@
 				83BFABC72AF1D5BA001A79F4 /* AwardSettingsView.swift */,
 				714ED6EEFCEED065D64918F3 /* SwitchThemeSettingsView.swift */,
 				83D3283828F3048E00018D10 /* RoguelikeSettingsView.swift */,
+				83C75A202DD9000100000020 /* CustomSettingsView.swift */,
+				F11300000000000000000101 /* UserDataUpdateSettingsView.swift */,
+				F11800000000000000000001 /* DepotMaintainSettingsView.swift */,
 				83264A2529EBC9C10074E33A /* ReclamationSettingsView.swift */,
 			);
 			path = "Configuration Views";
@@ -620,6 +695,20 @@
 				C20000000000000000000000 /* AnnouncementService.swift */,
 				832985B529EF1890009F7ED5 /* MAADepot.swift */,
 				C70000000000000000000001 /* InventoryTarget.swift */,
+				F11000000000000000000001 /* DepotHistoryStore.swift */,
+				F11200000000000000000001 /* OperBoxHistoryStore.swift */,
+				F12100000000000000000001 /* OperBoxHistoryPayload.swift */,
+				F12200000000000000000001 /* CopilotFileOperations.swift */,
+				F12900000000000000000001 /* ExternalNotificationProviders.swift */,
+				F13100000000000000000001 /* ExternalNotificationTrigger.swift */,
+				F13200000000000000000001 /* RemoteControlService.swift */,
+				F12500000000000000000001 /* StartupAutoRun.swift */,
+				F13600000000000000000001 /* DiagnosticsReport.swift */,
+				F13800000000000000000001 /* LogCardBuilder.swift */,
+				F11400000000000000000001 /* YituliuOperBoxService.swift */,
+				F11500000000000000000001 /* DataExport.swift */,
+				F11700000000000000000001 /* DepotMaintainPlanner.swift */,
+				F11300000000000000000201 /* UserDataUpdateRun.swift */,
 				C80000000000000000000001 /* AchievementDefinition.swift */,
 				C80000000000000000000002 /* AchievementEngine.swift */,
 				C80000000000000000000003 /* AchievementEventAdapter.swift */,
@@ -665,6 +754,9 @@
 				838FF82129FBB9E3000566A0 /* GameSettingsView.swift */,
 				83DD50B629BE385A000E84E7 /* UpdaterSettingsView.swift */,
 				92EB82862A0CD315006DD9D2 /* SystemSettingsView.swift */,
+				F13000000000000000000001 /* ExternalNotificationSettingsView.swift */,
+				F13300000000000000000001 /* RemoteControlSettingsView.swift */,
+				F13700000000000000000001 /* DiagnosticsSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -690,6 +782,10 @@
 				B50000000000000000000002 /* BlackflowStartSupport.swift */,
 				83B8E0D83053131B00AB0B56 /* HGCalendar.swift */,
 				B30000000000000000000002 /* LoginItemService.swift */,
+				F12600000000000000000001 /* MainWindowVisibility.swift */,
+				F13400000000000000000001 /* ResourceUpdateNetwork.swift */,
+				F13500000000000000000001 /* UpdateFeedPolicy.swift */,
+				F12700000000000000000001 /* LocalNotificationService.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -793,6 +889,12 @@
 				D435C735FBB248EDAB963960 /* HotkeyConfiguration.swift in Sources */,
 				4EED5734D98847338FFE7732 /* HookSettingsView.swift in Sources */,
 				175E0E7F43434EA4845EFF97 /* HookRunner.swift in Sources */,
+				F12800000000000000000002 /* PostActionRunner.swift in Sources */,
+				F12900000000000000000002 /* ExternalNotificationProviders.swift in Sources */,
+				F13100000000000000000002 /* ExternalNotificationTrigger.swift in Sources */,
+				F13200000000000000000002 /* RemoteControlService.swift in Sources */,
+				F13300000000000000000002 /* RemoteControlSettingsView.swift in Sources */,
+				F13000000000000000000002 /* ExternalNotificationSettingsView.swift in Sources */,
 				7B1B36888B12496B9DA5C1DB /* HookConfiguration.swift in Sources */,
 				BCAD46240D494C047C5532E9 /* BackgroundScheduleSettingsView.swift in Sources */,
 				E2634018F76DBCBF1FAA3074 /* BackgroundScheduleService.swift in Sources */,
@@ -876,6 +978,28 @@
 				836E9975305338150082748D /* FightStage.swift in Sources */,
 				832985B629EF1890009F7ED5 /* MAADepot.swift in Sources */,
 				C70000000000000000000002 /* InventoryTarget.swift in Sources */,
+				F11000000000000000000002 /* DepotHistoryStore.swift in Sources */,
+				F11200000000000000000002 /* OperBoxHistoryStore.swift in Sources */,
+				F12100000000000000000002 /* OperBoxHistoryPayload.swift in Sources */,
+				F12200000000000000000002 /* CopilotFileOperations.swift in Sources */,
+				F12300000000000000000002 /* VideoRecognitionImport.swift in Sources */,
+				F12400000000000000000002 /* MiniGameLaunch.swift in Sources */,
+				F12500000000000000000002 /* StartupAutoRun.swift in Sources */,
+				F12600000000000000000002 /* MainWindowVisibility.swift in Sources */,
+				F13400000000000000000002 /* ResourceUpdateNetwork.swift in Sources */,
+				F13500000000000000000002 /* UpdateFeedPolicy.swift in Sources */,
+				F13600000000000000000002 /* DiagnosticsReport.swift in Sources */,
+				F13800000000000000000002 /* LogCardBuilder.swift in Sources */,
+				F13700000000000000000002 /* DiagnosticsSettingsView.swift in Sources */,
+				F12700000000000000000002 /* LocalNotificationService.swift in Sources */,
+				F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */,
+				F11500000000000000000002 /* DataExport.swift in Sources */,
+				F11600000000000000000002 /* DepotMaintainConfiguration.swift in Sources */,
+				F11700000000000000000002 /* DepotMaintainPlanner.swift in Sources */,
+				F11800000000000000000002 /* DepotMaintainSettingsView.swift in Sources */,
+				F11900000000000000000002 /* CopilotPersistence.swift in Sources */,
+				F12000000000000000000002 /* OperBoxAssistExport.swift in Sources */,
+				F11300000000000000000202 /* UserDataUpdateRun.swift in Sources */,
 				C81000000000000000000001 /* AchievementDefinition.swift in Sources */,
 				C81000000000000000000002 /* AchievementEngine.swift in Sources */,
 				C81000000000000000000003 /* AchievementEventAdapter.swift in Sources */,
@@ -910,6 +1034,10 @@
 				83782A2B2CFFAF2900A32BDD /* LegacyConfigurations.swift in Sources */,
 				83264A2F29EBEE140074E33A /* RecruitConfiguration.swift in Sources */,
 				8341195029EC249E00044F45 /* RoguelikeConfiguration.swift in Sources */,
+				83C75A112DD9000100000011 /* CustomConfiguration.swift in Sources */,
+				F11300000000000000000002 /* UserDataUpdateConfiguration.swift in Sources */,
+				83C75A212DD9000100000021 /* CustomSettingsView.swift in Sources */,
+				F11300000000000000000102 /* UserDataUpdateSettingsView.swift in Sources */,
 				83264A2B29EBED780074E33A /* StartupConfiguration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1144,10 +1272,10 @@
 		};
 		832D14953042F6C40000C09B /* XCRemoteSwiftPackageReference "JBird" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/hguandl/JBird.git";
+			repositoryURL = "https://github.com/vsanthanam/JBird.git";
 			requirement = {
-				branch = "xcode-26";
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
 			};
 		};
 		8347B5A92CDF89CC00AEB627 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {

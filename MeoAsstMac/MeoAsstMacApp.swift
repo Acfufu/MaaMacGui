@@ -38,6 +38,8 @@ struct MeoAsstMacApp: App {
             await viewModel.prepareForTermination()
             await newModel.waitLogStoreToFinish()
         }
+        // P23/E01: 点击通知仅重新前置主窗口（S18 关窗驻留语义下的找回路径）。
+        viewModel.localNotifications.installTapHandler { MainWindowVisibility.reopen(tracker: .shared) }
     }
 
     var body: some Scene {
@@ -121,13 +123,26 @@ struct MeoAsstMacApp: App {
 
 final class MaaUpdaterDelegate: NSObject, SPUUpdaterDelegate {
     @AppStorage("MaaUseBetaChannel") private var useBetaChannel = false
+    // P28/U01: fork 自有更新源（上游 Info.plist 的 SUFeedURL 已被 fork 移除）。
+    @AppStorage(UpdateFeedPolicy.feedURLDefaultsKey) private var updateFeedURL = ""
 
     func allowedChannels(for updater: SPUUpdater) -> Set<String> {
-        if useBetaChannel {
-            return Set(["beta"])
-        } else {
-            return Set()
-        }
+        // U02: 渠道面由 appcast 的 sparkle:channel 标记分流（stable/beta 两档；
+        // WPF Nightly 渠道无 Mac appcast 支撑，不提供——差异入档）。
+        UpdateFeedPolicy.allowedChannels(useBetaChannel: useBetaChannel)
+    }
+
+    /// U01: fork feed 注入。未配置时返回 nil——Sparkle 回退 Info.plist（fork 已移除，
+    /// 即无 feed，检查失败有可见错误而非静默空转）。
+    func feedURLString(for updater: SPUUpdater) -> String? {
+        UpdateFeedPolicy.feedURLString(configured: updateFeedURL)
+    }
+
+    // S02: Sparkle 更新重启不透传命令行参数；以一次性标记文件承担 WPF
+    // --skip-startup-auto-run 的更新重启链语义（受 SkipStartupAutoRunAfterUpdate 门控）。
+    func updaterWillRelaunchApplication(_ updater: SPUUpdater) {
+        guard StartupAutoRunPolicy.skipAfterUpdateEnabled() else { return }
+        try? StartupAutoRunMarker.write()
     }
 }
 
@@ -152,6 +167,13 @@ private class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        true
+        // S18 统一行为：关窗不退出（定时任务/后台调度依赖进程存活），应用保留在
+        // Dock；窗口经 Dock 点击/热键找回。显式退出（⌘Q）仍走 applicationShouldTerminate。
+        false
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag { MainActor.assumeIsolated { MainWindowVisibility.reopen(tracker: .shared) } }
+        return true
     }
 }

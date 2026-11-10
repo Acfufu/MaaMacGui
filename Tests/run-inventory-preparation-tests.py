@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import subprocess,tempfile
+import re
 root=Path(__file__).resolve().parents[1]
 source=(root/'MeoAsstMac/Model/MAAViewModel.swift').read_text()
+# P12.3 库存保持拦截块由 run-depot-maintain-dispatch-tests.py 专责覆盖，本套件剥离
+#（提取面纪律：剥离必须有断言，防锚点漂移后静默空转）。
+_strip_pattern = r'\n *if case \.depotMaintain\(let depotConfig\) = task\.task \{\n(?:.*?\n)*? *\}\n'
+assert len(re.findall(_strip_pattern, source, re.M)) == 1, 'depotMaintain interception block drifted'
+source = re.sub(_strip_pattern, '\n', source, count=1)
 def anchor(source,marker):
  # The signature string is the test contract with the production source.
  try:return source.index(marker)
@@ -23,7 +29,9 @@ struct Closedown: Sendable, Equatable { var client_type = "CN" }
 // P08.2 起抽取面携带基建周计划门控与时间轮换；直接编译真 InfrastConfiguration
 // （单一事实源，见下方 swiftc 编译列表）。
 extension InfrastConfiguration: Sendable {}
-enum MAATask: Sendable, Equatable { case fight(FightConfiguration), startup(Startup), closedown(Closedown), mall(MallConfiguration), roguelike(RoguelikeSeedCfgStub), infrast(InfrastConfiguration), other }
+struct UserDataUpdateConfiguration: Sendable, Equatable {}
+struct UserDataUpdateRun { mutating func beginExecution() {} }
+enum MAATask: Sendable, Equatable { case fight(FightConfiguration), startup(Startup), closedown(Closedown), mall(MallConfiguration), roguelike(RoguelikeSeedCfgStub), infrast(InfrastConfiguration), userdataupdate(UserDataUpdateConfiguration), other }
 extension FightConfiguration: Sendable {}
 extension FightConfiguration.Params: Sendable {}
 extension FightConfiguration.Params { func jsonString() throws -> String {
@@ -105,6 +113,8 @@ actor FakeHandle {
  var touchMode = Touch.maatouch
  var clientChannel = "CN"
  var tasks: [DailyTask] = []
+ // G18 战斗态成员：startTasks 提取体的前置清零与入队置位引用。
+ var activeRunHasRoguelike = false; var roguelikeInCombat = false
  var handle: FakeHandle? = FakeHandle()
  var messageTask: Task<Void,Never>?
  var taskIDMap: [Int32: UUID] = [:]
@@ -120,6 +130,9 @@ actor FakeHandle {
  func recoverGameToHome(runID: UUID, isCurrent: @escaping @MainActor () -> Bool) async throws {}
  func dailyRunCoordinatorTransition(_ phase: DailyRunPhase, for id: UUID) throws {}
  var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
+ // P12.4 中途重算会话态（startTasks 冻结目标登记引用）。
+ var frozenTargetFights: [Int32: FrozenTargetDispatch] = [:]
+ var pendingFrozenTarget: (itemID: String, target: Int)?
  var achievementEvents = AchievementEventAdapter()
  let dailyRunCoordinator = DailyRunCoordinator()
  func checkStartupCancellation() throws {}
@@ -128,6 +141,9 @@ actor FakeHandle {
  var logs: [String] = []
  var connectionRequests = 0
  func invalidateInventory() { inventory.invalidate() }
+ var userDataUpdateRun = UserDataUpdateRun()
+ func cancelDailyUserDataUpdates() {}
+ func appendDailyUserDataUpdate(task: DailyTask, config: UserDataUpdateConfiguration, runID: UUID, scope: InventoryScope) async throws -> [Int32] { throw InventoryTargetError.stalePreparation }
  func logInfo(_ message: String) { logs.append(message) }
  func logWarn(_ message: String) { logs.append(message) }
  func logTrace(verbatim message: String) { logs.append(message) }
@@ -141,7 +157,7 @@ main='''@main struct Main {
  @MainActor static func main() async throws {
   var checks = 0
   func check(_ value: Bool, _ message: String) { checks += 1; precondition(value, message) }
-  FightConfiguration.dropItems = [("30012", DropItem(classifyType: "MATERIAL", description: nil, icon: "", name: "Material", sortId: 1, usage: nil))]
+  FightConfiguration.dropItems = [("30012", DropItem(classifyType: "MATERIAL", description: nil, icon: "", name: "Material", sortId: 1, usage: nil, formula: nil))]
   var config = FightConfiguration(); config.inventoryTarget = InventoryTarget(itemID: "30012", quantity: 10)
   func make(_ stock: Int) throws -> Probe {
    let model = Probe(); model.tasks = [.init(id: UUID(), task: .fight(config), enabled: true)]
@@ -176,7 +192,7 @@ main='''@main struct Main {
   let reached = try make(10); let reachedCore = reached.handle!
   try await reached.runStartTasks()
   let skippedBatches = await reachedCore.started
-  check(skippedBatches.count == 1 && skippedBatches[0].isEmpty, "reached target never appends drops=0 Fight")
+  check(skippedBatches.isEmpty, "reached target never starts an empty or drops=0 Fight batch")
   check(reached.logs.contains("Inventory.AlreadyReached"), "reached target is visible after ensureHandle")
   let missing = Probe(); missing.tasks = [.init(id: UUID(), task: .fight(config), enabled: true)]
   let missingCore = missing.handle!

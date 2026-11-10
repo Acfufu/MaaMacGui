@@ -213,15 +213,38 @@ struct InfrastSettingsView: View {
                 }
             }
 
-            Picker("班次", selection: $config.plan_index) {
-                try? MAAInfrast(path: config.filename).planList
+            Picker("班次选择", selection: $config.planSelection) {
+                Text("自动轮换").tag(InfrastConfiguration.PlanSelection.automatic)
+                Text("固定班次").tag(InfrastConfiguration.PlanSelection.fixed)
             }
-            // B11 时间轮换：任一 plan 带 period 时下发前按当前时刻选班，
-            // 这里显示当前命中的班次（无匹配回退第一个，与下发逻辑同源）。
-            if let plan = try? MAAInfrast(path: config.filename),
-                let rotated = config.resolvedPlanIndex(at: Date.now, plan: plan) {
-                Text("时间轮换 (\(plan.plans.indices.contains(rotated) ? (plan.plans[rotated].name ?? "\(rotated)") : "\(rotated)"))")
-                    .font(.caption).foregroundStyle(.secondary)
+            if let plan = try? MAAInfrast(path: config.filename) {
+                if config.planSelection == .fixed || !plan.hasPeriods {
+                    Picker("班次", selection: $config.plan_index) {
+                        plan.planList
+                    }
+                }
+                if config.planSelection == .fixed {
+                    Text("始终执行所选班次，完成后不自动切换。")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    if plan.hasPeriods {
+                        Text("按本机时间选择班次，无匹配时使用第一个班次。")
+                            .font(.caption).foregroundStyle(.secondary)
+                        TimelineView(.periodic(from: .now, by: 60)) { context in
+                            if let rotated = config.resolvedPlanIndex(at: context.date, plan: plan) {
+                                Text("时间轮换 (\(plan.plans[rotated].name ?? "\(rotated)"))")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    } else {
+                        Text("从所选班次开始，每次成功完成后切换到下一班次。")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    if plan.hasMixedPeriods {
+                        Text("部分班次未设置时间段，自动选择时无匹配将使用第一个班次。")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
+                }
             }
 
             HStack(spacing: 20) {

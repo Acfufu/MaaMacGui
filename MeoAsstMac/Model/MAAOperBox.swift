@@ -64,3 +64,14 @@ extension MAAOperBox.OwnedOper {
         }
     }
 }
+
+extension MAAOperBox {
+    var historyPayload: OperBoxHistoryPayload {
+        .init(done: done,
+              allOperators: all_opers.map { .init(id: $0.id, own: $0.own, name: $0.name, rarity: $0.rarity) },
+              ownedOperators: own_opers.map {
+                  .init(id: $0.id, own: $0.own, name: $0.name, rarity: $0.rarity,
+                        elite: $0.elite, level: $0.level, potential: $0.potential)
+              })
+    }
+}

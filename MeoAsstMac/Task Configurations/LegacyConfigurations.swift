@@ -84,6 +84,7 @@ extension InfrastConfiguration {
         self.dorm_trust_enabled = config.dorm_trust_enabled
         self.filename = config.filename
         self.plan_index = config.plan_index
+        self.planSelection = .automatic
         self.continue_training = true
         self.reception_message_board = true
         // 线索交流/赠送按 Core/WPF 缺省开；跨设施编组按 Core 缺省关；周计划缺省每天。

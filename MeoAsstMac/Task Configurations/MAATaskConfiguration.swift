@@ -54,6 +54,19 @@ extension MAAHandle {
             return try appendTask(type: config.type, params: config.params(blackflowStartAvailable: blackflowStartAvailable, supportsSeedInput: supportsRoguelikeSeedInput).jsonString())
         case .reclamation(let config):
             return try appendTask(config: config)
+        case .userdataupdate:
+            // Expanded by daily preparation into registered Depot/OperBox tasks.
+            throw MaaCoreError.appendTaskFailed
+        case .depotMaintain:
+            // Expanded by task serialization into an optional Depot recognition +
+            // per-plan Fight tasks (DepotMaintainPlanner evaluations).
+            throw MaaCoreError.appendTaskFailed
+        case .custom(let config):
+            try config.validate()
+            return try appendTask(config: config)
+        case .operProgress(let config):
+            _ = try config.validatedPlans()
+            return try appendTask(config: config)
         }
     }
 

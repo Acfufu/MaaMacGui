@@ -17,6 +17,13 @@ struct ResourceUpdateView: View {
 
     @Environment(\.dismiss) private var dismiss
     @AppStorage("ResourceUpdateChannel") var resourceChannel = MAAResourceChannel.github
+    // P27/U08: 代理会话注入（空 = 系统默认）。
+    @AppStorage("MAAResourceUpdateProxyEnabled") var resourceProxyEnabled = false
+    @AppStorage("MAAResourceUpdateProxy") var resourceProxy = ""
+
+    private var updateSession: URLSession {
+        ResourceUpdateNetwork.session(for: resourceProxyEnabled ? resourceProxy : "")
+    }
 
     private var extractURL: URL {
         switch resourceChannel {
@@ -70,11 +77,17 @@ struct ResourceUpdateView: View {
         .padding()
         .task {
             do {
-                let url = try await resourceChannel.latestURL()
-                try await downloadResource(from: url)
+                let session = updateSession
+                let url = try await resourceChannel.latestURL(session: session)
+                try await downloadResource(from: url, session: session)
                 try await extractResource()
-                try await copyResource()
-                try await onUpdate()
+                // P27/U06: 隔离 staging → 原子切换 → onUpdate（资源重载/门控）失败即回退。
+                let stagingURL = documentsURL.appendingPathComponent("resource.staging", isDirectory: true)
+                let backupURL = documentsURL.appendingPathComponent("resource.backup", isDirectory: true)
+                try ResourceUpdateNetwork.stageResource(source: sourceURL, staging: stagingURL)
+                try await ResourceUpdateNetwork.atomicApply(staging: stagingURL, target: targetURL, backup: backupURL) {
+                    try await onUpdate()
+                }
                 progress = nil
             } catch MAAResourceChannel.Error.noNeedUpdate {
                 self.shouldUpdate = false
@@ -86,9 +99,9 @@ struct ResourceUpdateView: View {
         }
     }
 
-    private func downloadResource(from remoteURL: URL) async throws {
+    private func downloadResource(from remoteURL: URL, session: URLSession) async throws {
         try? FileManager.default.removeItem(at: localURL)
-        for try await progress in URLSession.shared.downloadTo(localURL, from: remoteURL) {
+        for try await progress in session.downloadTo(localURL, from: remoteURL) {
             try Task.checkCancellation()
             self.progress = (String(localized: "正在下载…"), progress.fractionCompleted)
         }
@@ -117,32 +130,6 @@ struct ResourceUpdateView: View {
             try await task.value
         } onCancel: {
             progress.cancel()
-        }
-    }
-
-    private func copyResource() async throws {
-        try FileManager.default.createDirectory(at: targetURL, withIntermediateDirectories: true)
-
-        let directoryEnumerator = FileManager.default.enumerator(
-            at: sourceURL, includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles, .producesRelativePathURLs])!
-
-        while case let fileURL as URL = directoryEnumerator.nextObject() {
-            try Task.checkCancellation()
-
-            guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isDirectoryKey]),
-                let isDirectory = resourceValues.isDirectory
-            else {
-                continue
-            }
-
-            let destination = targetURL.appendingPathComponent(fileURL.relativePath, isDirectory: isDirectory)
-
-            if isDirectory {
-                try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
-            } else {
-                _ = try FileManager.default.replaceItemAt(destination, withItemAt: fileURL)
-            }
         }
     }
 

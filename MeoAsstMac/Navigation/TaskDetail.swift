@@ -41,6 +41,14 @@ struct TaskDetail: View {
                                               supportsSeedInput: viewModel.touchMode != .MacPlayTools)
                     case .reclamation(let config):
                         ReclamationSettingsView(config: taskConfigBinding(config, id: id))
+                    case .userdataupdate(let config):
+                        UserDataUpdateSettingsView(config: taskConfigBinding(config, id: id))
+                    case .depotMaintain(let config):
+                        DepotMaintainSettingsView(config: taskConfigBinding(config, id: id))
+                    case .custom(let config):
+                        CustomSettingsView(config: taskConfigBinding(config, id: id))
+                    case .operProgress(let config):
+                        OperProgressSettingsView(config: taskConfigBinding(config, id: id))
                     case .closedown(_):
                         EmptyView()
                     }

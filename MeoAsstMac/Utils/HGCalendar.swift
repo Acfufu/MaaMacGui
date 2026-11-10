@@ -20,6 +20,13 @@ public struct HGCalendar: Sendable {
         calendar.isDate(shifted(date1), inSameDayAs: shifted(date2))
     }
 
+    public func isDate(_ date1: Date, inSameWeekAs date2: Date) -> Bool {
+        var iso = Calendar(identifier: .iso8601)
+        iso.timeZone = calendar.timeZone
+        let fields: Set<Calendar.Component> = [.yearForWeekOfYear, .weekOfYear]
+        return iso.dateComponents(fields, from: shifted(date1)) == iso.dateComponents(fields, from: shifted(date2))
+    }
+
     public func weekday(for date: Date) -> Int {
         calendar.component(.weekday, from: shifted(date)) - 1
     }

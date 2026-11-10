@@ -34,6 +34,8 @@ struct RecruitConfiguration: MAATaskConfiguration {
     var report_to_yituliu: Bool
     var yituliu_id: String
     var server: String
+    /// 公招结果显示已持有干员潜能（R10）；纯 GUI 展示开关，不进 Core 任务参数。
+    var showPotential: Bool
 
     var title: String {
         type.description
@@ -124,7 +126,7 @@ struct RecruitConfiguration: MAATaskConfiguration {
                 "3": 540, "4": 540, "5": 540, "6": 540,
             ],
             report_to_penguin: false, penguin_id: "", report_to_yituliu: false,
-            yituliu_id: "", server: "")
+            yituliu_id: "", server: "", showPotential: true)
     }
 }
 
@@ -164,6 +166,7 @@ extension RecruitConfiguration {
         self.report_to_yituliu = try container.decodeIfPresent(Bool.self, forKey: .report_to_yituliu) ?? false
         self.yituliu_id = try container.decodeIfPresent(String.self, forKey: .yituliu_id) ?? ""
         self.server = try container.decodeIfPresent(String.self, forKey: .server) ?? "CN"
+        self.showPotential = try container.decodeIfPresent(Bool.self, forKey: .showPotential) ?? true
     }
 }
 

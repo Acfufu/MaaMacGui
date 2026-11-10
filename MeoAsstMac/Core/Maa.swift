@@ -169,13 +169,35 @@ actor MAAHandle {
         }
     }
 
+    /// P29/U12: Core 版本（AsstCaller.h:136，全局调用无需 handle）。
+    nonisolated static func coreVersion() -> String {
+        guard let cString = AsstGetVersion() else { return "" }
+        return String(cString: cString)
+    }
+
+    /// Core AsstBackToHome（pinned 51dac87 AsstCaller.h:88）：MaaTouch 回到游戏首页，
+    /// P22 收尾动作「返回安卓主页」消费。
+    @discardableResult
+    func backToHome() -> Bool {
+        AsstBackToHome(handle) != 0
+    }
+
     func appendTask(type: MAATaskType, params: String) throws -> Int32 {
+        guard type != .UserDataUpdate, type != .DepotMaintain else { throw MaaCoreError.appendTaskFailed }
         let taskID = AsstAppendTask(handle, type.rawValue, params)
         if taskID == 0 {
             throw MaaCoreError.appendTaskFailed
         } else {
             return taskID
         }
+    }
+
+    /// 更新已排队任务的参数（Core AsstSetTaskParams）：库存保持中途重算在战斗链
+    /// 启动时按最新库存快照改写 drops/times。返回 Core 布尔结果，失败处置由调用方
+    /// 决定（消息处理路径不打断运行，仅记录）。
+    @discardableResult
+    func setTaskParams(taskID: Int32, params: String) -> Bool {
+        AsstSetTaskParams(handle, taskID, params).isTrue
     }
 
     func connect(adbPath: String, address: String, profile: String) async throws {
@@ -317,6 +339,12 @@ enum MAATaskType: String {
     case Reclamation
     case VideoRecognition
     case OperBox
+    case OperProgress
+    /// GUI-only composite, explicitly rejected by appendTask(type:params:).
+    case UserDataUpdate
+    /// GUI-only composite: dispatch expands to an optional Depot recognition +
+    /// per-plan Fight tasks (see MAAViewModel serialization).
+    case DepotMaintain
     case Custom
 }
 
@@ -344,6 +372,7 @@ typealias MAAInstanceOptions = [MAAInstanceOptionKey: String]
 
 extension Notification.Name {
     static let MAAPreventSystemSleepingChanged = Notification.Name("MAAPreventSystemSleepingChanged")
+    static let MAABlockSleepWithScreenOnChanged = Notification.Name("MAABlockSleepWithScreenOnChanged")
 }
 
 extension AsstBool {

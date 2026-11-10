@@ -35,6 +35,14 @@ struct TasksContent: View {
                     TaskCell(id: task.id, config: config, enabled: $task.enabled)
                 case .reclamation(let config):
                     TaskCell(id: task.id, config: config, enabled: $task.enabled)
+                case .userdataupdate(let config):
+                    TaskCell(id: task.id, config: config, enabled: $task.enabled)
+                case .depotMaintain(let config):
+                    TaskCell(id: task.id, config: config, enabled: $task.enabled)
+                case .custom(let config):
+                    TaskCell(id: task.id, config: config, enabled: $task.enabled)
+                case .operProgress(let config):
+                    TaskCell(id: task.id, config: config, enabled: $task.enabled)
                 }
             }
             .onMove(perform: moveTask)
@@ -50,6 +58,19 @@ struct TasksContent: View {
     @ToolbarContentBuilder private func listToolbar() -> some ToolbarContent {
         ToolbarItemGroup {
             ProfilePickerMenu()
+        }
+
+        ToolbarItemGroup {
+            Button(action: moveSelectedUp) {
+                Label("上移", systemImage: "arrow.up")
+            }
+            .help("上移任务（拖动替代入口）")
+            .disabled(!canMoveSelectedUp)
+            Button(action: moveSelectedDown) {
+                Label("下移", systemImage: "arrow.down")
+            }
+            .help("下移任务（拖动替代入口）")
+            .disabled(!canMoveSelectedDown)
         }
 
         ToolbarItemGroup {
@@ -113,6 +134,40 @@ struct TasksContent: View {
 
     private func moveTask(from: IndexSet, to: Int) {
         viewModel.tasks.move(fromOffsets: from, toOffset: to)
+    }
+
+    // MARK: - D08 拖动替代入口（WPF MoveUpTask/MoveDownTask 同位：逐行移动）
+
+    private var selectedIndex: Int? {
+        selection.flatMap { viewModel.tasks.firstIndex(id: $0) }
+    }
+
+    private var canMoveSelectedUp: Bool {
+        guard let selectedIndex else { return false }
+        return selectedIndex > 0
+    }
+
+    private var canMoveSelectedDown: Bool {
+        guard let selectedIndex else { return false }
+        return selectedIndex < viewModel.tasks.count - 1
+    }
+
+    private func moveSelectedUp() {
+        moveSelected(by: -1)
+    }
+
+    private func moveSelectedDown() {
+        moveSelected(by: 1)
+    }
+
+    /// 按 id 移动一行并保持选中跟随（WPF MoveTask 一行同构；配置队列同步由
+    /// tasks 写回机制承担）。
+    private func moveSelected(by delta: Int) {
+        guard let index = selectedIndex else { return }
+        let target = index + delta
+        guard viewModel.tasks.indices.contains(target) else { return }
+        viewModel.tasks.move(fromOffsets: IndexSet(integer: index), toOffset: target > index ? target + 1 : target)
+        selection = viewModel.tasks[target].id
     }
 
     private func selectLastTask(_ shouldSelect: Bool) {

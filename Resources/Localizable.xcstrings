@@ -1,6 +1,4106 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "环境与支持" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Environment & Support"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "환경 및 지원"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "环境与支持"
+          }
+        }
+      }
+    },
+    "复制环境信息" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Environment Info"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "환경 정보 복사"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制环境信息"
+          }
+        }
+      }
+    },
+    "环境信息已复制到剪贴板" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Environment info copied to clipboard"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "환경 정보가 클립보드에 복사되었습니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "环境信息已复制到剪贴板"
+          }
+        }
+      }
+    },
+    "生成支持报告" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generate Support Report"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지원 보고서 생성"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成支持报告"
+          }
+        }
+      }
+    },
+    "支持报告已生成并在访达中定位" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support report generated and revealed in Finder"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지원 보고서가 생성되어 파인더에서 표시됩니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持报告已生成并在访达中定位"
+          }
+        }
+      }
+    },
+    "支持报告生成失败：" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to generate support report: "
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지원 보고서 생성 실패: "
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持报告生成失败："
+          }
+        }
+      }
+    },
+    "清理截图缓存" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Screenshot Cache"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크린샷 캐시 정리"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清理截图缓存"
+          }
+        }
+      }
+    },
+    "已清理 %lld 个截图文件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed %lld screenshot files"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크린샷 %lld개를 정리했습니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已清理 %lld 个截图文件"
+          }
+        }
+      }
+    },
+    "语言" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "언어"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语言"
+          }
+        }
+      }
+    },
+    "界面语言" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interface language"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인터페이스 언어"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "界面语言"
+          }
+        }
+      }
+    },
+    "跟随系统" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow System"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 따르기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "简体中文" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simplified Chinese"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "중국어 간체"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "简体中文"
+          }
+        }
+      }
+    },
+    "繁體中文" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Traditional Chinese"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "중국어 번체"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "繁體中文"
+          }
+        }
+      }
+    },
+    "English" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "영어"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English"
+          }
+        }
+      }
+    },
+    "한국어" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korean"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "한국어"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "한국어"
+          }
+        }
+      }
+    },
+    "切换后重启应用生效。干员名语言跟随资源区服，暂无独立选项。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Takes effect after restarting the app. Operator-name language follows the resource region and has no separate option yet."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "앱을 다시 시작하면 적용됩니다. 오퍼레이터 이름 언어는 리소스 지역을 따르며, 아직 별도 옵션이 없습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换后重启应用生效。干员名语言跟随资源区服，暂无独立选项。"
+          }
+        }
+      }
+    },
+    "诊断与支持…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnostics & Support…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진단 및 지원…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "诊断与支持…"
+          }
+        }
+      }
+    },
+    "更新源 Appcast URL（fork 自建，可选）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update appcast URL (self-hosted fork, optional)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 앱캐스트 URL (포크 자체 호스팅, 선택)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新源 Appcast URL（fork 自建，可选）"
+          }
+        }
+      }
+    },
+    "未配置时主程序更新不可用（上游 feed 已移除）；渠道由 appcast 的 sparkle:channel 标记分流（stable/beta）。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Without it, app updates are unavailable (upstream feed removed); channels are routed by the appcast's sparkle:channel markers (stable/beta)."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "구성하지 않으면 앱 업데이트를 사용할 수 없습니다(업스트림 feed 제거됨). 채널은 앱캐스트의 sparkle:channel 마커(stable/beta)로 라우팅됩니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未配置时主程序更新不可用（上游 feed 已移除）；渠道由 appcast 的 sparkle:channel 标记分流（stable/beta）。"
+          }
+        }
+      }
+    },
+    "下载的资源缺少 version.json，已放弃应用。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The downloaded resource is missing version.json; not applied."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다운로드한 리소스에 version.json이 없어 적용하지 않습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的资源缺少 version.json，已放弃应用。"
+          }
+        }
+      }
+    },
+    "GitHub Token（可选，用于解除限流）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub token (optional; lifts rate limits)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub 토큰 (선택, 속도 제한 해제용)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub Token（可选，用于解除限流）"
+          }
+        }
+      }
+    },
+    "定时检查资源更新" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check for resource updates on a schedule"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정기적으로 리소스 업데이트 확인"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "定时检查资源更新"
+          }
+        }
+      }
+    },
+    "每 %lld 小时检查一次" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check every %lld hours"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld시간마다 확인"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每 %lld 小时检查一次"
+          }
+        }
+      }
+    },
+    "使用代理更新资源" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use a proxy for resource updates"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프록시를 사용해 리소스 업데이트"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用代理更新资源"
+          }
+        }
+      }
+    },
+    "代理地址（如 127.0.0.1:7890 或 socks5://127.0.0.1:1080）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proxy address (e.g. 127.0.0.1:7890 or socks5://127.0.0.1:1080)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프록시 주소 (예: 127.0.0.1:7890 또는 socks5://127.0.0.1:1080)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代理地址（如 127.0.0.1:7890 或 socks5://127.0.0.1:1080）"
+          }
+        }
+      }
+    },
+    "支持 http/https/socks5 代理；仅作用于资源更新链（查询与下载）。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supports http/https/socks5 proxies; applies only to the resource update chain (query and download)."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "http/https/socks5 프록시를 지원하며, 리소스 업데이트 체인(조회 및 다운로드)에만 적용됩니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持 http/https/socks5 代理；仅作用于资源更新链（查询与下载）。"
+          }
+        }
+      }
+    },
+    "任务运行中，资源更新已延后到任务结束后。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks are running; the resource update is deferred until they finish."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업이 실행 중입니다. 리소스 업데이트는 작업이 끝난 후 연기됩니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务运行中，资源更新已延后到任务结束后。"
+          }
+        }
+      }
+    },
+    "远控" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote Control"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "원격 제어"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "远控"
+          }
+        }
+      }
+    },
+    "任务端点" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task endpoint"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 엔드포인트"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务端点"
+          }
+        }
+      }
+    },
+    "回执端点" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report endpoint"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보고 엔드포인트"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "回执端点"
+          }
+        }
+      }
+    },
+    "用户标识" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User identity"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용자 식별자"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用户标识"
+          }
+        }
+      }
+    },
+    "设备标识" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device identity"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장치 식별자"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备标识"
+          }
+        }
+      }
+    },
+    "重新生成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regenerate"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 생성"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新生成"
+          }
+        }
+      }
+    },
+    "轮询间隔（毫秒）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poll interval (ms)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴링 간격 (ms)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "轮询间隔（毫秒）"
+          }
+        }
+      }
+    },
+    "测试连接" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test Connection"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결 테스트"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试连接"
+          }
+        }
+      }
+    },
+    "测试中…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testing…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테스트 중…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试中…"
+          }
+        }
+      }
+    },
+    "连接成功" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection successful"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결 성공"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接成功"
+          }
+        }
+      }
+    },
+    "连接失败（检查端点与网络）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection failed (check the endpoint and network)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결 실패 (엔드포인트와 네트워크 확인)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接失败（检查端点与网络）"
+          }
+        }
+      }
+    },
+    "轮询中" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polling"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴링 중"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "轮询中"
+          }
+        }
+      }
+    },
+    "未轮询" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not polling"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴링 안 함"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未轮询"
+          }
+        }
+      }
+    },
+    "轮询任务端点接收远控命令（开始/停止/截图/设置等，命令矩阵与上游 WPF 一致），执行后向回执端点上报结果。任务端点为空即停用；同 id 命令不重复执行。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polls the task endpoint for remote commands (start/stop/screenshot/settings; the command matrix matches upstream WPF) and reports results to the report endpoint. An empty task endpoint disables the service; commands with the same id never run twice."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 엔드포인트를 폴링하여 원격 명령(시작/중지/스크린샷/설정 등, 명령 매트릭스는 업스트림 WPF와 동일)을 수신하고, 실행 후 보고 엔드포인트에 결과를 보고합니다. 작업 엔드포인트가 비어 있으면 비활성화되며, 같은 id의 명령은 두 번 실행되지 않습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "轮询任务端点接收远控命令（开始/停止/截图/设置等，命令矩阵与上游 WPF 一致），执行后向回执端点上报结果。任务端点为空即停用；同 id 命令不重复执行。"
+          }
+        }
+      }
+    },
+    "当前任务端点为 http 明文连接，存在被窃听/篡改的风险。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The task endpoint uses plain-text HTTP, which can be intercepted or tampered with."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 작업 엔드포인트는 평문 HTTP로, 도청이나 변조의 위험이 있습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前任务端点为 http 明文连接，存在被窃听/篡改的风险。"
+          }
+        }
+      }
+    },
+    "触发策略" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trigger Policy"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "트리거 정책"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触发策略"
+          }
+        }
+      }
+    },
+    "完成时发送" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send on completion"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "완료 시 전송"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成时发送"
+          }
+        }
+      }
+    },
+    "错误时发送" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send on error"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오류 시 전송"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "错误时发送"
+          }
+        }
+      }
+    },
+    "停滞时发送" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send on stall"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정체 시 전송"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停滞时发送"
+          }
+        }
+      }
+    },
+    "定时开始前发送" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send before scheduled start"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "예약 시작 전 전송"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "定时开始前发送"
+          }
+        }
+      }
+    },
+    "按日志条数发送" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send after log count"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그 수로 전송"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按日志条数发送"
+          }
+        }
+      }
+    },
+    "累计 %lld 条日志后发送" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send after %lld log entries"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld개 로그 누적 후 전송"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "累计 %lld 条日志后发送"
+          }
+        }
+      }
+    },
+    "按内容匹配发送" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send on content match"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내용 일치 시 전송"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按内容匹配发送"
+          }
+        }
+      }
+    },
+    "白名单（每行一个正则）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whitelist (one regex per line)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화이트리스트 (줄당 정규식 하나)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "白名单（每行一个正则）"
+          }
+        }
+      }
+    },
+    "附带最近日志" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include recent logs"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최근 로그 포함"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "附带最近日志"
+          }
+        }
+      }
+    },
+    "最多附带 %lld 条" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include at most %lld entries"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최대 %lld개 포함"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最多附带 %lld 条"
+          }
+        }
+      }
+    },
+    "时间窗 %lld 分钟" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time window: %lld minutes"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시간 창 %lld분"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "时间窗 %lld 分钟"
+          }
+        }
+      }
+    },
+    "过滤最近日志（黑名单）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter recent logs (blacklist)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최근 로그 필터 (블랙리스트)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "过滤最近日志（黑名单）"
+          }
+        }
+      }
+    },
+    "黑名单（每行一个正则）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blacklist (one regex per line)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "블랙리스트 (줄당 정규식 하나)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "黑名单（每行一个正则）"
+          }
+        }
+      }
+    },
+    "停滞检测" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stall detection"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정체 감지"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停滞检测"
+          }
+        }
+      }
+    },
+    "无输出 %lld 分钟后告警，按同间隔重复" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alert after %lld minutes without output, repeating at the same interval"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld분 동안 출력이 없으면 경고하며 같은 간격으로 반복합니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无输出 %lld 分钟后告警，按同间隔重复"
+          }
+        }
+      }
+    },
+    "任务疑似停滞" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task may be stalled"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업이 정지된 것으로 보입니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务疑似停滞"
+          }
+        }
+      }
+    },
+    "任务已 %lld 分钟无输出，累计 %lld 分钟。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No output for %lld minutes; %lld minutes total."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld분 동안 출력이 없으며, 누적 %lld분입니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务已 %lld 分钟无输出，累计 %lld 分钟。"
+          }
+        }
+      }
+    },
+    "外部通知" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "External Notifications"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "외부 알림"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外部通知"
+          }
+        }
+      }
+    },
+    "启用外部通知" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable external notifications"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "외부 알림 사용"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用外部通知"
+          }
+        }
+      }
+    },
+    "任务完成/公招识别出错/作业完成等事件按下方启用配置逐渠道发送；错误反馈不回显密钥。凭据以明文保存在本机偏好。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Events such as task completion, recruit recognition errors and copilot completion are sent through each enabled configuration; error feedback never echoes secrets. Credentials are stored in plain local preferences."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 완료, 공모집 인식 오류, 코파일럿 완료 등 이벤트가 아래 활성화된 구성을 통해 채널별로 전송됩니다. 오류 피드백은 비밀을 표시하지 않으며, 자격 증명은 로컬 환경설정에 평문으로 저장됩니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务完成/公招识别出错/作业完成等事件按下方启用配置逐渠道发送；错误反馈不回显密钥。凭据以明文保存在本机偏好。"
+          }
+        }
+      }
+    },
+    "新增配置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Configuration"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "구성 추가"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增配置"
+          }
+        }
+      }
+    },
+    "渠道" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "채널"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "渠道"
+          }
+        }
+      }
+    },
+    "测试发送" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Test"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테스트 전송"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试发送"
+          }
+        }
+      }
+    },
+    "发送中…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전송 중…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送中…"
+          }
+        }
+      }
+    },
+    "发送成功" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent successfully"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전송 성공"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送成功"
+          }
+        }
+      }
+    },
+    "启用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enabled"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用"
+          }
+        }
+      }
+    },
+    "发送密钥" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send key"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전송 키"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送密钥"
+          }
+        }
+      }
+    },
+    "机器人令牌" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bot token"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "봇 토큰"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "机器人令牌"
+          }
+        }
+      }
+    },
+    "聊天 ID" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat ID"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "채팅 ID"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聊天 ID"
+          }
+        }
+      }
+    },
+    "主题 ID（可选）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Topic ID (optional)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "토픽 ID (선택)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题 ID（可选）"
+          }
+        }
+      }
+    },
+    "用户 ID" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User ID"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용자 ID"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用户 ID"
+          }
+        }
+      }
+    },
+    "访问令牌" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access token"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "액세스 토큰"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "访问令牌"
+          }
+        }
+      }
+    },
+    "加签密钥（可选）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign secret (optional)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서명 시크릿 (선택)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加签密钥（可选）"
+          }
+        }
+      }
+    },
+    "SMTP 服务器" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SMTP server"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SMTP 서버"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SMTP 服务器"
+          }
+        }
+      }
+    },
+    "端口" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포트"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "端口"
+          }
+        }
+      }
+    },
+    "使用 SSL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use SSL"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSL 사용"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 SSL"
+          }
+        }
+      }
+    },
+    "需要认证" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requires authentication"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인증 필요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要认证"
+          }
+        }
+      }
+    },
+    "用户名" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Username"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용자 이름"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用户名"
+          }
+        }
+      }
+    },
+    "密码" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비밀번호"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密码"
+          }
+        }
+      }
+    },
+    "发件人" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보내는 사람"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发件人"
+          }
+        }
+      }
+    },
+    "收件人" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "받는 사람"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收件人"
+          }
+        }
+      }
+    },
+    "服务器" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器"
+          }
+        }
+      }
+    },
+    "服务器（可选）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server (optional)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버 (선택)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器（可选）"
+          }
+        }
+      }
+    },
+    "密钥" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "키"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密钥"
+          }
+        }
+      }
+    },
+    "用户 QQ（可选）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User QQ (optional)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용자 QQ (선택)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用户 QQ（可选）"
+          }
+        }
+      }
+    },
+    "机器人（可选）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bot (optional)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "봇 (선택)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "机器人（可选）"
+          }
+        }
+      }
+    },
+    "令牌" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "토큰"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "令牌"
+          }
+        }
+      }
+    },
+    "URL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL"
+          }
+        }
+      }
+    },
+    "请求体模板（{title}/{content} 占位）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Body template ({title}/{content} placeholders)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "본문 템플릿 ({title}/{content} 자리표시자)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请求体模板（{title}/{content} 占位）"
+          }
+        }
+      }
+    },
+    "请求头 JSON（可选）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Headers JSON (optional)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "헤더 JSON (선택)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请求头 JSON（可选）"
+          }
+        }
+      }
+    },
+    "定时任务即将开始" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scheduled tasks are about to start"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "예약 작업이 곧 시작됩니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "定时任务即将开始"
+          }
+        }
+      }
+    },
+    "MAA 将按计划开始日常任务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAA will start daily tasks as scheduled"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAA가 예약대로 일일 작업을 시작합니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAA 将按计划开始日常任务"
+          }
+        }
+      }
+    },
+    "定时开始前提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remind before scheduled start"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "예약 시작 전 알림"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "定时开始前提醒"
+          }
+        }
+      }
+    },
+    "提前 %lld 分钟提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remind %lld minutes ahead"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld분 전에 알림"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提前 %lld 分钟提醒"
+          }
+        }
+      }
+    },
+    "档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로필"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "档案"
+          }
+        }
+      }
+    },
+    "当前档案" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current profile"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 프로필"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前档案"
+          }
+        }
+      }
+    },
+    "仅当次" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이번만"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅当次"
+          }
+        }
+      }
+    },
+    "开启后该定时在下一次触发后自动停用。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This schedule disables itself after its next trigger."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 옵션을 켜면 다음 트리거 후 해당 예약이 자동으로 비활성화됩니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启后该定时在下一次触发后自动停用。"
+          }
+        }
+      }
+    },
+    "限制运行时长" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limit run duration"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 시간 제한"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "限制运行时长"
+          }
+        }
+      }
+    },
+    "运行时长上限：%lld 分钟" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run duration limit: %lld min"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 시간 제한: %lld분"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "运行时长上限：%lld 分钟"
+          }
+        }
+      }
+    },
+    "到点停止后执行收尾动作" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run post-run actions after the timed stop"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시간 제한 정지 후 마무리 작업 실행"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "到点停止后执行收尾动作"
+          }
+        }
+      }
+    },
+    "收尾动作" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Post-run Actions"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마무리 작업"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收尾动作"
+          }
+        }
+      }
+    },
+    "有失败任务时跳过收尾动作" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip post-run actions when tasks failed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실패한 작업이 있으면 마무리 작업 건너뛰기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有失败任务时跳过收尾动作"
+          }
+        }
+      }
+    },
+    "返回安卓主页" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to Android home"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "안드로이드 홈으로 돌아가기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返回安卓主页"
+          }
+        }
+      }
+    },
+    "关闭游戏客户端" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close the game client"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "게임 클라이언트 종료"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭游戏客户端"
+          }
+        }
+      }
+    },
+    "退出模拟器" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exit the emulator"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "에뮬레이터 종료"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出模拟器"
+          }
+        }
+      }
+    },
+    "退出 MAA" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit MAA"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAA 종료"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出 MAA"
+          }
+        }
+      }
+    },
+    "锁定屏幕" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lock the screen"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 잠그기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "锁定屏幕"
+          }
+        }
+      }
+    },
+    "睡眠" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "잠자기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "睡眠"
+          }
+        }
+      }
+    },
+    "关机" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shut down"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 종료"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关机"
+          }
+        }
+      }
+    },
+    "作业也执行前后脚本" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run scripts for copilot tasks as well"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "코파일럿 작업에도 전후 스크립트 실행"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作业也执行前后脚本"
+          }
+        }
+      }
+    },
+    "作业（Copilot/保全/悖论）开始与完成时同样运行上方脚本；手动停止不执行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copilot/SSS/paradox runs also run the scripts above on start and completion; manual stops do not"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "코파일럿(보전/역설) 작업 시작 및 완료 시에도 위 스크립트를 실행합니다. 수동 정지 시에는 실행하지 않습니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作业（Copilot/保全/悖论）开始与完成时同样运行上方脚本；手动停止不执行"
+          }
+        }
+      }
+    },
+    "任务已完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasks Completed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 완료"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务已完成"
+          }
+        }
+      }
+    },
+    "全部任务执行完毕" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All tasks finished"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모든 작업 완료"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部任务执行完毕"
+          }
+        }
+      }
+    },
+    "理智恢复提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sanity Recovery Reminder"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이성 회복 알림"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "理智恢复提醒"
+          }
+        }
+      }
+    },
+    "理智已回满，可以继续安排任务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sanity is fully recovered; you can schedule tasks again"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이성이 가득 회복되었습니다. 작업을 다시 예약할 수 있습니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "理智已回满，可以继续安排任务"
+          }
+        }
+      }
+    },
+    "公招任务链出错，请查看日志" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recruitment task chain failed; check the log"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "공모집 작업 체인에 오류가 발생했습니다. 로그를 확인하세요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公招任务链出错，请查看日志"
+          }
+        }
+      }
+    },
+    "作业已完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copilot Task Completed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "코파일럿 작업 완료"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作业已完成"
+          }
+        }
+      }
+    },
+    "系统通知" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Notifications"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 알림"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统通知"
+          }
+        }
+      }
+    },
+    "任务完成、公招识别出错等事件发送本机通知" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send local notifications for events such as task completion and recruit recognition errors"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 완료, 공모집 인식 오류 등 이벤트에 대한 로컬 알림을 보냅니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务完成、公招识别出错等事件发送本机通知"
+          }
+        }
+      }
+    },
+    "发送测试通知" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Test Notification"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테스트 알림 보내기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送测试通知"
+          }
+        }
+      }
+    },
+    "打开系统通知设置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Notification Settings"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알림 설정 열기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开系统通知设置"
+          }
+        }
+      }
+    },
+    "测试通知" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test Notification"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테스트 알림"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试通知"
+          }
+        }
+      }
+    },
+    "MAA 本机通知工作正常" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAA local notifications are working"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAA 로컬 알림이 정상 작동합니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAA 本机通知工作正常"
+          }
+        }
+      }
+    },
+    "正在检查通知权限" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking notification permission"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알림 권한 확인 중"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在检查通知权限"
+          }
+        }
+      }
+    },
+    "开启开关后请求通知授权" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authorization is requested when the switch is turned on"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스위치를 켜면 알림 권한을 요청합니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启开关后请求通知授权"
+          }
+        }
+      }
+    },
+    "通知权限被拒绝，请在系统设置中允许" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification permission denied; allow it in System Settings"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알림 권한이 거부되었습니다. 시스템 설정에서 허용해 주세요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知权限被拒绝，请在系统设置中允许"
+          }
+        }
+      }
+    },
+    "系统通知已授权" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System notifications authorized"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 알림이 승인되었습니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统通知已授权"
+          }
+        }
+      }
+    },
+    "当前系统不支持通知" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are not supported on this system"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 시스템은 알림을 지원하지 않습니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前系统不支持通知"
+          }
+        }
+      }
+    },
+    "打开应用即运行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run Tasks on Launch"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 시 자동 시작"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开应用即运行"
+          }
+        }
+      }
+    },
+    "启动后自动开始日常任务, 倒计时内可取消" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily tasks start automatically after launch; cancel within the countdown"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 후 일일 작업이 자동 시작되며, 카운트다운 내에 취소할 수 있습니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动后自动开始日常任务, 倒计时内可取消"
+          }
+        }
+      }
+    },
+    "更新后立即重启时不自动运行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don't auto-run when restarting immediately for update"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 후 즉시 재시작할 때 자동 실행 안 함"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新后立即重启时不自动运行"
+          }
+        }
+      }
+    },
+    "仅在自动安装更新或更新提示中选择立即重启时生效" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only applies when updates install automatically or you choose to restart immediately in the update prompt"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 업데이트 설치 또는 업데이트 안내에서 즉시 재시작을 선택한 경우에만 적용됩니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅在自动安装更新或更新提示中选择立即重启时生效"
+          }
+        }
+      }
+    },
+    "阻止休眠时保持屏幕常亮" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep screen on when preventing hibernation"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "절전 모드 방지 시 항상 밝게 표시"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阻止休眠时保持屏幕常亮"
+          }
+        }
+      }
+    },
+    "任务运行期间保持屏幕点亮, 关闭后允许屏幕休眠而系统保持唤醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the display on while tasks run; when off, the display may sleep while the system stays awake"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 실행 중 화면을 켠 상태로 유지하고, 끄면 시스템은 깨어 있는 상태로 화면 절전을 허용합니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务运行期间保持屏幕点亮, 关闭后允许屏幕休眠而系统保持唤醒"
+          }
+        }
+      }
+    },
+    "显示/隐藏主窗口" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show/Hide Main Window"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기본 창 표시/숨기기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示/隐藏主窗口"
+          }
+        }
+      }
+    },
+    "即将自动开始日常任务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily tasks will start automatically"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일일 작업이 곧 자동 시작됩니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即将自动开始日常任务"
+          }
+        }
+      }
+    },
+    "取消自动运行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Auto-Run"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 실행 취소"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消自动运行"
+          }
+        }
+      }
+    },
+    "将在 %lld 秒后自动开始日常任务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily tasks will start in %lld seconds"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld초 후 일일 작업이 자동 시작됩니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将在 %lld 秒后自动开始日常任务"
+          }
+        }
+      }
+    },
+    "登录后打开应用；已启用「打开应用即运行」，将自动开始日常任务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the app at login; with \"Run Tasks on Launch\" enabled, daily tasks will start automatically"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 시 앱이 열리며, 「실행 시 자동 시작」이 활성화된 경우 일일 작업이 자동 시작됩니다"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录后打开应用；已启用「打开应用即运行」，将自动开始日常任务"
+          }
+        }
+      }
+    },
+    "Peep.FpsReduced %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screencap is slow; target FPS reduced to %lld."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크린샷이 느려 목표 FPS를 %lld(으)로 낮췄습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peep.FpsReduced %lld"
+          }
+        }
+      }
+    },
+    "Peep.FpsStatus %lld %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target %lld FPS · Measured %lld FPS"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목표 %lld FPS · 실측 %lld FPS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peep.FpsStatus %lld %lld"
+          }
+        }
+      }
+    },
+    "Peep.TargetFps %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target FPS: %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목표 FPS: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peep.TargetFps %lld"
+          }
+        }
+      }
+    },
+    "「活动期间跳过」已开启，导入的计划在活动期间不会执行。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「Skip during event」 is enabled: imported plans will not run while an event is open."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "｢이벤트 기간 중 건너뛰기｣가 활성화되어 있어 가져온 계획은 이벤트 기간 동안 실행되지 않습니다."
+          }
+        }
+      }
+    },
+    "不足时消耗普通信物" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use normal tokens when insufficient"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부족할 때 일반 증표 사용"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不足时消耗普通信物"
+          }
+        }
+      }
+    },
+    "仓库历史快照保存失败。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not save the historical depot snapshot."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 창고 스냅샷을 저장하지 못했습니다."
+          }
+        }
+      }
+    },
+    "以逗号分隔的任务名列表，将执行第一个匹配的任务及其后续链。示例：TaskA, TaskB → 运行 TaskA（若未匹配则尝试 TaskB）" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "쉼표로 구분된 작업 이름 목록이며, 첫 번째로 일치하는 작업과 그 이후의 체인을 실행합니다. 예시: TaskA, TaskB → TaskA 실행(일치하지 않으면 TaskB 시도)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comma-separated task names; the first match and its chain runs. Example: TaskA, TaskB → runs TaskA (else TaskB)."
+          }
+        }
+      }
+    },
+    "低级芯片（全职业）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chips (All Classes)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "칩 (전 직군)"
+          }
+        }
+      }
+    },
+    "作业下载失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copilot download failed: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 다운로드 실패: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作业下载失败：%@"
+          }
+        }
+      }
+    },
+    "作业集无法激活：清单损坏或成员类型不一致。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The copilot set cannot be activated: the manifest is corrupted or member kinds are inconsistent."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 세트를 활성화할 수 없습니다: 목록이 손상되었거나 멤버 유형이 일치하지 않습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作业集无法激活：清单损坏或成员类型不一致。"
+          }
+        }
+      }
+    },
+    "作业集已激活，部分成员无法加载：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copilot set activated, but some members could not be loaded: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 세트가 활성화되었지만 일부 항목을 불러올 수 없습니다: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作业集已激活，部分成员无法加载：%@"
+          }
+        }
+      }
+    },
+    "像素画" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pixel art"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "픽셀 아트"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "像素画"
+          }
+        }
+      }
+    },
+    "出现错误，评价失败 : <" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An error occurred, the like failed. : <"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오류가 발생하여 평가에 실패했습니다. : <"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出现错误，评价失败 : <"
+          }
+        }
+      }
+    },
+    "使用一图流数据辅助编队" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assist formation with Yituliu data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu 데이터로 편성 지원"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用一图流数据辅助编队"
+          }
+        }
+      }
+    },
+    "刷分结束后清空商店：" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear the store after grinding:"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "점수 획득 후 상점 비우기:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷分结束后清空商店："
+          }
+        }
+      }
+    },
+    "导入图片并预览后开始绘制，绘制过程中可随时停止。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import an image, preview it, then start painting. Painting can be stopped at any time."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이미지를 가져와 미리 보고 그리기를 시작하세요. 그리는 중에도 언제든지 중지할 수 있습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入图片并预览后开始绘制，绘制过程中可随时停止。"
+          }
+        }
+      }
+    },
+    "商品黑名单" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Item blacklist"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "상품 블랙리스트"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "商品黑名单"
+          }
+        }
+      }
+    },
+    "导入预设" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Presets"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프리셋 가져오기"
+          }
+        }
+      }
+    },
+    "导航覆盖" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nav Override"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내비 덮어쓰기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导航覆盖"
+          }
+        }
+      }
+    },
+    "常驻关卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permanent Stages"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "상시 스테이지"
+          }
+        }
+      }
+    },
+    "干员资料写盘失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to write operator data: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 데이터 쓰기 실패: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "干员资料写盘失败：%@"
+          }
+        }
+      }
+    },
+    "开局干员职业重复，请调整顺位配置。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting operators share a class. Adjust the starting order."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시작 오퍼레이터의 직업이 중복됩니다. 순위 설정을 변경하세요."
+          }
+        }
+      }
+    },
+    "感谢评价！\n网页已经开放评论区，欢迎前往留下你的评论！" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thanks for the likes!\nThe comment section is already open on the web page, please feel free to leave your comment!"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "감사합니다!\n웹사이트에 댓글을 남길 수도 있으니 의견을 남겨 주세요!"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "感谢评价！\n网页已经开放评论区，欢迎前往留下你的评论！"
+          }
+        }
+      }
+    },
+    "当前没有可用的一图流干员数据，无法辅助编队。请先从一图流获取干员数据，或关闭「使用一图流数据辅助编队」。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Yituliu operator data is available for formation assist. Fetch operator data from Yituliu first, or disable ｢Assist formation with Yituliu data｣."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용 가능한 Yituliu 오퍼레이터 데이터가 없어 편성을 지원할 수 없습니다. 먼저 Yituliu에서 오퍼레이터 데이터를 가져오거나 ｢Yituliu 데이터로 편성 지원｣을 끄세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前没有可用的一图流干员数据，无法辅助编队。请先从一图流获取干员数据，或关闭「使用一图流数据辅助编队」。"
+          }
+        }
+      }
+    },
+    "技巧概要·卷3" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skill Summary - III"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스킬개론 제3권"
+          }
+        }
+      }
+    },
+    "技能等级" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skill rank"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스킬 랭크"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "技能等级"
+          }
+        }
+      }
+    },
+    "指定第二、第三顺位干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specify second and third starting operators"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "두 번째 및 세 번째 시작 오퍼레이터 지정"
+          }
+        }
+      }
+    },
+    "点踩" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dislike"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "싫어요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点踩"
+          }
+        }
+      }
+    },
+    "点赞" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Like"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "좋아요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点赞"
+          }
+        }
+      }
+    },
+    "突袭" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raid"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "돌격"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "突袭"
+          }
+        }
+      }
+    },
+    "普通" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일반"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "普通"
+          }
+        }
+      }
+    },
+    "添加干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add operator"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 추가"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加干员"
+          }
+        }
+      }
+    },
+    "缺口材料合成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Material synthesis"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재료 합성"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺口材料合成"
+          }
+        }
+      }
+    },
+    "自动提升潜能" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto raise potential"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 잠재력 상승"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动提升潜能"
+          }
+        }
+      }
+    },
+    "自动编队前，按一图流干员练度数据（含技能与模组信息）预匹配作业编队。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Before auto formation, pre-matches the copilot formation against Yituliu operator training data (including skills and modules)."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 편성 전에 Yituliu 오퍼레이터 육성 데이터(스킬 및 모듈 포함)로 작업 편성을 미리 매칭합니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动编队前，按一图流干员练度数据（含技能与模组信息）预匹配作业编队。"
+          }
+        }
+      }
+    },
+    "覆盖导航识别名，作业无法导航到关卡时使用。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overrides the navigation name, for when the copilot cannot navigate to the stage."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내비게이션 인식 이름을 덮어씁니다. 작업이 스테이지로 내비게이션하지 못할 때 사용합니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "覆盖导航识别名，作业无法导航到关卡时使用。"
+          }
+        }
+      }
+    },
+    "视频识别失败：无法完成识别，请检查视频文件是否受支持。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video recognition failed: the video file may not be supported."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비디오 인식 실패: 비디오 파일이 지원되는지 확인해 주세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "视频识别失败：无法完成识别，请检查视频文件是否受支持。"
+          }
+        }
+      }
+    },
+    "识别产物不是有效的作业文件，已丢弃。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recognized output is not a valid copilot file and has been discarded."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인식 결과물은 유효한 작업 파일이 아니므로 폐기했습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "识别产物不是有效的作业文件，已丢弃。"
+          }
+        }
+      }
+    },
+    "请在合成站页面开始。任务会按缺口自动合成所需材料。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start on the synthesis workshop screen. The task synthesizes the required materials automatically."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "합성소 화면에서 시작하세요. 작업이 부족한 재료를 자동으로 합성합니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在合成站页面开始。任务会按缺口自动合成所需材料。"
+          }
+        }
+      }
+    },
+    "请进入干员潜能提升界面。中控信物不足时默认放弃提升，可开启「不足时消耗普通信物」改用普通信物。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the operator potential screen. By default the promotion is abandoned when mid tokens are insufficient; enable ｢Use normal tokens when insufficient｣ to spend normal tokens instead."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 잠재력 상승 화면으로 이동하세요. 중간 증표가 부족하면 기본적으로 상승을 포기하며, ｢부족할 때 일반 증표 사용｣을 켜면 일반 증표를 소모합니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请进入干员潜能提升界面。中控信物不足时默认放弃提升，可开启「不足时消耗普通信物」改用普通信物。"
+          }
+        }
+      }
+    },
+    "部分班次未设置时间段，自动选择时无匹配将使用第一个班次。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some plans have no time periods. Automatic selection falls back to the first plan when no period matches."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일부 근무조에 시간대가 설정되지 않았습니다. 자동 선택 시 일치하는 시간대가 없으면 첫 번째 근무조를 사용합니다."
+          }
+        }
+      }
+    },
+    "从一图流导入干员练度" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import operator data from Yituliu"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류에서 오퍼레이터 데이터 가져오기"
+          }
+        }
+      }
+    },
+    "从所选班次开始，每次成功完成后切换到下一班次。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with the selected plan and advance after each successful completion."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 근무조부터 시작하여 성공적으로 완료할 때마다 다음 근무조로 전환합니다."
+          }
+        }
+      }
+    },
+    "按本机时间选择班次，无匹配时使用第一个班次。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a plan using local time; use the first plan if no period matches."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "컴퓨터의 현재 시간에 따라 근무조를 선택하며, 일치하는 시간대가 없으면 첫 번째 근무조를 사용합니다."
+          }
+        }
+      }
+    },
+    "始终执行所选班次，完成后不自动切换。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always run the selected plan without advancing after completion."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "항상 선택한 근무조를 실행하며, 완료 후 자동으로 전환하지 않습니다."
+          }
+        }
+      }
+    },
+    "固定班次" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fixed plan"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "고정 근무조"
+          }
+        }
+      }
+    },
+    "自动轮换" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic rotation"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동 순환"
+          }
+        }
+      }
+    },
+    "班次选择" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan selection"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "근무조 선택"
+          }
+        }
+      }
+    },
     "" : {
       "shouldTranslate" : false
     },
@@ -32,6 +4132,22 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@：%2$lld"
+          }
+        }
+      }
+    },
+    "%lld 项计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld plans"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획 %lld개"
           }
         }
       }
@@ -191,6 +4307,22 @@
         }
       }
     },
+    "关卡" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stage"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스테이지"
+          }
+        }
+      }
+    },
     "AP-5" : {
       "localizations" : {
         "ko" : {
@@ -203,6 +4335,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "红票-5"
+          }
+        }
+      }
+    },
+    "AUTO 代理倍率" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto Series"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AUTO 대리 배수"
           }
         }
       }
@@ -4428,6 +8576,22 @@
         }
       }
     },
+    "ID" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID"
+          }
+        }
+      }
+    },
     "IP请求频率过快，请稍后再试" : {
       "localizations" : {
         "ko" : {
@@ -5546,6 +9710,406 @@
         }
       }
     },
+    "库存保持" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depot maintain"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재고 유지"
+          }
+        }
+      }
+    },
+    "未配置计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No plans configured"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "구성된 계획 없음"
+          }
+        }
+      }
+    },
+    "仅首个不足" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First insufficient only"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 부족만 실행"
+          }
+        }
+      }
+    },
+    "按达成率排序" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By progress"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "달성률순"
+          }
+        }
+      }
+    },
+    "活动跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip in events"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트 건너뜀"
+          }
+        }
+      }
+    },
+    "芯片折算" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chip conversion"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "칩 환산"
+          }
+        }
+      }
+    },
+    "执行前更新仓库数据" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update depot data before execution"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 전 창고 데이터 업데이트"
+          }
+        }
+      }
+    },
+    "活动期间跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip during event"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트 기간 중 건너뛰기"
+          }
+        }
+      }
+    },
+    "资源全开放期间跳过" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip during resource collection limited-time all-day open"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자원 전체 개방 기간 중 건너뛰기"
+          }
+        }
+      }
+    },
+    "仅执行第一个不足计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only execute the first insufficient plan"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재고 부족한 첫 번째 계획만 실행"
+          }
+        }
+      }
+    },
+    "按库存达成率排序" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execute in inventory progress order"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재고 달성률 순으로 실행"
+          }
+        }
+      }
+    },
+    "使用药剂" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use sanity potion"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이성 회복제 사용"
+          }
+        }
+      }
+    },
+    "使用源石" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use originite prime"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오리지늄 사용"
+          }
+        }
+      }
+    },
+    "使用临期理智药（48 小时内）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use expiring sanity potions (within 48 hours)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "48시간 이내 만료되는 이성 회복제 사용"
+          }
+        }
+      }
+    },
+    "双芯片折算计入芯片组" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Count dual chips as chip packs"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "쌍칩을 칩 팩으로 계산"
+          }
+        }
+      }
+    },
+    "计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plans"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획"
+          }
+        }
+      }
+    },
+    "执行" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execution"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행"
+          }
+        }
+      }
+    },
+    "采购凭证（红票）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Purchase Certificates"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "구매 증명서"
+          }
+        }
+      }
+    },
+    "顺序与预算" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Order and budget"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "순서와 예산"
+          }
+        }
+      }
+    },
+    "统计" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistics"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "통계"
+          }
+        }
+      }
+    },
+    "尚未配置计划。每条计划指定关卡与目标材料，达到目标库存即停。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No plans configured yet. Each plan targets a stage and a material and stops once the target stock is reached."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아직 구성된 계획이 없습니다. 각 계획은 스테이지와 목표 재료를 지정하며, 목표 수량에 도달하면 중단합니다."
+          }
+        }
+      }
+    },
+    "已配置 %lld 项计划。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld plans configured."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획 %lld개가 구성되어 있습니다."
+          }
+        }
+      }
+    },
+    "开启活动/资源跳过后，对应期间整个任务不会下发，计划配置保持不变。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With event or resource skipping enabled, the whole task is not dispatched during those periods; plan configuration is preserved."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이벤트/자원 건너뛰기를 켜면 해당 기간 전체 작업이 실행되지 않으며, 계획 구성은 유지됩니다."
+          }
+        }
+      }
+    },
+    "两个策略同时开启时，先按达成率排序，再执行排序后的第一个不足计划。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With both strategies enabled, plans are sorted by progress first; the first insufficient plan in that order runs."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "두 전략을 모두 켜면 먼저 달성률순으로 정렬한 뒤, 정렬된 순서에서 첫 번째 부족한 계획을 실행합니다."
+          }
+        }
+      }
+    },
+    "开启后每个双芯片按配方折算为 2 个对应芯片组参与达标判定，不会自动合成。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When enabled, each dual chip counts as 2 matching chip packs per the synthesis recipe for completion checks; no synthesis is performed."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "켜면 각 쌍칩이 조합식에 따라 대응 칩 팩 2개로 계산되어 달성 판정에 반영되며, 자동 조합은 하지 않습니다."
+          }
+        }
+      }
+    },
     "ReclamationPnsModeError" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6383,6 +10947,22 @@
         }
       }
     },
+    "Token 只保存在本机偏好设置且不进入日志；导入数据按当前账号/区服隔离，未绑定或为空时保留本地快照。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The token is stored in local preferences only and never enters logs; imported data is isolated per account and server, and the local snapshot is kept when unbound or empty."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "토큰은 로컬 환경설정에만 저장되며 로그에 기록되지 않습니다. 가져온 데이터는 계정/서버별로 격리되며, 미연동 또는 빈 데이터 시 로컬 스냅샷을 유지합니다."
+          }
+        }
+      }
+    },
     "TotalDrop" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6596,6 +11176,70 @@
         }
       }
     },
+    "一图流 OpenAPI Token" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu OpenAPI Token"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 OpenAPI 토큰"
+          }
+        }
+      }
+    },
+    "一图流 Token 为空" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu token is empty"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 토큰이 비어 있습니다"
+          }
+        }
+      }
+    },
+    "一图流 Token 只有写入权限，无法读取练度" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu token has write-only permission and cannot read operator data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 토큰이 쓰기 전용 권한이라 오퍼레이터 데이터를 읽을 수 없습니다"
+          }
+        }
+      }
+    },
+    "一图流 Token 无效或已失效" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu token is invalid or expired"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 토큰이 유효하지 않거나 만료되었습니다"
+          }
+        }
+      }
+    },
     "一图流汇报ID" : {
       "localizations" : {
         "en" : {
@@ -6608,6 +11252,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yituliu 보고 ID"
+          }
+        }
+      }
+    },
+    "一图流网络请求失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu network request failed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 네트워크 요청 실패"
+          }
+        }
+      }
+    },
+    "一图流账号未绑定或未导入练度，已保留本地数据" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yituliu account is unbound or has no imported operator data; local snapshot kept"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류 계정이 연동되지 않았거나 연습도가 가져와지지 않아 로컬 데이터를 유지합니다"
           }
         }
       }
@@ -6676,6 +11352,28 @@
         }
       }
     },
+    "上次激活的作业集无法恢复：目录被移动或作业集清单损坏，已重置列表。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The previously activated copilot set could not be restored: the directory was moved or the set manifest is corrupted. The list has been reset."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전에 활성화한 작업 세트를 복원할 수 없습니다: 디렉터리가 이동되었거나 작업 세트 목록이 손상되어 목록을 초기화했습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次激活的作业集无法恢复：目录被移动或作业集清单损坏，已重置列表。"
+          }
+        }
+      }
+    },
     "上次结果未知" : {
       "localizations" : {
         "zh-Hans" : {
@@ -6720,6 +11418,28 @@
         }
       }
     },
+    "上移" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Up"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "위로 이동"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上移"
+          }
+        }
+      }
+    },
     "上移奖励" : {
       "localizations" : {
         "en" : {
@@ -6760,6 +11480,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "上移标签"
+          }
+        }
+      }
+    },
+    "下移" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Down"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아래로 이동"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下移"
           }
         }
       }
@@ -7131,6 +11873,22 @@
         }
       }
     },
+    "仓库历史快照读取失败；请重新识别。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not read depot history. Recognize inventory again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 창고 자료를 읽지 못했습니다. 다시 인식하세요."
+          }
+        }
+      }
+    },
     "仓库材料" : {
       "localizations" : {
         "ko" : {
@@ -7211,6 +11969,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "작업 제어가 사용 중이므로 이번 예약을 건너뛰었습니다."
+          }
+        }
+      }
+    },
+    "任务名" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 이름"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task Name"
           }
         }
       }
@@ -7451,6 +12225,28 @@
         }
       }
     },
+    "作业集已恢复，部分成员无法加载：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copilot set restored, but some members could not be loaded: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 세트가 복원되었지만 일부 항목을 불러올 수 없습니다: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作业集已恢复，部分成员无法加载：%@"
+          }
+        }
+      }
+    },
     "作业集缺少类型信息，请重新激活此作业集。" : {
       "localizations" : {
         "en" : {
@@ -7495,6 +12291,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "adb-lite로 연결"
+          }
+        }
+      }
+    },
+    "使用助战" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use support unit"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지원 유닛 사용"
           }
         }
       }
@@ -7843,6 +12655,22 @@
         }
       }
     },
+    "停止当前任务；肉鸽战斗中先等待战斗结束，最多 10 分钟。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop current tasks. During a roguelike battle, wait up to 10 minutes for combat to end."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 작업을 중지합니다. 통합 전략 전투 중에는 전투가 끝날 때까지 최대 10분 기다립니다."
+          }
+        }
+      }
+    },
     "傀影" : {
       "localizations" : {
         "ko" : {
@@ -7990,6 +12818,22 @@
         }
       }
     },
+    "公招结果按最近一次干员识别的持有数据标注潜能与新增干员；数据按账号/区服隔离，未识别时不标注。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annotate recruit results with potential and new-operator marks from the latest operator recognition; data is isolated per account and server, and nothing is annotated before recognition."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "공개 모집 결과에 최신 오퍼레이터 식별의 보유 데이터로 잠재 및 신규 오퍼레이터 표시를 붙입니다. 데이터는 계정/서버별로 격리되며, 식별 전에는 표시되지 않습니다."
+          }
+        }
+      }
+    },
     "公招词条" : {
       "localizations" : {
         "ko" : {
@@ -8036,6 +12880,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "게임 종료"
+          }
+        }
+      }
+    },
+    "养成计划 JSON" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progression plan JSON"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "육성 계획 JSON"
+          }
+        }
+      }
+    },
+    "养成计划含有未知字段。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The progression plan contains unknown fields."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "육성 계획에 알 수 없는 필드가 있습니다."
+          }
+        }
+      }
+    },
+    "养成计划字段不能为 null。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progression plan fields cannot be null."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "육성 계획 필드는 null일 수 없습니다."
           }
         }
       }
@@ -8491,6 +13383,22 @@
         }
       }
     },
+    "刷新仓库与干员资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh depot and operator data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "창고 및 오퍼레이터 자료 새로고침"
+          }
+        }
+      }
+    },
     "刷新商店（指路鳞）" : {
       "localizations" : {
         "ko" : {
@@ -8724,6 +13632,86 @@
       }
     },
     "即将" : {},
+    "历史仓库快照" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historical depot snapshot"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 창고 스냅샷"
+          }
+        }
+      }
+    },
+    "历史干员快照" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historical operator snapshot"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 오퍼레이터 스냅샷"
+          }
+        }
+      }
+    },
+    "历史资料不可用，下一次将重新识别。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historical data is unavailable. The next update will recognize again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 자료를 사용할 수 없어 다음 업데이트에서 다시 인식합니다."
+          }
+        }
+      }
+    },
+    "历史资料不可用，将重新识别。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historical data is unavailable. Recognition will run again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 자료를 사용할 수 없어 다시 인식합니다."
+          }
+        }
+      }
+    },
+    "历史资料读取失败；请重新识别。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not read historical data. Recognize again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 자료를 읽지 못했습니다. 다시 인식하세요."
+          }
+        }
+      }
+    },
     "原始分辨率：" : {},
     "参数（每行一个）" : {
       "localizations" : {
@@ -8946,6 +13934,22 @@
         }
       }
     },
+    "同一身份下的手动识别也计入更新间隔。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual recognition under the same identity also counts toward the refresh interval."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "같은 계정에서 수동으로 인식한 자료도 갱신 주기에 포함됩니다."
+          }
+        }
+      }
+    },
     "同次恢复只补跑一条历史计划，本次已跳过。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -8964,6 +13968,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "이번 복구에서는 이전 예약 하나만 실행하므로 이번 예약을 건너뛰었습니다."
+          }
+        }
+      }
+    },
+    "名称" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이름"
           }
         }
       }
@@ -9188,6 +14208,22 @@
         }
       }
     },
+    "否" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아니요"
+          }
+        }
+      }
+    },
     "启用全局热键" : {
       "localizations" : {
         "zh-Hans" : {
@@ -9313,6 +14349,102 @@
         }
       }
     },
+    "材料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Material"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재료"
+          }
+        }
+      }
+    },
+    "目标数量" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target quantity"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목표 수량"
+          }
+        }
+      }
+    },
+    "添加计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add plan"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획 추가"
+          }
+        }
+      }
+    },
+    "清空计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear plans"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획 비우기"
+          }
+        }
+      }
+    },
+    "确认清空所有计划？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear all plans?"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모든 계획을 비울까요?"
+          }
+        }
+      }
+    },
+    "未选择" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not selected"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택 안 함"
+          }
+        }
+      }
+    },
     "在第五层BOSS前暂停" : {
       "localizations" : {
         "ko" : {
@@ -9349,6 +14481,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "기반 시설 모드"
+          }
+        }
+      }
+    },
+    "填写 JSON 计划数组；干员名使用中文。支持 name、role、elite、skill_level、skill_mastery，省略不执行的动作。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a JSON array using Chinese operator names. Supported fields: name, role, elite, skill_level, skill_mastery. Omit actions you do not want to run."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "중국어 오퍼레이터 이름으로 JSON 계획 배열을 입력하세요. 지원 필드: name, role, elite, skill_level, skill_mastery. 실행하지 않을 동작은 생략하세요."
           }
         }
       }
@@ -9797,6 +14945,92 @@
         }
       }
     },
+    "导出 CSV" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export CSV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CSV 내보내기"
+          }
+        }
+      }
+    },
+    "导出 Markdown" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Markdown"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markdown 내보내기"
+          }
+        }
+      }
+    },
+    "导出失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export failed: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보내기 실패: %@"
+          }
+        }
+      }
+    },
+    "导出干员资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export operator data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 데이터 내보내기"
+          }
+        }
+      }
+    },
+    "导航名映射失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navigation name mapping failed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내비게이션 이름 매핑 실패"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导航名映射失败"
+          }
+        }
+      }
+    },
     "将删除无法读取的定时记录文件并重建空记录；刚触发过且仍在触发窗口内的定时可能再执行一次。" : {
       "localizations" : {
         "zh-Hans" : {
@@ -9847,6 +15081,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "小游戏启动失败"
+          }
+        }
+      }
+    },
+    "尚未绑定本地账号标识：将每次识别。可在仓库或干员工具页绑定，以使用按天、按周的成功记录。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No local account label is bound, so recognition runs every time. Bind a label in the depot or operator tool to use daily or weekly success records."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로컬 계정 이름이 연결되지 않아 매번 인식합니다. 창고 또는 오퍼레이터 도구에서 계정 이름을 연결하면 일별 또는 주별 성공 기록을 사용할 수 있습니다."
           }
         }
       }
@@ -10074,6 +15324,22 @@
         }
       }
     },
+    "已持有" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Owned"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보유"
+          }
+        }
+      }
+    },
     "已添加：%@" : {},
     "已请求取消正在进行的任务启动，请稍候。" : {
       "localizations" : {
@@ -10240,6 +15506,38 @@
       }
     },
     "常驻活动" : {},
+    "干员养成计划" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operator progression plans"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 육성 계획"
+          }
+        }
+      }
+    },
+    "干员养成计划按数组顺序执行，可能消耗龙门币、材料与训练时间。请确认目标后再启用任务。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plans run in array order and may consume LMD, materials and training time. Confirm the targets before enabling the task."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계획은 배열 순서대로 실행되며 용문폐, 재료 및 훈련 시간이 소모될 수 있습니다. 목표를 확인한 후 작업을 활성화하세요."
+          }
+        }
+      }
+    },
     "干员列表" : {
       "localizations" : {
         "ko" : {
@@ -10250,7 +15548,44 @@
         }
       }
     },
-    "干员名称" : {},
+    "干员历史快照保存失败。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not save the historical operator snapshot."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 오퍼레이터 스냅샷을 저장하지 못했습니다."
+          }
+        }
+      }
+    },
+    "干员名称" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operator name"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 이름"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "干员名称"
+          }
+        }
+      }
+    },
     "干员寻访" : {
       "localizations" : {
         "ko" : {
@@ -10267,6 +15602,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "오퍼레이터 인식"
+          }
+        }
+      }
+    },
+    "干员识别结果不包含技能、专精与模组信息，历史快照不会补造这些字段。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operator recognition does not include skill, mastery or module data. History does not invent these fields."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 인식 결과에는 스킬, 특화 및 모듈 정보가 포함되지 않습니다. 과거 스냅샷은 이 필드를 임의로 생성하지 않습니다."
           }
         }
       }
@@ -10332,6 +15683,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "열기"
+          }
+        }
+      }
+    },
+    "开启后每日更新资料不再为干员部分启动模拟器识别；Token 为空时该次运行失败，其余失败按条目记录，不影响仓库识别。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When enabled, the daily data update no longer runs emulator recognition for operators; an empty token fails that run, while other failures are recorded per entry and do not affect depot recognition."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "활성화하면 매일 데이터 갱신 시 오퍼레이터 부분의 에뮬레이터 인식을 실행하지 않습니다. 토큰이 비어 있으면 해당 실행이 실패하고, 그 외 실패는 항목별로 기록되며 창고 인식에는 영향을 주지 않습니다."
           }
         }
       }
@@ -10599,6 +15966,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Current resources use the legacy multiplier UI; series battles are limited to 6x."
+          }
+        }
+      }
+    },
+    "当前身份上次成功更新" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last successful update for this identity"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 계정의 마지막 성공 업데이트"
           }
         }
       }
@@ -11112,12 +16495,56 @@
         }
       }
     },
+    "文件损坏" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File corrupted"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "파일 손상"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件损坏"
+          }
+        }
+      }
+    },
     "文件格式错误" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "파일 형식 오류"
+          }
+        }
+      }
+    },
+    "文件缺失" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File missing"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "파일 없음"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件缺失"
           }
         }
       }
@@ -11534,6 +16961,22 @@
         }
       }
     },
+    "日常更新资料的干员识别改用一图流" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Yituliu for daily operator-data update"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일일 오퍼레이터 데이터 갱신에 일유류 사용"
+          }
+        }
+      }
+    },
     "日志" : {
       "localizations" : {
         "ko" : {
@@ -11610,6 +17053,54 @@
         }
       }
     },
+    "星级" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rarity"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "희귀도"
+          }
+        }
+      }
+    },
+    "是" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "예"
+          }
+        }
+      }
+    },
+    "显示已持有干员潜能" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show potential for owned operators"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보유 오퍼레이터 잠재 표시"
+          }
+        }
+      }
+    },
     "更换主题" : {
       "localizations" : {
         "en" : {
@@ -11646,6 +17137,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "업데이트 설정"
+          }
+        }
+      }
+    },
+    "更新资料" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update data"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자료 업데이트"
+          }
+        }
+      }
+    },
+    "更新资料未到执行间隔或未选择识别内容，已跳过。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data refresh skipped: the interval has not elapsed or no data was selected."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자료 갱신 주기가 지나지 않았거나 인식 내용을 선택하지 않아 건너뛰었습니다."
+          }
+        }
+      }
+    },
+    "更新资料未完整完成或保存失败：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data refresh was incomplete or could not be saved: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자료 갱신이 완료되지 않았거나 저장하지 못했습니다: %@"
           }
         }
       }
@@ -11797,6 +17336,22 @@
       }
     },
     "未启用MacPlayTools触控模式" : {},
+    "未填写任务名" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 이름 미입력"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No task name entered"
+          }
+        }
+      }
+    },
     "未开启屏幕录制权限，请前往“系统设置” > “隐私与安全性” > “录屏与系统录音”允许MAA访问" : {},
     "未拥有干员：%lld" : {
       "localizations" : {
@@ -11863,6 +17418,22 @@
         }
       }
     },
+    "未绑定本地账号标识，资料识别仍会执行，但不会按历史成功时间跳过后续更新。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No local account label is bound. Recognition will run without using historical success times to skip future updates."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로컬 계정 이름이 연결되지 않았습니다. 인식은 실행되지만 과거 성공 시간을 기준으로 이후 업데이트를 건너뛰지 않습니다."
+          }
+        }
+      }
+    },
     "未编号物" : {
       "localizations" : {
         "en" : {
@@ -11903,6 +17474,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "선택된 파일 없음"
+          }
+        }
+      }
+    },
+    "未选择识别内容，此任务将跳过。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No data selected. This task will be skipped."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 인식 내용이 없어 이 작업을 건너뜁니다."
           }
         }
       }
@@ -11967,6 +17554,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "리소스 찾기…"
+          }
+        }
+      }
+    },
+    "查看历史仓库快照" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View historical depot snapshot"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 창고 스냅샷 보기"
+          }
+        }
+      }
+    },
+    "查看历史干员快照" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View historical operator snapshot"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "과거 오퍼레이터 스냅샷 보기"
           }
         }
       }
@@ -12058,6 +17677,22 @@
         }
       }
     },
+    "模组" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Module"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모듈"
+          }
+        }
+      }
+    },
     "次" : {
       "localizations" : {
         "ko" : {
@@ -12118,6 +17753,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "복구 중인 강제 시작 작업을 중단하는 중입니다. 잠시만 기다려 주세요."
+          }
+        }
+      }
+    },
+    "正在等待当前肉鸽战斗结束；再次停止将立即中断。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for the current roguelike battle to end. Stop again to interrupt immediately."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 통합 전략 전투가 끝나기를 기다리는 중입니다. 다시 중지하면 즉시 중단합니다."
           }
         }
       }
@@ -12666,6 +18317,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "최대 레벨 도달 시 자동 정지"
+          }
+        }
+      }
+    },
+    "潜能" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potential"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "잠재"
           }
         }
       }
@@ -13334,6 +19001,22 @@
       }
     },
     "窗口大小：" : {},
+    "立即停止" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop immediately"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "즉시 중지"
+          }
+        }
+      }
+    },
     "第一只动物" : {
       "localizations" : {
         "en" : {
@@ -13378,6 +19061,22 @@
         }
       }
     },
+    "第一顺位干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First starting operator"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 번째 시작 오퍼레이터"
+          }
+        }
+      }
+    },
     "第三结局" : {
       "localizations" : {
         "en" : {
@@ -13396,6 +19095,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "第三结局"
+          }
+        }
+      }
+    },
+    "第三顺位干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Third starting operator"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "세 번째 시작 오퍼레이터"
           }
         }
       }
@@ -13440,6 +19155,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "第二结局"
+          }
+        }
+      }
+    },
+    "第二顺位干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Second starting operator"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "두 번째 시작 오퍼레이터"
           }
         }
       }
@@ -13555,6 +19286,22 @@
         }
       }
     },
+    "等级" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레벨"
+          }
+        }
+      }
+    },
     "策略" : {
       "localizations" : {
         "ko" : {
@@ -13631,6 +19378,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "精英%1$lld 等级%2$lld 潜能%3$lld"
+          }
+        }
+      }
+    },
+    "精英化" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elite"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정예화"
+          }
+        }
+      }
+    },
+    "精英化、技能升级与专精" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Promotion, skill levels and mastery"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정예화, 스킬 레벨 및 특화"
           }
         }
       }
@@ -13777,24 +19556,40 @@
       }
     },
     "红票-5" : {},
-    "组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口。无需输入监控权限。" : {
+    "练度快照保存失败：%@" : {
       "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口。无需输入监控权限。"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Include Command or Control. Start runs only when idle; Stop uses the same task controls. Input Monitoring permission is not required."
+            "value" : "Failed to save operator snapshot: %@"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Command 또는 Control을 포함해야 합니다. 유휴 상태에서만 시작하며 중지는 작업 버튼과 동일하게 작동합니다. 입력 모니터링 권한은 필요하지 않습니다."
+            "value" : "연습도 스냅샷 저장 실패: %@"
+          }
+        }
+      }
+    },
+    "组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口；显隐主窗口切换主窗口可见性。无需输入监控权限。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Must include Command or Control. Start runs only when idle; Stop uses the same entry as the task buttons; Show/Hide toggles main window visibility. No Input Monitoring permission required."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Command 또는 Control을 포함해야 합니다. 시작은 대기 중일 때만 실행되고, 중지는 작업 버튼과 같은 진입점을 사용하며, 창 표시/숨기기는 기본 창 표시 상태를 전환합니다. 입력 모니터링 권한이 필요하지 않습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "组合须包含 Command 或 Control。开始仅在空闲时执行；停止使用与任务按钮相同的入口；显隐主窗口切换主窗口可见性。无需输入监控权限。"
           }
         }
       }
@@ -13926,6 +19721,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "羽蛇最多选择一只。"
+          }
+        }
+      }
+    },
+    "职业需使用 Core 标准名称，或省略以自动识别。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use a canonical Core class name, or omit role for automatic detection."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Core 표준 직업 이름을 사용하거나 role을 생략해 자동 인식하세요."
           }
         }
       }
@@ -14244,6 +20055,22 @@
       }
     },
     "色彩匹配" : {},
+    "自定任务" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "커스텀 작업"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Task"
+          }
+        }
+      }
+    },
     "至简" : {
       "localizations" : {
         "en" : {
@@ -14488,6 +20315,22 @@
       }
     },
     "解析 %@[%@] 成功" : {},
+    "触发间隔" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh interval"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "갱신 주기"
+          }
+        }
+      }
+    },
     "触控模式" : {
       "localizations" : {
         "ko" : {
@@ -14780,6 +20623,54 @@
         }
       }
     },
+    "请填写干员中文名。三名干员职业不能相同，建议希望消耗高的排在前面；空项会被跳过，后续非空项依次前移。未找到指定干员时由 Core 自动选择。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter Chinese operator names. Use different classes and put higher Hope costs first. Empty entries are skipped and later entries move forward. Core chooses automatically if the requested operator is not found."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터의 중국어 이름을 입력하세요. 직업이 서로 달라야 하며 희망 소모가 높은 순서를 권장합니다. 빈 항목은 건너뛰고 이후 항목이 앞으로 이동합니다. 지정한 오퍼레이터를 찾지 못하면 Core가 자동으로 선택합니다."
+          }
+        }
+      }
+    },
+    "请填写至少一个任务名。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter at least one task name."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 이름을 하나 이상 입력하세요."
+          }
+        }
+      }
+    },
+    "请填写至少一个干员养成计划。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter at least one operator progression plan."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 육성 계획을 하나 이상 입력하세요."
+          }
+        }
+      }
+    },
     "请打开“自动战斗”页，将攻略视频文件拖入外部作业列表即可。" : {
       "localizations" : {
         "ko" : {
@@ -14791,6 +20682,38 @@
       }
     },
     "请拖入图片" : {},
+    "请按游戏账号分别命名；此标识不验证登录身份。游戏切换账号后将清空绑定。历史快照仅供查看，重启后仍须重新识别库存。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use a separate label for each game account. This label does not verify login identity and is cleared when the game reports an account switch. History is for reference; recognize inventory again after restarting."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "게임 계정마다 별도의 이름을 지정하세요. 이 이름은 로그인 신원을 확인하지 않으며 게임 계정 전환 시 연결이 해제됩니다. 과거 자료는 참고용이며 재시작 후 창고를 다시 인식해야 합니다."
+          }
+        }
+      }
+    },
+    "请检查干员名和养成目标：精英化 1–2，技能 2–7，专精为三个 0–3 的整数。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check the operator name and targets: promotion 1–2, skill level 2–7, and three mastery integers from 0 to 3."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오퍼레이터 이름과 목표를 확인하세요. 정예화는 1–2, 스킬 레벨은 2–7, 특화는 0–3 사이의 정수 3개입니다."
+          }
+        }
+      }
+    },
     "请注意，这是真的抽卡！不是模拟！！！" : {
       "localizations" : {
         "ko" : {
@@ -14934,6 +20857,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "무역소 - 용문폐"
+          }
+        }
+      }
+    },
+    "资料更新缺少完整结束回调，本轮按失败收口。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data refresh ended without complete callbacks. This run is recorded as failed."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자료 갱신의 완료 콜백이 누락되어 이번 실행을 실패로 기록합니다."
+          }
+        }
+      }
+    },
+    "资料账号标识（本地自定义）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data account label (local)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자료 계정 이름 (로컬)"
           }
         }
       }
@@ -15742,7 +21697,22 @@
         }
       }
     },
-    "预设" : {},
+    "预设" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preset"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프리셋"
+          }
+        }
+      }
+    },
     "领取周年庆赠送月卡奖励" : {
       "localizations" : {
         "ko" : {
@@ -15826,6 +21796,28 @@
       }
     },
     "额外绘制间隔" : {},
+    "额外自选干员" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add custom operators"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "커스텀 오퍼레이터 추가"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "额外自选干员"
+          }
+        }
+      }
+    },
     "饱和度" : {},
     "额外标签策略" : {
       "localizations" : {
@@ -15854,6 +21846,22 @@
       }
     },
     "高度：" : {},
+    "高级芯片组（全职业）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chip Packs (All Classes)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "칩셋 (전 직군)"
+          }
+        }
+      }
+    },
     "黄票商店" : {
       "localizations" : {
         "ko" : {
@@ -15953,11 +21961,60 @@
             "state" : "translated",
             "value" : "LMD"
           }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "용문폐"
+          }
         }
       }
     },
     "龙门币-6/5" : {},
-    "（突袭）" : {},
+    "（磨难）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(Adverse)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(가혹)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "（磨难）"
+          }
+        }
+      }
+    },
+    "（突袭）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(Raid)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(돌격)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "（突袭）"
+          }
+        }
+      }
+    },
     "启用备选关卡" : {
       "localizations" : {
         "en" : {
@@ -16018,6 +22075,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "주간 일정 사용"
+          }
+        }
+      }
+    },
+    "按区服游戏日凌晨四点与周一四点判断间隔。识别完整成功并保存后才更新对应记录；失败、取消或切换身份不会提前记为成功。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intervals use the server game day at 04:00 and Monday at 04:00. Each record updates only after complete recognition and successful saving; failure, cancellation or identity changes cannot premark success."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "주기는 서버 기준 오전 4시와 월요일 오전 4시를 사용합니다. 각 기록은 인식이 완전히 성공하고 저장된 후에만 갱신되며 실패, 취소 또는 계정 변경을 미리 성공으로 기록하지 않습니다."
           }
         }
       }
@@ -16086,6 +22159,38 @@
         }
       }
     },
+    "专精" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mastery"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "특화"
+          }
+        }
+      }
+    },
+    "主技能等级" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Main skill level"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메인 스킬 레벨"
+          }
+        }
+      }
+    },
     "主选关卡已不在目录（活动轮换）时的处理；启用备选关卡时由备选顺序接管。" : {
       "localizations" : {
         "en" : {
@@ -16114,6 +22219,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "주간 일정에 오늘 요일이 체크되지 않아 \"%@\"을(를) 건너뛰었습니다"
+          }
+        }
+      }
+    },
+    "已导入 %lld 名干员练度" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imported %lld operators from Yituliu"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일유류에서 %lld명의 오퍼레이터를 가져왔습니다"
+          }
+        }
+      }
+    },
+    "已导出：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exported: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보냄: %@"
           }
         }
       }

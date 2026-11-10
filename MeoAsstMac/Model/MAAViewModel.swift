@@ -19,6 +19,9 @@ import SwiftUI
     /// 先置钩子脚本执行失败(exit≠0,非超时):记 .failed 而非 .cancelled,
     /// 使结果四态与任务卡"成功/失败/取消/超时"字面一致(A 审 Q1)。
     private struct PreparationHookFailure: Error {}
+    /// 日常「更新资料」准入期 token 为空（I04-b）：与 WPF 同构地失败整跑，
+    /// 与条目级失败（writeOnly/invalid/network/noData）的"条目 .failure 不中止跑"区分。
+    private struct YituliuDailyTokenEmpty: Error {}
 
 // MARK: - Core Status
 
@@ -46,6 +49,18 @@ import SwiftUI
 
     // 核心回调可能在异步操作返回前重置 status，独立标记防止入口重叠。
     @Published private(set) var isStartStopInFlight = false
+
+    // G18 停止语义：肉鸽战斗中延迟停止。开关是全局运行时设置（WPF
+    // Gui.RuntimeSettings.RoguelikeDelayAbortUntilCombatComplete 同位，不进任务参数）。
+    @AppStorage("MAARoguelikeDelayAbortUntilCombatComplete") var roguelikeDelayAbortUntilCombatComplete = false
+    /// 本轮运行是否下发了肉鸽任务：限定战斗态跟踪范围，防止 Copilot 的 StageInfo 误触发。
+    /// （ setter 供 MaaMessage 扩展跨文件写入，与 taskStatus 同例。）
+    @Published var activeRunHasRoguelike = false
+    /// 肉鸽当前处于战斗节点（StageInfo/RoguelikeCombatEnd 消息对驱动）。
+    @Published var roguelikeInCombat = false
+    /// 停止请求正在等待当前战斗结束；再次请求停止时立即终止等待。
+    @Published var roguelikeWaitingForCombat = false
+    private var roguelikeCombatWaitAborted = false
     var forceRecovery: ForcedGameRecovery?
     var forceRecoveryInFlight = false
     private var forceRecoveryAbortRequested = false
@@ -152,15 +167,45 @@ import SwiftUI
     @Published var taskIDMap: [Int32: UUID] = [:]
     // Preserve the exact parameters submitted to Core for delayed medicine callbacks.
     var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
+    // P12.4 库存保持中途重算（upstream OnTaskStatusChanged 会话态，运行开始重置）：
+    // 已下发战斗的档案、识别回填复查登记与临期药耗尽证明。
+    var depotFightPlans: [Int32: DepotFightDispatch] = [:]
+    var frozenTargetFights: [Int32: FrozenTargetDispatch] = [:]
+    var depotMaintainReviews: [DepotMaintainReviewEntry] = []
+    var provenExhaustedMedicineDays = 0
+    /// 本轮冻结目标的消费凭据（startTasks 规划期设置、战斗下发时消费）：元组字段
+    /// (itemID, 重算目标量 = startInventory + requiredDrops)。不随 ensureHandle 重置
+    /// ——重置发生在规划之后；每轮规划无条件覆写，下发登记消费。
+    var pendingFrozenTarget: (itemID: String, target: Int)?
     @Published var newTaskAdded = false
     @Published var inventory = InventorySnapshotAdapter()
     var inventoryDepotTaskID: Int32?
     var pendingInventoryDepot: MAADepot?
     var inventoryDepotScope: InventoryScope?
+    var operBoxHistoryTaskID: Int32?
+    var operBoxHistoryScope: InventoryScope?
+    var pendingOperBoxHistory: OperBoxHistoryPayload?
+    @Published var operBoxHistoryRevision = UUID()
+
+    /// A local label explicitly bound by the user, never inferred from a task profile.
+    @AppStorage("MAAUserDataAccount") var userDataAccount = "" {
+        didSet { if userDataAccount != oldValue { invalidateInventory() } }
+    }
+
+    /// 一图流 OpenAPI token（I04 只读练度导入）。明文存 UserDefaults：WPF 为 DPAPI 加密，
+    /// Keychain 迁移待正式签名环境（P28/P29 批次）；token 不进日志与支持包。
+    @AppStorage("MAAYituliuOpenApiToken") var yituliuOpenApiToken = ""
+    /// 日常「更新资料」组合任务的干员资料改用一图流拉取（I04-b，WPF
+    /// EnableOperBoxYituliuApi 同位）；关闭时干员识别照常进 Core 队列。
+    @AppStorage("MAAYituliuOperBoxForDaily") var yituliuOperBoxForDaily = false
+    /// 生产为默认会话；隔离验证注入 URLProtocol 桩会话。
+    var yituliuSession: URLSession = .shared
+    @Published private(set) var yituliuImportInFlight = false
+    @Published private(set) var yituliuImportMessage: String?
 
     var inventoryScope: InventoryScope {
         InventoryScope(connection: "\(connectionAddress)|\(touchMode.rawValue)|\(toolsMode.rawValue)|\(useGzip)|\(useAdbLite)",
-                       server: clientChannel.rawValue, profile: dailyTaskProfile)
+                       server: clientChannel.rawValue, profile: dailyTaskProfile, account: userDataAccount)
     }
 
     var currentInventorySnapshot: InventorySnapshot? { inventory.usableSnapshot(scope: inventoryScope) }
@@ -170,6 +215,11 @@ import SwiftUI
         inventoryDepotTaskID = nil
         inventoryDepotScope = nil
         pendingInventoryDepot = nil
+        operBoxHistoryTaskID = nil
+        operBoxHistoryScope = nil
+        pendingOperBoxHistory = nil
+        logStore?.setDepot(nil)
+        logStore?.setOperBox(nil)
     }
 
     enum TaskStatus: Equatable {
@@ -177,9 +227,12 @@ import SwiftUI
         case failure
         case running
         case success
+        case skipped
     }
 
     @Published var taskStatus: [UUID: TaskStatus] = [:]
+    var userDataUpdateRun = UserDataUpdateRun()
+    private var userDataCallbackDeadline: ContinuousClock.Instant?
 
     var tasksDirectory: URL {
         Self.userDirectory.appendingPathComponent("DailyTasks", isDirectory: true)
@@ -261,12 +314,304 @@ import SwiftUI
     @AppStorage("ResourceUpdateChannel") var resourceChannel = MAAResourceChannel.github
 
     @Published var showResourceUpdate = false
+    /// U04: 忙时延后标记——运行收口后由 applyDeferredResourceUpdateIfPending 消费。
+    @Published private(set) var pendingResourceUpdateNotice = false
+    // P27/U03/U04/U08: 资源更新代理/GitHub token/定时检查（WPF Update.Proxy/ProxyType/
+    // GitHubToken/CheckOnSchedule 同位；WPF 的 CheckOnSchedule 无消费者为休眠字段，
+    // Mac 实现为活体定时检查——差异入档）。
+    @AppStorage("MAAResourceUpdateProxyEnabled") var resourceProxyEnabled = false
+    @AppStorage("MAAResourceUpdateProxy") var resourceUpdateProxy = ""
+    @AppStorage("MAAGitHubResourceToken") var githubResourceToken = ""
+    @AppStorage("MAACheckResourceUpdateOnSchedule") var checkResourceUpdateOnSchedule = false
+    @AppStorage("MAAResourceUpdateCheckIntervalHours") var resourceUpdateCheckIntervalHours = 24
+    private var scheduledResourceCheckTimer: Timer?
 
     // MARK: - System Settings
 
     @AppStorage("MAAPreventSystemSleeping") var preventSystemSleeping = false {
         didSet {
             NotificationCenter.default.post(name: .MAAPreventSystemSleepingChanged, object: preventSystemSleeping)
+        }
+    }
+
+    // S04: WPF RuntimeSettings.BlockSleepWithScreenOn 同位。true（缺省）＝任务期间
+    // 屏幕常亮（历史行为 NoDisplaySleep）；false＝允许屏幕休眠、系统仍保持唤醒。
+    @AppStorage("MAABlockSleepWithScreenOn") var blockSleepWithScreenOn = true {
+        didSet {
+            NotificationCenter.default.post(name: .MAABlockSleepWithScreenOnChanged, object: blockSleepWithScreenOn)
+        }
+    }
+
+    // S02: WPF Start.RunDirectly / Start.SkipStartupAutoRunAfterUpdate 同位。
+    @AppStorage("MAARunDirectly") var runDirectly = false
+    @AppStorage(StartupAutoRunPolicy.skipAfterUpdateDefaultsKey) var skipStartupAutoRunAfterUpdate = true
+
+    /// S02: 启动自动运行倒计时的剩余秒数；nil＝无倒计时（驱动 ContentView 弹窗）。
+    @Published private(set) var startupAutoRunRemaining: Int?
+    let startupAutoRunCountdown = StartupAutoRunCountdown()
+    private var startupAutoRunHandled = false
+
+    // MARK: - Local Notifications (P23/E01)
+
+    let localNotifications = LocalNotificationService()
+    /// 缺省关（历史行为无系统通知，零暗改）；开启时走授权链。
+    @AppStorage("MAALocalNotificationsEnabled") var localNotificationsEnabled = false {
+        didSet {
+            localNotifications.userEnabled = localNotificationsEnabled
+            if localNotificationsEnabled {
+                Task { await localNotifications.requestIfNecessary() }
+            }
+        }
+    }
+
+    /// AllTasksCompleted：完成通知（按运行去重）+ 理智恢复定时提醒（同 id 覆盖旧计划）+ 外部通知。
+    func notifyAllTasksCompleted(body: String) {
+        let runID = dailyRunCoordinator.active?.id
+        let recoveryTime = logStore?.sanityReport?.fullRecoveryTime()
+        let externalBody = body.isEmpty ? String(localized: "全部任务执行完毕") : body
+        notifyExternal(title: String(localized: "任务已完成"), body: externalBody)
+        Task {
+            await localNotifications.send(
+                id: "all-tasks-completed-\(runID?.uuidString ?? "unknown")",
+                title: String(localized: "任务已完成"),
+                body: externalBody,
+                deduplicateSession: true
+            )
+            if let recoveryTime {
+                await localNotifications.schedule(
+                    id: LocalNotificationService.sanityRecoveryID,
+                    title: String(localized: "理智恢复提醒"),
+                    body: String(localized: "理智已回满，可以继续安排任务"),
+                    fireDate: recoveryTime
+                )
+            }
+        }
+    }
+
+    /// 公招识别错误（WPF ToastNotification.ShowDirect(identifyTheMistakes) 同位）。
+    func notifyRecruitRecognitionError() {
+        let externalBody = String(localized: "公招任务链出错，请查看日志")
+        notifyExternal(title: String(localized: .identifyTheMistakes), body: externalBody)
+        Task {
+            await localNotifications.send(
+                id: "recruit-error-\(UUID().uuidString)",
+                title: String(localized: .identifyTheMistakes),
+                body: externalBody
+            )
+        }
+    }
+
+    /// 独立作业完成反馈（WPF runOwner==Copilot 的 TaskComplete 同位）。
+    func notifyCopilotCompleted(chainName: String) {
+        notifyExternal(title: String(localized: "作业已完成"), body: chainName)
+        Task {
+            await localNotifications.send(
+                id: "copilot-completed-\(chainName)",
+                title: String(localized: "作业已完成"),
+                body: chainName,
+                deduplicateSession: true
+            )
+        }
+    }
+
+    // MARK: - Post Actions & Duration Limit (P22/S15-S17)
+
+    let postActionSettings = PostActionSettingsStore()
+    /// S15: 作业也执行前后脚本（WPF ExecuteScriptOnCopilot 同位，缺省 false 零暗改）。
+    @AppStorage("MAAExecuteScriptOnCopilot") var executeScriptOnCopilot = false
+    /// S15: 本轮运行是否为作业——终态 after-hook 的门控标记。
+    @Published private(set) var activeRunIsCopilot = false
+    /// S16: 运行时长上限（WPF RunDurationLimit* 同位；缺省关）。
+    @AppStorage("MAARunDurationLimitEnabled") var runDurationLimitEnabled = false
+    @AppStorage("MAARunDurationLimitMinutes") var runDurationLimitMinutes = RunDurationLimit.clampedMinutes(240)
+    @AppStorage("MAARunDurationLimitExecutePostActions") var runDurationLimitExecutePostActions = true
+    private var durationLimitTask: Task<Void, Never>?
+    private var stopInitiatedByDurationLimit = false
+    /// S17: per-run 幂等（WPF _postActionsLaunched 同构）——时长上限停止与
+    /// 自然完成赛跑时只执行一次收尾动作。
+    private var postActionsLaunchedRunID: UUID?
+
+    // MARK: - Scheduled Start (P21/S08)
+
+    /// S08: 定时开始前发送本机提醒（WPF NotifyBeforeScheduledStart 同位）。
+    @AppStorage("MAANotifyBeforeScheduledStart") var notifyBeforeScheduledStart = false
+    /// S08: 提前分钟数（WPF ScheduledStartNotificationMinutes 缺省 5）。
+    @AppStorage("MAAScheduledStartNotificationMinutes") var scheduledStartNotificationMinutes = 5
+
+    // MARK: - External Notifications (P24/E02+E06 + P25/E03-E05)
+
+    let externalNotificationSettings = ExternalNotificationSettingsStore()
+    let externalNotificationSender = ExternalNotificationSender()
+    let externalNotificationTrigger = ExternalNotificationTrigger()
+    let externalNotificationHistory = ExternalNotificationHistory()
+    let externalNotificationPolicyStore = ExternalNotificationDeliveryPolicyStore()
+    let externalStallMonitor = ExternalStallMonitor()
+    /// WPF DeliverySettings.Enable 同位（缺省关零暗改）。
+    @AppStorage("MAAExternalNotificationEnabled") var externalNotificationEnabled = false
+    /// E05: 停滞检测开关与超时（WPF EnableStallTimeout/StallTimeoutMinutes 同位，钳 0-11451）。
+    @AppStorage("MAANotifyStallTimeoutEnabled") var notifyStallTimeoutEnabled = false
+    @AppStorage("MAANotifyStallTimeoutMinutes") var notifyStallTimeoutMinutes = 30
+
+    /// P25 触发判定 + 历史打包后的逐渠道投递（WPF Notify→ProcessLog→SendExternal 同构）。
+    func notifyExternal(title: String, body: String, kind: ExternalNotificationEventKind = .complete) {
+        externalNotificationHistory.add(.init(timestamp: .now, content: body))
+        guard externalNotificationEnabled, !externalNotificationSettings.configs.isEmpty else {
+            externalNotificationTrigger.reset()
+            return
+        }
+        let policy = externalNotificationPolicyStore.policy
+        guard externalNotificationTrigger.shouldSend(policy: policy, kind: kind, content: body) else { return }
+        let bundled = externalNotificationHistory.bundle(current: body, at: .now, policy: policy)
+        let configs = externalNotificationSettings.configs.filter(\.enabled)
+        guard !configs.isEmpty else { return }
+        Task { [sender = externalNotificationSender] in
+            for config in configs {
+                let result = await sender.send(config: config, title: title, content: bundled)
+                if !result.success {
+                    // 错误反馈不携带凭据（发送面已截断 key-in-path）。
+                    self.logError(verbatim: "外部通知(\(config.displayName))发送失败：\(result.detail)")
+                }
+            }
+        }
+    }
+
+    /// E03: 停滞告警回调（WPF OnStalled 同构：忙时且同运行才发）。
+    func notifyExternalStalled(initialMinutes: Int, accumulatedMinutes: Int) {
+        guard dailyRunCoordinator.active != nil else { return }
+        notifyExternal(
+            title: String(localized: "任务疑似停滞"),
+            body: String(localized: "任务已 \(initialMinutes) 分钟无输出，累计 \(accumulatedMinutes) 分钟。"),
+            kind: .stalled
+        )
+    }
+
+    // MARK: - Log Cards (P29/U11)
+
+    /// 卡尾缩略图（日志 id → 640×360）；上限 100（WPF TrimOldThumbnails 同构）。
+    @Published private(set) var logThumbnails: [UUID: NSImage] = [:]
+    private var logThumbnailInFlight = false
+
+    /// 任务链完成/错误时截图挂到最新日志卡尾；连接不可用或截图失败静默跳过
+    /// （WPF AttachThumbnailToCardAsync 的 catch 同构）。
+    func attachLogThumbnail() async {
+        guard !logThumbnailInFlight else { return }
+        logThumbnailInFlight = true
+        defer { logThumbnailInFlight = false }
+        guard let logID = logStore?.lastLogID, logThumbnails[logID] == nil else { return }
+        guard let handle, await handle.connected, let (cgImage, _) = try? await handle.previewImage(requestFresh: false) else {
+            return
+        }
+        let image = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+        let thumbnail = LogCardBuilder.thumbnail(from: image)
+        logThumbnails[logID] = thumbnail
+        logThumbnails = LogCardBuilder.trimThumbnails(logThumbnails)
+    }
+
+    // MARK: - Remote Control (P26/E07+E08)
+
+    let remoteControl = RemoteControlService()
+
+    /// 远控命令钩子接线（WPF ExecuteSequential/InstantJobLoop 的 Mac 等价面）。
+    /// @Sendable async 闭包直呼 @MainActor 方法自动 hop。
+    func wireRemoteControlHooks() {
+        remoteControl.hooks.startFull = { [weak self] in
+            await self?.remoteStartFull()
+        }
+        remoteControl.hooks.startSubset = { [weak self] name in
+            await self?.startRemoteSubset(name) ?? false
+        }
+        remoteControl.hooks.gacha = { [weak self] once in
+            await self?.remoteGacha(once: once)
+        }
+        remoteControl.hooks.captureImage = { [weak self] fresh in
+            await self?.remoteCaptureImage(fresh: fresh) ?? ""
+        }
+        remoteControl.hooks.setConnectAddress = { [weak self] value in
+            await self?.remoteSetConnectAddress(value)
+        }
+        remoteControl.hooks.setStage1 = { [weak self] value in
+            await self?.remoteSetStage1(value)
+        }
+        remoteControl.hooks.stop = { [weak self] in
+            await self?.remoteStop()
+        }
+        remoteControl.hooks.log = { [weak self] line in
+            await self?.remoteLog(line)
+        }
+    }
+
+    /// 以下为钩子的 @MainActor 执行面（与 UI/任务互斥同一执行域）。
+    @MainActor func remoteStartFull() {
+        Task { _ = await self.startDailyTasks(origin: .remote) }
+    }
+
+    @MainActor func remoteGacha(once: Bool) {
+        Task { try? await self.gachaPoll(once: once) }
+    }
+
+    @MainActor func remoteStop() {
+        Task { try? await self.stop(logsConflict: false) }
+    }
+
+    @MainActor func remoteSetConnectAddress(_ value: String) {
+        connectionAddress = value
+    }
+
+    @MainActor func remoteLog(_ line: String) {
+        logInfo(verbatim: line)
+    }
+
+    /// WPF LinkStart(subset) 同构：按任务名从已保存配置过滤，恰好一个启用任务才执行。
+    func startRemoteSubset(_ name: String) async -> Bool {
+        guard let taskType = Self.remoteSubsetTaskTypes[name] else {
+            logError(verbatim: "远控子集启动失败：未知任务类型 \(name)")
+            return false
+        }
+        let targets = tasks.filter { dailyTask in
+            guard dailyTask.enabled else { return false }
+            return dailyTask.task.maataskType == taskType
+        }
+        guard targets.count == 1 else {
+            logError(verbatim: "远控子集启动失败：\(name) 的启用任务数量为 \(targets.count)（须恰为 1）")
+            return false
+        }
+        let snapshot = DailyRunSnapshot(profileID: dailyTaskProfile, tasks: [targets[0]])
+        return await startDailyTasks(origin: .remote, snapshot: snapshot) == .started
+    }
+
+    /// WPF LinkStart 子集名 → Mac 任务类型（Base/WakeUp/Combat/Recruiting/Mall/Mission/AutoRoguelike/Reclamation）。
+    static let remoteSubsetTaskTypes: [String: MAATaskType] = [
+        "Base": .Infrast, "WakeUp": .StartUp, "Combat": .Fight, "Recruiting": .Recruit,
+        "Mall": .Mall, "Mission": .Award, "AutoRoguelike": .Roguelike, "Reclamation": .Reclamation,
+    ]
+
+    /// CaptureImage/CaptureImageNow：连接态截图 → PNG base64（WPF 同构；Mac 不做
+    /// 隐式重连——连接由日常链建立，差异入档）。
+    func remoteCaptureImage(fresh: Bool) async -> String {
+        guard let handle else { return "" }
+        do {
+            let (image, _) = try await handle.previewImage(requestFresh: fresh)
+            let representation = NSBitmapImageRep(cgImage: image)
+            guard let png = representation.representation(using: .png, properties: [:]) else { return "" }
+            return png.base64EncodedString()
+        } catch {
+            return ""
+        }
+    }
+
+    /// Settings-Stage1：首个启用战斗任务的主选关卡改写（WPF StagePlan 单项同位）。
+    func remoteSetStage1(_ stage: String) {
+        guard let index = tasks.firstIndex(where: { dailyTask in
+            guard dailyTask.enabled, case .fight = dailyTask.task else { return false }
+            return true
+        }) else {
+            logError(verbatim: "远控设置主线关卡失败：无启用的战斗任务")
+            return
+        }
+        if case .fight(var config) = tasks[index].task {
+            config.stage = stage
+            tasks[index] = DailyTask(id: tasks[index].id, task: .fight(config),
+                                     enabled: tasks[index].enabled, runOnce: tasks[index].runOnce)
         }
     }
 
@@ -311,8 +656,23 @@ import SwiftUI
             case .stop:
                 guard self.status != .idle || self.dailyRunCoordinator.active != nil else { return false }
                 do { try await self.stop(); return true } catch { return false }
+            case .showGui:
+                // S13: 显隐主窗口；与 WPF ShowGui 一致始终视作已受理。
+                MainWindowVisibility.toggle(tracker: .shared)
+                return true
             }
         }
+        NotificationCenter.default.publisher(for: .MAABlockSleepWithScreenOnChanged)
+            .sink { [weak self] _ in self?.refreshAwakeAssertionType() }
+            .store(in: &cancellables)
+        // P26: 远控命令钩子接线；端点为空时轮询不启动（WPF InitializePollJobTask 同位）。
+        wireRemoteControlHooks()
+        remoteControl.startPolling()
+        // P27/U04: 定时资源检查 + 忙时延后应用（运行收口回空闲时消费）。
+        armScheduledResourceCheck()
+        $status.sink(receiveValue: { [weak self] newValue in
+            if newValue == .idle { self?.applyDeferredResourceUpdateIfPending() }
+        }).store(in: &cancellables)
         dailyRunCoordinator.didChange = { [weak self] in self?.objectWillChange.send() }
         initScheduledDailyTaskTimer()
         AchievementStore.shared.recordLaunch()
@@ -365,7 +725,12 @@ extension MAAViewModel {
         secretFrontRun = SecretFrontRun()
         logStore?.clearLogs(upTo: sessionBaseline)
         taskIDMap.removeAll()
+        userDataUpdateRun.reset()
         fightTaskParams.removeAll()
+        depotFightPlans.removeAll()
+        frozenTargetFights.removeAll()
+        depotMaintainReviews.removeAll()
+        provenExhaustedMedicineDays = 0
         taskStatus.removeAll()
 
         guard requireConnect else { return }
@@ -418,9 +783,16 @@ extension MAAViewModel {
         status = .busy
     }
 
-    func stop(cancelScheduledStart: Bool = true, logsConflict: Bool = true, userRequested: Bool = true) async throws {
+    func stop(cancelScheduledStart: Bool = true, logsConflict: Bool = true, userRequested: Bool = true, waitForRoguelikeCombat: Bool = true) async throws {
         if cancelScheduledStart {
             NotificationCenter.default.post(name: .MAACancelPendingScheduledStart, object: nil)
+        }
+        if roguelikeWaitingForCombat {
+            // G18：等待战斗结束期间再次请求停止 → 只终止等待；实际的 Core 停止
+            // 由在途的首次停止流程在跳出等待后立即执行，此处不重复进入停止互斥。
+            roguelikeCombatWaitAborted = true
+            logInfo("已请求立即停止，不再等待当前战斗结束。")
+            return
         }
         if forceRecoveryInFlight && isStartStopInFlight && !forceRecoveryCleanupPending {
             // 强制恢复最长约 5 分钟,且仅在 startDailyTasks 持有启动互斥期间运行;
@@ -451,6 +823,10 @@ extension MAAViewModel {
         }
         try await beginTaskOperation(requiresIdle: false, logsConflict: logsConflict)
         defer { isStartStopInFlight = false }
+        // Revoke recognition ownership before awaiting native stop: late complete
+        // callbacks cannot publish or persist a refresh the user cancelled.
+        invalidateInventory()
+        cancelDailyUserDataUpdates()
         let achievementWasRunning = await handle?.running == true
         let achievementRunID = dailyRunCoordinator.active?.id
 
@@ -474,11 +850,38 @@ extension MAAViewModel {
         // 停止尝试后必须就地消化隔离状态,避免标志跨运行残留污染下一次运行
         // 的消息路由与收尾过滤。
         let discardQuarantinedCore = abandonedRun && forceRecoveryCleanupPending
+        // G18：肉鸽战斗中延迟停止——等待当前战斗结束（RoguelikeCombatEnd）后再停止，
+        // 最长 10 分钟；等待期间 MainActor 挂起，消息循环持续更新战斗态。
+        // 再次请求停止立即跳出；退出路径显式绕过等待，继续运行收尾。
+        if waitForRoguelikeCombat, roguelikeDelayAbortUntilCombatComplete, activeRunHasRoguelike,
+           roguelikeInCombat, await handle?.running == true {
+            roguelikeWaitingForCombat = true
+            logInfo("肉鸽战斗中：等待当前战斗结束后再停止（最长 10 分钟）。再次点击停止可立即停止。")
+            let deadline = ContinuousClock.now.advanced(by: .seconds(600))
+            while ContinuousClock.now < deadline, roguelikeInCombat, !roguelikeCombatWaitAborted, !Task.isCancelled,
+                  await handle?.running == true {
+                try? await Task.sleep(for: .seconds(1))
+            }
+            roguelikeWaitingForCombat = false
+            if Task.isCancelled {
+                logInfo("停止等待已取消，现在停止。")
+            } else if roguelikeCombatWaitAborted {
+                logInfo("已按请求立即停止。")
+            } else if roguelikeInCombat, await handle?.running == true {
+                logInfo("等待战斗结束超时，现在停止。")
+            } else {
+                // 战斗态清零（RoguelikeCombatEnd）或 Core 自然收口（running 已 false）。
+                logInfo("战斗已结束或运行已收口，继续停止。")
+            }
+        }
+        roguelikeCombatWaitAborted = false
         do { try await handle?.stop() }
         catch {
             guard discardQuarantinedCore else { throw error }
             // 丢弃隔离 Core 时,停止失败由句柄释放(AsstDestroy)兜底。
         }
+        activeRunHasRoguelike = false
+        roguelikeInCombat = false
         if userRequested, cancelScheduledStart, achievementWasRunning {
             AchievementStore.shared.record(.init(runID: achievementRunID, metric: .manualStop, operation: .maximum))
         }
@@ -497,6 +900,11 @@ extension MAAViewModel {
 
     func resetStatus() {
         taskCompletionGeneration &+= 1
+        // G18：本轮运行收口（自然完成或链停止），战斗态与等待标志随之清零。
+        activeRunHasRoguelike = false
+        roguelikeInCombat = false
+        roguelikeWaitingForCombat = false
+        roguelikeCombatWaitAborted = false
         if let runID = dailyRunCoordinator.active?.id, dailyFinishAttemptedRunID == runID {
             status = .pending
             return
@@ -587,6 +995,15 @@ extension MAAViewModel {
                 return true
             }
         }
+        // Native idle can become visible before MainActor drains the terminal
+        // callback stream. Keep run ownership briefly; missing refresh callbacks
+        // must end as failure rather than consume runOnce on a false success.
+        if userDataUpdateRun.hasPending(runID: context.id) {
+            if userDataCallbackDeadline == nil { userDataCallbackDeadline = ContinuousClock.now.advanced(by: .seconds(2)) }
+            if let deadline = userDataCallbackDeadline, ContinuousClock.now < deadline { return false }
+            failIncompleteDailyUserDataUpdates(runID: context.id)
+        }
+        userDataCallbackDeadline = nil
         // Failed journal writes keep ownership and must not spin on duplicate callbacks.
         guard dailyFinishAttemptedRunID != context.id else { return true }
         dailyFinishAttemptedRunID = context.id
@@ -618,6 +1035,15 @@ extension MAAViewModel {
             dailyRunTasks = nil
             status = .idle
             if !cleanupSucceeded { logError("后置清理失败，请检查脚本输出并手动恢复设备设置") }
+            // P22: 收尾动作在清理契约之后执行（WPF CheckAfterCompleted 同序）。
+            // 时长上限到点的停止按 RunDurationLimitExecutePostActions 门控；
+            // 其余路径（自然完成/用户手动停止）总是执行。
+            cancelDurationLimit()
+            externalStallMonitor.stop()
+            let policyAllows = stopInitiatedByDurationLimit ? runDurationLimitExecutePostActions : true
+            stopInitiatedByDurationLimit = false
+            await executePostActions(runID: id, hasError: outcome == .failed || outcome == .timedOut,
+                                     policyAllows: policyAllows)
         } catch {
             status = .pending
             logError(verbatim: "Daily run journal: \(error.localizedDescription)")
@@ -658,8 +1084,9 @@ extension MAAViewModel {
         }
     }
 
-    private func executeHook(_ command: HookCommand, context: RunContext, outcome: DailyRunOutcome?,
-                             cancellable: Bool = true) async throws -> HookResult {
+    /// P22 起作业终态 after-hook（MaaMessage 扩展）也消费，故为 internal。
+    func executeHook(_ command: HookCommand, context: RunContext, outcome: DailyRunOutcome?,
+                     cancellable: Bool = true) async throws -> HookResult {
         let directory = Self.userDirectory.appendingPathComponent("RunHooks", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let configuredTimeout = TimeInterval(runHookConfiguration.timeoutSeconds)
@@ -722,7 +1149,7 @@ extension MAAViewModel {
             if let task = activeHookTask { _ = try? await task.value }
         }
         guard dailyRunCoordinator.active != nil else { return }
-        Task { try? await self.stop() }
+        Task { try? await self.stop(waitForRoguelikeCombat: false) }
         while dailyRunCoordinator.active != nil, Date.now < deadline {
             try? await Task.sleep(for: .milliseconds(50))
         }
@@ -909,21 +1336,54 @@ extension MAAViewModel {
         guard false else { return }
         #endif
 
+        checkResourceUpdate()
+    }
+
+    /// U03/U04/U08: 资源更新检查（启动与定时共用；代理会话 + GitHub token 注入）。
+    /// 发现新版本且开启自动更新时：空闲即弹窗；忙时记 pending，运行收口后延后应用。
+    func checkResourceUpdate() {
         Task {
             do {
-                let version = try await self.resourceChannel.latestVersion()
-                if version > currentResourceVersion.last_updated {
-                    logInfo("发现新资源版本：\(version)")
-                    if autoResourceUpdate {
-                        showResourceUpdate = true
-                    }
-                } else {
+                let session = ResourceUpdateNetwork.session(for: resourceProxyEnabled ? resourceUpdateProxy : "")
+                let currentVersion = (try? resourceChannel.version().1.last_updated) ?? ""
+                let version = try await resourceChannel.latestVersion(
+                    session: session, githubToken: githubResourceToken.isEmpty ? nil : githubResourceToken)
+                guard version > currentVersion else {
                     logInfo("资源已是最新版本")
+                    return
+                }
+                logInfo("发现新资源版本：\(version)")
+                guard autoResourceUpdate else { return }
+                if status == .idle {
+                    showResourceUpdate = true
+                } else {
+                    pendingResourceUpdateNotice = true
+                    logInfo("任务运行中，资源更新已延后到任务结束后。")
                 }
             } catch {
                 logError("无法检查资源更新: \(error.localizedDescription)")
             }
         }
+    }
+
+    /// U04: 忙时延后的资源更新在运行收口（回到空闲）时应用。
+    func applyDeferredResourceUpdateIfPending() {
+        guard pendingResourceUpdateNotice, status == .idle, autoResourceUpdate else { return }
+        pendingResourceUpdateNotice = false
+        showResourceUpdate = true
+    }
+
+    /// U04: 定时资源检查（WPF CheckOnSchedule 为休眠字段；Mac 实现为活体定时器——差异入档）。
+    func armScheduledResourceCheck() {
+        scheduledResourceCheckTimer?.invalidate()
+        scheduledResourceCheckTimer = nil
+        guard checkResourceUpdateOnSchedule else { return }
+        let interval = TimeInterval(max(1, resourceUpdateCheckIntervalHours) * 3600)
+        let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.checkResourceUpdate() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        scheduledResourceCheckTimer = timer
     }
 
     private func updateChannel(channel: MAAClientChannel) {
@@ -955,7 +1415,7 @@ extension MAAViewModel {
         }
     }
 
-    private static var userDirectory: URL {
+    static var userDirectory: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
     }
 
@@ -1045,6 +1505,7 @@ extension MAAViewModel {
             dailyRunOutcome = .completed
             dailyRunChainFailed = false
             dailyRunTasks = snapshot.tasks
+            userDataCallbackDeadline = nil
             startupCancellationRequested = false
             startupCancellationLocked = false
             defer {
@@ -1077,10 +1538,22 @@ extension MAAViewModel {
                 try Task.checkCancellation()
                 try dailyRunCoordinator.transition(.connecting, for: runID)
                 try await startTasks(snapshot: snapshot, runID: runID, recoverGame: recoverGame, recoveryCurrent: recoveryCurrent)
+                // Poll this exact owner even if a global completion callback is
+                // lost. The refresh-specific drain gate below prevents premature success.
+                waitForDailyRunCompletion(runID: runID)
                 if origin == .schedule {
                     AchievementStore.shared.record(.init(runID: runID, metric: .scheduledStart))
                 }
                 await finishDailyRunIfStopped(allowInFlight: true)
+                // P22/S16: 启动成功后武装运行时长上限计时。
+                armDurationLimit(runID: runID)
+                // P25/E05: 停滞检测武装（开关关或分钟为 0 时不监控）。
+                if notifyStallTimeoutEnabled {
+                    externalStallMonitor.arm(timeoutMinutes: max(0, notifyStallTimeoutMinutes)) {
+                        [weak self] initial, accumulated in
+                        self?.notifyExternalStalled(initialMinutes: initial, accumulatedMinutes: accumulated)
+                    }
+                }
                 return .started
             } catch {
                 let recoveryCleanupFailed = error is ForcedRecoveryCleanupFailure
@@ -1138,6 +1611,8 @@ extension MAAViewModel {
         var frozenPlan: InventoryTargetPlan?
         var reachedTaskID: UUID?
         var frozenItemID: String?
+        // 每轮规划无条件覆写（含无目标轮次），不残留上一轮凭据。
+        pendingFrozenTarget = nil
         if let targetIndex = targets.first, case .fight(let config) = runTasks[targetIndex].task,
            let target = config.inventoryTarget {
             guard await handle?.connected == true else {
@@ -1158,6 +1633,8 @@ extension MAAViewModel {
                 runTasks[targetIndex].enabled = false
                 reachedTaskID = runTasks[targetIndex].id
             } else {
+                // P12.4 中途重算凭据：战斗链启动时按最新快照重算缺口。
+                pendingFrozenTarget = (itemID: target.itemID, target: plan.startInventory + plan.requiredDrops)
                 runTasks[targetIndex] = DailyTask(id: runTasks[targetIndex].id,
                     task: .fight(config.preparingInventoryTarget(plan)), enabled: true)
             }
@@ -1309,11 +1786,27 @@ extension MAAViewModel {
         let inventoryRunID = UUID()
         var inventoryFightIDs = Set<Int32>()
         var appendedAnyTask = false
+        // G18：新运行开始前清残留战斗态（防上一轮异常收口后的陈旧标志）。
+        activeRunHasRoguelike = false
+        roguelikeInCombat = false
         do {
             for task in runTasks {
                 try Task.checkCancellation()
                 guard task.enabled else { continue }
 
+                if case .userdataupdate(let config) = task.task {
+                    let ids = try await appendDailyUserDataUpdate(task: task, config: config, runID: runID, scope: scope)
+                    appendedAnyTask = appendedAnyTask || !ids.isEmpty
+                    continue
+                }
+                if case .depotMaintain(let depotConfig) = task.task {
+                    // P12.3 库存保持展开：任务级跳过 → 可选前置识别 → 逐计划战斗追加。
+                    let dispatched = try await appendDepotMaintainTask(
+                        task: task, config: depotConfig, runID: runID, scope: scope,
+                        inventoryFightIDs: &inventoryFightIDs)
+                    appendedAnyTask = appendedAnyTask || dispatched
+                    continue
+                }
                 let coreID: Int32?
                 if case .fight(let config) = task.task {
                     let now = Date.now
@@ -1356,6 +1849,15 @@ extension MAAViewModel {
                         if let coreID {
                             fightTaskParams[coreID] = params
                             inventoryFightIDs.insert(coreID)
+                            // P12.4 冻结目标战斗档案：战斗链启动时按最新快照重算缺口
+                            // （仅冻结目标战斗携带单键 drops，普通战斗无 drops）。
+                            if let pending = pendingFrozenTarget,
+                               dispatchConfig.drops?.count == 1,
+                               dispatchConfig.drops?.keys.first == pending.itemID {
+                                frozenTargetFights[coreID] = FrozenTargetDispatch(
+                                    fight: dispatchConfig, itemID: pending.itemID, target: pending.target)
+                                pendingFrozenTarget = nil
+                            }
                         }
                     }
                 } else if case .infrast(var dispatchConfig) = task.task {
@@ -1366,21 +1868,26 @@ extension MAAViewModel {
                         logInfo("周计划今日未勾选，已跳过「\(dispatchConfig.subtitle)」")
                         continue
                     }
-                    // B11 时间轮换：任一 plan 带 period 时按当前时刻选班（端点闭
-                    // 匹配，无匹配回退第一个）；nil 保持用户手选 plan_index。
+                    // Only automatic selection resolves periods; fixed selection
+                    // dispatches the saved plan_index without changing the profile.
                     if dispatchConfig.mode == .custom,
-                        let plan = try? MAAInfrast(path: dispatchConfig.filename),
-                        let rotated = dispatchConfig.resolvedPlanIndex(at: Date.now, plan: plan) {
-                        let name = plan.plans.indices.contains(rotated)
-                            ? (plan.plans[rotated].name ?? "\(rotated)") : "\(rotated)"
-                        logInfo("时间轮换 (\(name))")
-                        dispatchConfig.plan_index = rotated
+                        dispatchConfig.planSelection == .automatic,
+                        let plan = try? MAAInfrast(path: dispatchConfig.filename) {
+                        if plan.hasMixedPeriods {
+                            logWarn("部分班次未设置时间段，自动选择时无匹配将使用第一个班次。")
+                        }
+                        if let rotated = dispatchConfig.resolvedPlanIndex(at: Date.now, plan: plan) {
+                            let name = plan.plans[rotated].name ?? "\(rotated)"
+                            logInfo("时间轮换 (\(name))")
+                            dispatchConfig.plan_index = rotated
+                        }
                     }
                     coreID = try await handle?.appendTask(.infrast(dispatchConfig),
                                                       recruitTagNames: recruitTagNames,
                                                       blackflowStartAvailable: supportsBlackflowStart,
                                                       supportsRoguelikeSeedInput: touchMode != .MacPlayTools)
                 } else {
+                    if case .roguelike = task.task { activeRunHasRoguelike = true }
                     coreID = try await handle?.appendTask(task.task, recruitTagNames: recruitTagNames,
                                                       blackflowStartAvailable: supportsBlackflowStart,
                                                       supportsRoguelikeSeedInput: touchMode != .MacPlayTools)
@@ -1405,11 +1912,15 @@ extension MAAViewModel {
             if let plan = frozenPlan {
                 logTrace(verbatim: "Inventory generation=\(plan.generation) run=\(inventoryRunID) base=\(plan.startInventory) drops=\(plan.requiredDrops)")
             }
-            try await startCoreTasks(recordDailyTaskStart: true)
+            if appendedAnyTask {
+                userDataUpdateRun.beginExecution()
+                try await startCoreTasks(recordDailyTaskStart: true)
+            }
         } catch {
+            cancelDailyUserDataUpdates()
             if await handle?.running == true {
                 status = .busy
-            } else if appendedAnyTask {
+            } else if appendedAnyTask || !taskIDMap.isEmpty {
                 // Assistant::stop clears m_tasks_list, including tasks appended
                 // while idle. A rejected preparation must never leak into a later run.
                 do { try await handle?.stop() }
@@ -1616,11 +2127,11 @@ extension MAAViewModel {
     var lastRunOutcome: DailyRunOutcome? { dailyRunCoordinator.lastTerminal?.outcome }
 
     /// 停止入口可用性：与停止键（TaskButtons）同源。启动/停止互斥期与后置
-    /// 清理期都不可停止——互斥期 stop 会被拒绝，后置清理期 stop 只会报错。
+    /// 清理期不可停止；肉鸽等待期仍可再次请求立即停止。
     /// 强制恢复中止窗口该谓词同为 false（按钮禁用），但 stop() 程序化路径
     /// 不经此谓词，保留中止恢复途径。
     var canStopTasks: Bool {
-        !isStartStopInFlight && dailyRunCoordinator.active?.status != .postHook
+        (!isStartStopInFlight || roguelikeWaitingForCombat) && dailyRunCoordinator.active?.status != .postHook
     }
 
     /// 请求启动一次日常运行：准入冲突（已有运行/占用中）返回 nil，冲突由
@@ -1769,6 +2280,10 @@ extension MAAViewModel {
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
+        // S15: 作业运行标记 + 前置脚本（失败阻止开始）。
+        activeRunIsCopilot = true
+        try await runCopilotPreHookIfEnabled()
+
         try await ensureHandle()
         try await appendTrackedTask(type: type, params: params)
         try await startCoreTasks()
@@ -1785,6 +2300,10 @@ extension MAAViewModel {
 
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
+
+        // S15: 作业运行标记 + 前置脚本（失败阻止开始）。
+        activeRunIsCopilot = true
+        try await runCopilotPreHookIfEnabled()
 
         try await ensureHandle()
         do {
@@ -1821,17 +2340,61 @@ extension MAAViewModel {
     }
 
     func recognizeDepot() async throws {
+        try await recognizeUserData(includeDepot: true, includeOperators: false)
+    }
+
+    /// One reservation and one Core start for both read-only recognition chains.
+    func refreshUserData() async throws {
+        try await recognizeUserData(includeDepot: true, includeOperators: true)
+    }
+
+    private func recognizeUserData(includeDepot: Bool, includeOperators: Bool) async throws {
         try await beginTaskOperation()
         defer { isStartStopInFlight = false }
-
         status = .pending
         defer { handleEarlyReturn(backTo: .idle) }
 
+        let scope = inventoryScope
         try await ensureHandle()
-        inventoryDepotScope = inventoryScope
-        inventoryDepotTaskID = try await handle?.appendTask(type: .Depot, params: "")
-        if let id = inventoryDepotTaskID { achievementEvents.register(taskID: id, type: MAATaskType.Depot.rawValue) }
-        try await startCoreTasks()
+        try Task.checkCancellation()
+        guard inventoryScope == scope else { throw InventoryTargetError.stalePreparation }
+        invalidateInventory()
+        var appended = false
+        do {
+            if includeDepot {
+                guard let id = try await handle?.appendTask(type: .Depot, params: "") else {
+                    throw MaaCoreError.appendTaskFailed
+                }
+                appended = true
+                inventoryDepotScope = scope
+                inventoryDepotTaskID = id
+                achievementEvents.register(taskID: id, type: MAATaskType.Depot.rawValue)
+            }
+            if includeOperators {
+                guard let id = try await handle?.appendTask(type: .OperBox, params: "") else {
+                    throw MaaCoreError.appendTaskFailed
+                }
+                appended = true
+                operBoxHistoryScope = scope
+                operBoxHistoryTaskID = id
+                achievementEvents.register(taskID: id, type: MAATaskType.OperBox.rawValue)
+            }
+            try Task.checkCancellation()
+            guard inventoryScope == scope else { throw InventoryTargetError.stalePreparation }
+            try await startCoreTasks()
+        } catch {
+            invalidateInventory()
+            if appended {
+                do { try await handle?.stop() }
+                catch {
+                    messageTask?.cancel()
+                    messageTask = nil
+                    handle = nil
+                    throw PreparationCleanupFailure()
+                }
+            }
+            throw error
+        }
     }
 
     func recognizeVideo(video url: URL) async throws {
@@ -1852,15 +2415,7 @@ extension MAAViewModel {
     }
 
     func recognizeOperBox() async throws {
-        try await beginTaskOperation()
-        defer { isStartStopInFlight = false }
-
-        status = .pending
-        defer { handleEarlyReturn(backTo: .idle) }
-
-        try await ensureHandle()
-        try await appendTrackedTask(type: .OperBox, params: "")
-        try await startCoreTasks()
+        try await recognizeUserData(includeDepot: false, includeOperators: true)
     }
 
     func gachaPoll(once: Bool) async throws {
@@ -1964,13 +2519,16 @@ extension MAAViewModel {
     }
 
     // keeps the system from sleeping during tasks
+    // S04: 断言类型由「阻止休眠时保持屏幕常亮」决定——常亮（缺省）＝NoDisplaySleep
+    // （历史行为），关闭＝NoIdleSleep（允许屏幕休眠、系统保持唤醒，WPF DisplayRequired 位同构）。
     private func enableAwake() {
         guard awakeAssertionID == nil else { return }
         var assertionID: IOPMAssertionID = 0
         let name = "MAA is running; sleep is diabled."
+        let assertionType = blockSleepWithScreenOn ? kIOPMAssertionTypeNoDisplaySleep : kIOPMAssertionTypeNoIdleSleep
         let properties =
             [
-                kIOPMAssertionTypeKey: kIOPMAssertionTypeNoDisplaySleep as CFString,
+                kIOPMAssertionTypeKey: assertionType as CFString,
                 kIOPMAssertionNameKey: name as CFString,
                 kIOPMAssertionLevelKey: UInt32(kIOPMAssertionLevelOn),
             ] as [String: Any]
@@ -1978,6 +2536,14 @@ extension MAAViewModel {
         if result == kIOReturnSuccess {
             awakeAssertionID = assertionID
         }
+    }
+
+    /// S04: 运行中切换屏幕常亮选项时，以新断言类型重建（唤醒断言不动）。
+    func refreshAwakeAssertionType() {
+        guard awakeAssertionID != nil else { return }
+        Self.releaseAssertion(awakeAssertionID)
+        awakeAssertionID = nil
+        enableAwake()
     }
 
     private nonisolated static func releaseAssertion(_ assertionID: IOPMAssertionID?) {
@@ -1995,6 +2561,162 @@ extension MAAViewModel {
         Self.releaseAssertion(wakeupAssertionID)
         self.awakeAssertionID = nil
         self.wakeupAssertionID = nil
+    }
+}
+
+// MARK: - Startup Auto Run (S02)
+
+extension MAAViewModel {
+    /// 应用启动后调用一次：按策略决定是否自动开始日常任务（WPF 启动自动运行同构）。
+    /// WPF 的资源损坏/需重启/演示模式守卫映射到 Mac 的 canStartTasks 前置检查；
+    /// 真正启动仍走 startDailyTasks 的完整检查点（互斥、连接、参数编码）。
+    func requestStartupAutoRun(cliSkipRequested: Bool) {
+        guard !startupAutoRunHandled else { return }
+        startupAutoRunHandled = true
+        let markerPresent = StartupAutoRunMarker.consume()
+        switch StartupAutoRunPolicy.decide(runDirectly: runDirectly, cliSkipRequested: cliSkipRequested,
+                                           updateRelaunchMarkerPresent: markerPresent) {
+        case .skip(let reason):
+            logInfo(verbatim: "Startup auto-run skipped (\(reason))")
+        case .run:
+            guard canStartTasks else {
+                logInfo(verbatim: "Startup auto-run skipped (not ready to start)")
+                return
+            }
+            logInfo(verbatim: "Startup auto-run armed; starting in 10s unless canceled")
+            startupAutoRunCountdown.begin(
+                seconds: 10,
+                tick: .seconds(1),
+                onTick: { [weak self] remaining in self?.startupAutoRunRemaining = remaining },
+                onProceed: { [weak self] in
+                    guard let self else { return }
+                    Task { _ = await self.startDailyTasks(origin: .startup) }
+                }
+            )
+        }
+    }
+
+    /// 倒计时内用户取消；对已归零的倒计时是安全空操作。
+    func cancelStartupAutoRun() {
+        guard startupAutoRunCountdown.isCounting else { return }
+        startupAutoRunCountdown.cancel()
+        startupAutoRunRemaining = nil
+        logInfo(verbatim: "Startup auto-run canceled during countdown")
+    }
+}
+
+// MARK: - Post Actions & Duration Limit (P22)
+
+extension MAAViewModel {
+    /// S16: 运行启动后武装时长上限计时（到点按手动停止路径收口）。
+    func armDurationLimit(runID: UUID) {
+        durationLimitTask?.cancel()
+        guard runDurationLimitEnabled else { return }
+        let minutes = RunDurationLimit.clampedMinutes(runDurationLimitMinutes)
+        durationLimitTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(TimeInterval(minutes * 60)))
+            guard !Task.isCancelled, let self, self.dailyRunCoordinator.active?.id == runID else { return }
+            self.logInfo(verbatim: "运行时长上限（\(minutes) 分钟）到点，正在停止任务。")
+            self.stopInitiatedByDurationLimit = true
+            try? await self.stop(logsConflict: false)
+        }
+    }
+
+    private func cancelDurationLimit() {
+        durationLimitTask?.cancel()
+        durationLimitTask = nil
+    }
+
+    /// S17: 收尾动作执行（WPF RunPostActionsCoreAsync 同位）。逐动作失败记录并继续；
+    /// per-run 幂等防止时长上限停止与自然完成赛跑双执行。
+    func executePostActions(runID: UUID, hasError: Bool, policyAllows: Bool) async {
+        let actions = PostActionPlanner.plannedActions(
+            config: postActionSettings.configuration, hasError: hasError, policyAllows: policyAllows)
+        guard !actions.isEmpty, postActionsLaunchedRunID != runID else { return }
+        postActionsLaunchedRunID = runID
+        logInfo(verbatim: "执行收尾动作")
+        for action in actions {
+            do {
+                switch action {
+                case .backToAndroidHome:
+                    guard await handle?.running == true else {
+                        logError(verbatim: "收尾动作：Core 已停止，无法返回安卓主页")
+                        continue
+                    }
+                    guard await handle?.backToHome() == true else {
+                        logError(verbatim: "返回安卓主页失败")
+                        continue
+                    }
+                    try? await Task.sleep(for: .seconds(1))
+                case .exitArknights:
+                    // WPF AsstStartCloseDown 同位：以 CloseDown 任务链关闭游戏客户端。
+                    let params = ClosedownConfiguration(client_type: clientChannel)
+                    let data = try JSONEncoder().encode(params)
+                    try await startCopilot(type: .CloseDown, params: String(decoding: data, as: UTF8.self))
+                    try? await Task.sleep(for: .seconds(1))
+                case .exitEmulator:
+                    try await runSystemProcess(adbPath, ["-s", connectionAddress, "emu", "kill"])
+                    try? await Task.sleep(for: .seconds(1))
+                case .exitSelf:
+                    // 经 applicationShouldTerminate 清理链有序退出。
+                    NSApp.terminate(nil)
+                case .lockScreen:
+                    try await runSystemProcess("/usr/bin/pmset", ["displaysleepnow"])
+                case .sleep:
+                    try await runSystemProcess("/usr/bin/pmset", ["sleepnow"])
+                case .shutdown:
+                    try await runSystemProcess("/usr/bin/osascript",
+                                               ["-e", "tell app \"System Events\" to shut down"])
+                }
+            } catch {
+                logError(verbatim: "收尾动作失败：\(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// 不阻塞主线程的外部进程执行（收尾动作期间 UI 仍应响应）。
+    private func runSystemProcess(_ path: String, _ arguments: [String]) async throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: path)
+        process.arguments = arguments
+        try process.run()
+        while process.isRunning {
+            try Task.checkCancellation()
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        guard process.terminationStatus == 0 else {
+            throw PostActionCommandError(path: path, code: process.terminationStatus)
+        }
+    }
+
+    /// S15: 作业终态 after-hook（WPF CopilotWithScript 同位；手动停止不执行）。
+    func runCopilotPostHookIfEnabled() {
+        guard activeRunIsCopilot else { return }
+        activeRunIsCopilot = false
+        guard executeScriptOnCopilot, runHookConfiguration.enabled,
+              let command = runHookConfiguration.after else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            let context = RunContext(id: UUID(), origin: .manual, profileID: self.dailyTaskProfile,
+                                     status: .postHook, startedAt: .now)
+            _ = try? await self.executeHook(command, context: context, outcome: .completed, cancellable: false)
+        }
+    }
+
+    /// S15: 作业前置脚本（MAAExecuteScriptOnCopilot 门控）。失败阻止开始
+    /// （WPF 启动脚本失败中止 LinkStart 同构）。
+    func runCopilotPreHookIfEnabled() async throws {
+        runHookConfiguration = hookSettings.configuration
+        guard executeScriptOnCopilot, runHookConfiguration.enabled,
+              let command = runHookConfiguration.before else { return }
+        let context = RunContext(id: UUID(), origin: .manual, profileID: dailyTaskProfile,
+                                 status: .preHook, startedAt: .now)
+        do {
+            _ = try await executeHook(command, context: context, outcome: nil)
+        } catch {
+            logError(verbatim: "作业前置脚本失败：\(error.localizedDescription)")
+            throw error
+        }
     }
 }
 
@@ -2032,3 +2754,610 @@ extension MAAViewModel {
 
 private enum ForcedRecoveryFailure: Error { case notReady, timedOut, resultStalled }
 private struct ForcedRecoveryCleanupFailure: Error {}
+
+// MARK: - Depot history integration
+
+extension MAAViewModel {
+    var depotHistoryStore: DepotHistoryStore {
+        .init(directory: Self.userDirectory.appendingPathComponent("UserData/DepotHistory", isDirectory: true))
+    }
+
+    func persistDepotHistory(items: [String: Int], scope: InventoryScope) {
+        guard scope == inventoryScope, !scope.account.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        do { try depotHistoryStore.save(items: items, complete: true, scope: scope) }
+        catch { logError("仓库历史快照保存失败。") }
+    }
+}
+
+
+// MARK: - Operator history integration
+
+extension MAAViewModel {
+    var operBoxHistoryStore: OperBoxHistoryStore {
+        .init(directory: Self.userDirectory.appendingPathComponent("UserData/OperBoxHistory", isDirectory: true))
+    }
+
+    func persistOperBoxHistory(_ payload: OperBoxHistoryPayload, scope: InventoryScope) {
+        guard scope == inventoryScope, !scope.account.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        do {
+            try operBoxHistoryStore.save(payload, scope: scope)
+            operBoxHistoryRevision = UUID()
+        } catch { logError("干员历史快照保存失败。") }
+    }
+
+    /// I04 一图流只读练度导入：不发 Core 任务，不受任务运行互斥限制（WPF 同为免检路径）。
+    /// 失败保留既有快照；空数据（未绑定/未导入/全部跳过）不落盘覆盖；成功按当前
+    /// InventoryScope 落盘并广播 revision。token 不进任何日志。
+    func importOperBoxFromYituliu(localeIdentifier: String) async {
+        guard !yituliuImportInFlight else { return }
+        let token = yituliuOpenApiToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !token.isEmpty else {
+            yituliuImportMessage = String(localized: "一图流 Token 为空")
+            return
+        }
+        yituliuImportInFlight = true
+        defer { yituliuImportInFlight = false }
+        let (verdict, data) = await YituliuOperBoxService().fetchOperatorInfo(token: token)
+        switch verdict {
+        case .valid:
+            let catalog = OperatorCatalog.load(
+                resourceDirectory: recruitResourceDirectory, localeIdentifier: localeIdentifier)
+            let payload = YituliuOperBoxService.convert(data ?? [], catalog: catalog)
+            guard !payload.ownedOperators.isEmpty else {
+                yituliuImportMessage = String(localized: "一图流账号未绑定或未导入练度，已保留本地数据")
+                return
+            }
+            do {
+                try operBoxHistoryStore.save(payload, scope: inventoryScope, source: "yituliu")
+                operBoxHistoryRevision = UUID()
+                yituliuImportMessage = String(localized: "已导入 \(payload.ownedOperators.count) 名干员练度")
+            } catch {
+                yituliuImportMessage = String(localized: "练度快照保存失败：\(error.localizedDescription)")
+            }
+        case .writeOnly:
+            yituliuImportMessage = String(localized: "一图流 Token 只有写入权限，无法读取练度")
+        case .invalid:
+            yituliuImportMessage = String(localized: "一图流 Token 无效或已失效")
+        case .networkError:
+            yituliuImportMessage = String(localized: "一图流网络请求失败")
+        }
+    }
+}
+
+// MARK: - Daily user-data composite
+
+extension MAAViewModel {
+    func appendDailyUserDataUpdate(task: DailyTask, config: UserDataUpdateConfiguration,
+                                   runID: UUID, scope: InventoryScope) async throws -> [Int32] {
+        guard let context = dailyRunCoordinator.active, context.id == runID, inventoryScope == scope else { throw CancellationError() }
+        let runScope = InventoryScope(connection: scope.connection, server: scope.server,
+                                      profile: context.profileID, account: scope.account)
+        var admission = config
+        if config.triggerInterval != .everyTime {
+            // A successful manual recognition counts too, but only in this
+            // exact scope. Missing/corrupt caches force a repair refresh.
+            for kind in UserDataKind.allCases where kind == .depot ? config.updateDepot : config.updateOperBox {
+                let receipt: UserDataSyncReceipt?
+                do { receipt = try successfulUserDataReceipt(kind, scope: runScope) }
+                catch {
+                    receipt = nil
+                    logWarn("历史资料不可用，将重新识别。")
+                }
+                if kind == .depot { admission.lastDepotSync = receipt }
+                else { admission.lastOperBoxSync = receipt }
+            }
+        }
+        let due = admission.dueKinds(scope: runScope, calendar: clientChannel.calendar, at: .now)
+        guard !due.isEmpty else {
+            taskStatus[task.id] = .skipped
+            // This entry did not execute; a successful surrounding run must not
+            // consume its runOnce flag.
+            if let index = dailyRunTasks?.firstIndex(where: { $0.id == task.id }), let frozen = dailyRunTasks?[index] {
+                dailyRunTasks?[index] = DailyTask(id: frozen.id, task: frozen.task, enabled: false, runOnce: frozen.runOnce)
+            }
+            logInfo("更新资料未到执行间隔或未选择识别内容，已跳过。")
+            return []
+        }
+        if scope.account.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            logInfo("未绑定本地账号标识，资料识别仍会执行，但不会按历史成功时间跳过后续更新。")
+        }
+        var ids = [Int32]()
+        for kind in due {
+            try Task.checkCancellation()
+            guard dailyRunCoordinator.active?.id == runID, inventoryScope == scope else { throw CancellationError() }
+            if kind == .operBox, yituliuOperBoxForDaily {
+                // I04-b：干员资料改用一图流拉取，不进 Core 队列（WPF 同构）。WPF 为
+                // fire-and-forget，Mac 在追加期同步等待：条目终态确定、无未观察异常，
+                // 代价是最长一个请求超时的启动延迟（差异入档）。
+                try await syncDailyOperBoxFromYituliu(taskID: task.id, scope: runScope)
+                continue
+            }
+            let type: MAATaskType = kind == .depot ? .Depot : .OperBox
+            guard let id = try await handle?.appendTask(type: type, params: "{}") else { throw MaaCoreError.appendTaskFailed }
+            taskIDMap[id] = task.id
+            try userDataUpdateRun.register(id, owner: .init(runID: runID, taskID: task.id, scope: runScope, kind: kind, observedProfile: scope.profile))
+            achievementEvents.register(taskID: id, runID: runID)
+            ids.append(id)
+        }
+        return ids
+    }
+
+    /// 日常「更新资料」的一图流干员拉取（I04-b）。Token 为空与 WPF 同构：直接失败整跑
+    /// （WPF 在准入即 return false）。其余失败按条目级 .failure 收口、不中止跑（WPF
+    /// fire-and-forget 的条目 Error 同语义）；成功写 runScope 快照并广播 revision。
+    func syncDailyOperBoxFromYituliu(taskID: UUID, scope: InventoryScope) async throws {
+        let token = yituliuOpenApiToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !token.isEmpty else {
+            taskStatus[taskID] = .failure
+            logError("一图流 Token 为空，干员练度拉取失败。")
+            throw YituliuDailyTokenEmpty()
+        }
+        let (verdict, data) = await YituliuOperBoxService()
+            .fetchOperatorInfo(token: token, session: yituliuSession)
+        switch verdict {
+        case .valid:
+            let catalog = OperatorCatalog.load(
+                resourceDirectory: recruitResourceDirectory,
+                localeIdentifier: Locale.preferredLanguages.first ?? "zh-Hans")
+            let payload = YituliuOperBoxService.convert(data ?? [], catalog: catalog)
+            guard !payload.ownedOperators.isEmpty else {
+                taskStatus[taskID] = .failure
+                logError("一图流账号未绑定或未导入练度，本轮干员资料未更新。")
+                return
+            }
+            do {
+                try operBoxHistoryStore.save(payload, scope: scope, source: "yituliu")
+                operBoxHistoryRevision = UUID()
+                taskStatus[taskID] = .success
+                logInfo("一图流干员练度已更新（\(payload.ownedOperators.count) 名）。")
+            } catch {
+                taskStatus[taskID] = .failure
+                logError("练度快照保存失败：\(error.localizedDescription)")
+            }
+        case .writeOnly:
+            taskStatus[taskID] = .failure
+            logError("一图流 Token 只有写入权限，无法读取练度。")
+        case .invalid:
+            taskStatus[taskID] = .failure
+            logError("一图流 Token 无效或已失效。")
+        case .networkError:
+            taskStatus[taskID] = .failure
+            logError("一图流网络请求失败。")
+        }
+    }
+
+    func successfulUserDataReceipt(_ kind: UserDataKind, scope: InventoryScope) throws -> UserDataSyncReceipt? {
+        let date: Date?
+        switch kind {
+        case .depot: date = try depotHistoryStore.load(scope: scope)?.capturedAt
+        case .operBox: date = try operBoxHistoryStore.load(scope: scope)?.capturedAt
+        }
+        return date.map { .init(scope: scope, completedAt: $0) }
+    }
+
+    private func acceptsDailyUserData(_ coreID: Int32, kind: UserDataKind) -> Bool {
+        guard userDataUpdateRun.executionSubmitted,
+              let entry = userDataUpdateRun.entries[coreID], entry.owner.kind == kind,
+              entry.owner.runID == dailyRunCoordinator.active?.id,
+              entry.owner.scope.connection == inventoryScope.connection,
+              entry.owner.scope.server == inventoryScope.server,
+              entry.owner.scope.account == inventoryScope.account,
+              entry.owner.observedProfile == inventoryScope.profile,
+              [.pending, .running].contains(entry.progress) else { return false }
+        return true
+    }
+
+    func receiveDailyDepot(_ depot: MAADepot?, coreID: Int32?) -> Bool {
+        guard let coreID, userDataUpdateRun.entries[coreID] != nil else { return false }
+        guard acceptsDailyUserData(coreID, kind: .depot) else { return true }
+        userDataUpdateRun.record(depot.map { .depot(items: $0.items, complete: $0.done) }, coreID: coreID)
+        if userDataUpdateRun.entries[coreID]?.owner.scope.profile == inventoryScope.profile { logStore?.setDepot(depot) }
+        if userDataUpdateRun.entries[coreID]?.completionObserved == true { processDailyUserDataTerminal(coreID: coreID, code: 10002, taskchain: "Depot") }
+        return true
+    }
+
+    func receiveDailyOperators(_ operators: MAAOperBox?, coreID: Int32?) -> Bool {
+        guard let coreID, userDataUpdateRun.entries[coreID] != nil else { return false }
+        guard acceptsDailyUserData(coreID, kind: .operBox) else { return true }
+        userDataUpdateRun.record(operators.map { .operators($0.historyPayload) }, coreID: coreID)
+        if userDataUpdateRun.entries[coreID]?.owner.scope.profile == inventoryScope.profile { logStore?.setOperBox(operators) }
+        if userDataUpdateRun.entries[coreID]?.completionObserved == true { processDailyUserDataTerminal(coreID: coreID, code: 10002, taskchain: "OperBox") }
+        return true
+    }
+
+    func processDailyUserDataTerminal(coreID: Int32, code: Int, taskchain: String) {
+        guard userDataUpdateRun.executionSubmitted,
+              let entry = userDataUpdateRun.entries[coreID],
+              entry.owner.runID == dailyRunCoordinator.active?.id,
+              taskchain == (entry.owner.kind == .depot ? "Depot" : "OperBox"),
+              [.pending, .running].contains(entry.progress) else { return }
+        switch code {
+        case 10001:
+            userDataUpdateRun.finish(coreID, as: .running)
+        case 10000:
+            userDataUpdateRun.finish(coreID, as: .failed)
+            markDailyRunFailed()
+        case 10004:
+            cancelDailyUserDataUpdates()
+            if !dailyRunChainFailed { dailyRunOutcome = .cancelled }
+        case 10002:
+            do {
+                guard acceptsDailyUserData(coreID, kind: entry.owner.kind) else { throw InventoryTargetError.recognitionRequired }
+                userDataUpdateRun.observeCompletion(coreID)
+                guard let payload = entry.payload, payload.isComplete else {
+                    // A terminal callback and the final recognition payload can
+                    // arrive on adjacent MainActor turns. The idle drain gate
+                    // bounds this wait and fails it if no complete payload arrives.
+                    userDataUpdateRun.finish(coreID, as: .running)
+                    publishUserDataProgress(taskID: entry.owner.taskID)
+                    return
+                }
+                let now = Date.now
+                let bound = !entry.owner.scope.account.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                switch payload {
+                case .depot(let items, let complete):
+                    try inventory.capture(items: items, complete: complete, scope: entry.owner.scope, now: now)
+                    if bound { try depotHistoryStore.save(items: items, complete: complete, scope: entry.owner.scope, now: now) }
+                    // P12.4 识别回填复查：同批独立更新资料任务的识别同样触发。
+                    reviewDepotMaintainSkippedPlans()
+                case .operators(let operators):
+                    if bound {
+                        try operBoxHistoryStore.save(operators, scope: entry.owner.scope, now: now)
+                        operBoxHistoryRevision = UUID()
+                    }
+                }
+                if bound {
+                    guard applyDailyTaskCallback(.userDataSync(entry.owner.kind, .init(scope: entry.owner.scope, completedAt: now)),
+                                                 coreID: coreID) else { throw CocoaError(.fileWriteUnknown) }
+                }
+                userDataUpdateRun.finish(coreID, as: .succeeded)
+            } catch {
+                userDataUpdateRun.finish(coreID, as: .failed)
+                markDailyRunFailed()
+                logError("更新资料未完整完成或保存失败：\(error.localizedDescription)")
+            }
+        default: return
+        }
+        publishUserDataProgress(taskID: entry.owner.taskID)
+    }
+
+    private func publishUserDataProgress(taskID: UUID) {
+        switch userDataUpdateRun.aggregate(for: taskID) {
+        case .failed: taskStatus[taskID] = .failure
+        case .cancelled: taskStatus[taskID] = .cancel
+        case .succeeded: taskStatus[taskID] = .success
+        case .running: taskStatus[taskID] = .running
+        case .pending, nil: break
+        }
+    }
+
+    func failIncompleteDailyUserDataUpdates(runID: UUID) {
+        let unfinished = userDataUpdateRun.entries.filter {
+            $0.value.owner.runID == runID && [.pending, .running].contains($0.value.progress)
+        }
+        guard !unfinished.isEmpty else { return }
+        for (id, entry) in unfinished {
+            userDataUpdateRun.finish(id, as: .failed)
+            publishUserDataProgress(taskID: entry.owner.taskID)
+        }
+        userDataUpdateRun.cancelPending()
+        markDailyRunFailed()
+        logError("资料更新缺少完整结束回调，本轮按失败收口。")
+    }
+
+    func cancelDailyUserDataUpdates() {
+        userDataUpdateRun.cancelPending()
+        for taskID in Set(userDataUpdateRun.entries.values.map { $0.owner.taskID }) { publishUserDataProgress(taskID: taskID) }
+    }
+
+    /// Composite progress is handled exclusively by the owned subtask tracker.
+    func updateDailyTaskStatus(_ value: TaskStatus, coreID: Int32?) {
+        guard let coreID, userDataUpdateRun.entries[coreID] == nil, let id = taskIDMap[coreID] else { return }
+        taskStatus[id] = value
+    }
+}
+
+// MARK: - Depot maintain dispatch
+
+extension MAAViewModel {
+    /// P12.3 库存保持分发展开（I05-I12）：任务级跳过 → 可选前置仓库识别 →
+    /// 逐计划预检与战斗任务追加。对齐 upstream DepotMaintainTaskUserControlModel
+    /// 序列化（dev-v2 d75bf9a）；预检库存取会话快照、空缓存按 0 计（upstream 同口径，
+    /// 识别回填后的中途重算已于 P12.4 落地，divergence P12-[a] 收口）；与冻结目标
+    /// 任务同批共存（P12-[e] 复评后放开，重算承接）。
+    /// 返回本任务是否实际下发了 Core 任务。
+    @discardableResult
+    func appendDepotMaintainTask(task: DailyTask, config: DepotMaintainConfiguration,
+                                 runID: UUID, scope: InventoryScope,
+                                 inventoryFightIDs: inout Set<Int32>) async throws -> Bool {
+        guard dailyRunCoordinator.active?.id == runID, inventoryScope == scope else { throw CancellationError() }
+        let now = Date.now
+
+        if let skip = DepotMaintainPlanner.taskLevelSkip(config: config, at: now, activities: stageActivity) {
+            taskStatus[task.id] = .skipped
+            skipDepotMaintainRunOnce(task: task)
+            logInfo(skip == .activityOpen ? "活动进行中，库存保持已跳过。" : "资源全开放期间，库存保持已跳过。")
+            return false
+        }
+        if config.plans.isEmpty && !config.updateDepot {
+            taskStatus[task.id] = .skipped
+            skipDepotMaintainRunOnce(task: task)
+            logWarn("库存保持未配置计划且未启用执行前识别，已跳过。")
+            return false
+        }
+        // 冻结共存（P12-[e] 复评，P12.4）：upstream 允许库存保持与目标库存任务同批
+        // 运行并靠中途重算消化——冻结目标战斗与库存保持计划战斗均在战斗链启动时
+        // 按最新快照重算缺口，识别回填复查覆盖预检充足计划的向下翻转，同批共存
+        // 不再显式跳过（端到端共行业界归真机验收）。
+
+        logInfo("库存保持")
+
+        // 预检库存：会话快照（按账号/区服/档案/本地标识隔离）；无数据按 0 计。
+        let depotItems = currentInventorySnapshot?.items ?? [:]
+        let evaluations = DepotMaintainPlanner.evaluate(
+            config: config, inventory: depotItems,
+            formulas: FightConfiguration.dropFormulaTable,
+            isStageOpen: depotStageOpenPredicate(at: now))
+        // 登记识别回填复查（upstream _serializedDepotMaintainTasks 同位）：任一仓库
+        // 识别完成后复查充足计划的缓存翻转（含未启用前置识别、同批独立更新资料
+        // 任务识别的场景）。
+        depotMaintainReviews.append(DepotMaintainReviewEntry(config: config, evaluations: evaluations))
+
+        var dispatched = false
+        for evaluation in evaluations {
+            let label = "计划\(evaluation.index + 1)"
+            let dropName = FightConfiguration.dropItems.first { $0.id == evaluation.plan.dropID }?.item.name
+                ?? evaluation.plan.dropID
+            switch evaluation.outcome {
+            case .dispatched(let need, let current):
+                logInfo("\(label)：\(dropName) 库存不足（当前 \(current)/目标 \(evaluation.plan.dropCount)），需补 \(need) 个")
+            case .enough(let current):
+                logInfo("\(label)：\(dropName) 库存已充足（\(current)/\(evaluation.plan.dropCount)），已跳过")
+            case .invalidDrop:
+                logError("\(label)：未选择材料，已跳过")
+            case .zeroDropCount:
+                logError("\(label)：目标数量为 0，已跳过")
+            case .noStage:
+                logError("\(label)：未选择关卡，已跳过")
+            case .stageClosed:
+                logInfo("\(label)：关卡「\(evaluation.plan.stage)」今日不可执行，已跳过")
+            }
+        }
+
+        if config.updateDepot {
+            try Task.checkCancellation()
+            guard dailyRunCoordinator.active?.id == runID, inventoryScope == scope else { throw CancellationError() }
+            if let id = try await handle?.appendTask(type: .Depot, params: "") {
+                dispatched = true
+                // 登记会话识别槽：完成回调把结果捕获进快照并落盘历史
+                //（与手动识别同路径；多识别任务并发覆盖为已知边界，重算面收口）。
+                inventoryDepotScope = scope
+                inventoryDepotTaskID = id
+                taskIDMap[id] = task.id
+                achievementEvents.register(taskID: id, runID: runID)
+            } else {
+                logError("库存保持：执行前仓库识别任务下发失败")
+            }
+        }
+
+        for evaluation in evaluations {
+            guard case .dispatched(let need, _) = evaluation.outcome else { continue }
+            try Task.checkCancellation()
+            guard dailyRunCoordinator.active?.id == runID, inventoryScope == scope else { throw CancellationError() }
+            let fight = DepotMaintainPlanner.dispatchFight(for: evaluation.plan, config: config, need: need)
+            guard let coreID = try await handle?.appendTask(type: .Fight, params: fight.params.jsonString()) else {
+                logError("计划\(evaluation.index + 1)：战斗任务下发失败")
+                continue
+            }
+            dispatched = true
+            taskIDMap[coreID] = task.id
+            achievementEvents.register(taskID: coreID, runID: runID)
+            // 中途重算档案（P12.4：战斗链启动重算缺口、完成记录临期药耗尽证明）+
+            // 掉落并入会话快照（既有水位线管线）：前序计划掉落影响后续预检（I08）。
+            depotFightPlans[coreID] = DepotFightDispatch(plan: evaluation.plan, config: config,
+                                                         label: evaluation.index + 1)
+            fightTaskParams[coreID] = fight.params
+            inventoryFightIDs.insert(coreID)
+        }
+
+        if !dispatched {
+            // 所有计划已达标/跳过且无前置识别：本轮无事可做，标记完成。
+            taskStatus[task.id] = .success
+        }
+        return dispatched
+    }
+
+    // MARK: 中途重算与识别回填（P12.4，upstream OnTaskStatusChanged）
+
+    /// 关卡开放判定（预检与识别回填复查共用）：目录内取 isOpen；目录外活动形码
+    /// 按过期活动判关，其余 fail-open（手输/特殊导航可连性，与 F05 备选解析同源）。
+    private func depotStageOpenPredicate(at date: Date) -> (String) -> Bool {
+        let catalog = StageCatalog(context: StageActivityContext(
+            channel: clientChannel, activities: stageActivity))
+        return { code in
+            let normalized = FightConfiguration.normalizedStage(code)
+            if let entry = catalog.entries(at: date).first(where: { $0.code == normalized }) {
+                return entry.isOpen
+            }
+            return !FightConfiguration.isExpiredActivityShape(normalized)
+        }
+    }
+
+    private func inventoryDropName(_ itemID: String) -> String {
+        FightConfiguration.dropItems.first { $0.id == itemID }?.item.name ?? itemID
+    }
+
+    /// P12.4 战斗链状态钩子（upstream OnTaskStatusChanged）：启动时按最新快照重算
+    /// 缺口，正常完成未达标时记录临期药耗尽证明。由消息处理在 Fight 任务链事件
+    /// 时调用；未登记的战斗链（普通日常战斗等）直接返回。
+    func processDepotMaintainFight(coreID: Int32, code: Int) async {
+        switch code {
+        case 10001: // TaskChainStart
+            await refreshDepotFightDrops(coreID: coreID)
+        case 10002: // TaskChainCompleted
+            recordFightCompletionProvenExhaustion(coreID: coreID)
+        default: break
+        }
+    }
+
+    /// 战斗链启动：用最新库存重算缺口并经 AsstSetTaskParams 改写已排队战斗参数
+    /// （upstream RefreshFightTaskDrops）。已充足 → times=0 跳过（核心侧不进终端
+    /// 不导航）；不足 → drops=need。覆盖库存保持计划战斗与冻结目标战斗（重算由
+    /// 前序识别/掉落 merge 刷新后的快照承接）。
+    ///
+    /// 快照缺失（nil）与 upstream「无数据」不同义：Mac 在非 Fight/Depot/OperBox
+    /// 链启动时会做一致性失效（invalidateInventory），nil 可能只是运行中失效而非
+    /// 从未识别。仅前置识别已启用且识别未成功（失败/不完整/作用域失配）时按
+    /// upstream 无数据口径 times=0 停刷（按 0 计会把目标量全额下发）；其余情形
+    /// 保留下发参数（P12-[i]，fail-open——冻结战斗的下发参数本就来自追加时的
+    /// 有效快照校验）。
+    private func refreshDepotFightDrops(coreID: Int32) async {
+        let recalculated: (fight: FightConfiguration, label: String)?
+        if let dispatch = depotFightPlans[coreID] {
+            let label = "计划\(dispatch.label)"
+            let dropName = inventoryDropName(dispatch.plan.dropID)
+            let fight: FightConfiguration
+            if let snapshot = currentInventorySnapshot {
+                let current = DepotMaintainPlanner.effectiveCount(
+                    of: dispatch.plan, inventory: snapshot.items,
+                    formulas: FightConfiguration.dropFormulaTable,
+                    chipConversion: dispatch.config.countDualChipAsChipPack)
+                let need = dispatch.plan.dropCount - current
+                if need <= 0 {
+                    var skipped = DepotMaintainPlanner.dispatchFight(for: dispatch.plan, config: dispatch.config, need: 0)
+                    skipped.times = 0
+                    fight = skipped
+                    logInfo("\(label)：\(dropName) 库存已充足（\(current)/\(dispatch.plan.dropCount)），已跳过")
+                } else {
+                    fight = DepotMaintainPlanner.dispatchFight(for: dispatch.plan, config: dispatch.config, need: need)
+                    logInfo("\(label)：\(dropName) 按最新库存重算缺口（当前 \(current)/目标 \(dispatch.plan.dropCount)），需补 \(need) 个")
+                }
+                recalculated = (fight, label)
+            } else if dispatch.config.updateDepot {
+                var stopped = DepotMaintainPlanner.dispatchFight(for: dispatch.plan, config: dispatch.config, need: 0)
+                stopped.times = 0
+                logWarn("\(label)：库存数据为空，已停止该计划等待重新识别")
+                recalculated = (stopped, label)
+            } else {
+                // 未启用前置识别：下发参数即预检口径，运行中失效不做中途重算。
+                return
+            }
+        } else if let frozen = frozenTargetFights[coreID] {
+            var fight = frozen.fight
+            let label = "「\(fight.subtitle)」"
+            let dropName = inventoryDropName(frozen.itemID)
+            guard let snapshot = currentInventorySnapshot else { return }
+            let current = max(snapshot.items[frozen.itemID] ?? 0, 0)
+            let need = frozen.target - current
+            if need <= 0 {
+                fight.times = 0
+                logInfo("\(label)\(dropName) 库存已充足（\(current)/\(frozen.target)），已跳过")
+            } else {
+                fight.drops = [frozen.itemID: need]
+                logInfo("\(label)\(dropName) 按最新库存重算缺口（当前 \(current)/目标 \(frozen.target)），需补 \(need) 个")
+            }
+            recalculated = (fight, label)
+        } else {
+            return
+        }
+        guard let (fight, label) = recalculated, let params = try? fight.params.jsonString() else { return }
+        // Core 布尔结果不阻断运行（任务可能已被停止/清队）；仅记录可观测告警。
+        if await handle?.setTaskParams(taskID: coreID, params: params) != true {
+            logWarn("\(label)：战斗参数重算下发未生效")
+        }
+    }
+
+    /// 战斗链正常完成：无次数上限的战斗未达库存目标即结束只可能是理智不足，记录
+    /// 其临期药窗口为已耗尽（upstream ProvenExhaustedMedicineDays，运行内只增不减，
+    /// 由 ensureHandle 重置）。有次数限制的战斗打满次数未达标结束原因不唯一，不构成
+    /// 证明（upstream 同口径）；库存数据为空或已达标同样不构成证明。
+    private func recordFightCompletionProvenExhaustion(coreID: Int32) {
+        let expiry: Int
+        let dropID: String
+        let target: Int
+        if let dispatch = depotFightPlans[coreID] {
+            expiry = dispatch.config.useExpiringMedicine ? DepotMaintainConfiguration.expiringMedicineDays : 0
+            dropID = dispatch.plan.dropID
+            target = dispatch.plan.dropCount
+        } else if let frozen = frozenTargetFights[coreID] {
+            guard frozen.fight.times == nil || frozen.fight.times == Int(Int32.max) else { return }
+            expiry = frozen.fight.medicine_expire_days
+            dropID = frozen.itemID
+            target = frozen.target
+        } else {
+            return
+        }
+        guard expiry > 0, !dropID.isEmpty, target > 0 else { return }
+        guard let snapshot = currentInventorySnapshot else { return }
+        let current = max(snapshot.items[dropID] ?? 0, 0)
+        guard current < target else { return }
+        provenExhaustedMedicineDays = max(provenExhaustedMedicineDays, expiry)
+        logInfo("「\(inventoryDropName(dropID))」未达库存目标（\(current)/\(target)）即正常结束，临期药窗口已记录为耗尽")
+    }
+
+    /// 仓库识别完成后复查本轮被预检跳过（未下发）的计划：预检基于识别前的缓存，
+    /// 识别纠正后出现「预检充足、实际不足」的向下翻转时逐条告警，避免静默漏刷
+    /// 一轮（upstream ReviewSkippedPlansAfterDepotSync）。触发源不限库存保持自身的
+    /// 前置识别——同批独立更新资料任务的识别同样触发。登记一次性消费；排序/
+    /// 截断口径见 DepotMaintainPlanner.cacheStaleSkips。
+    func reviewDepotMaintainSkippedPlans() {
+        guard !depotMaintainReviews.isEmpty else { return }
+        let entries = depotMaintainReviews
+        depotMaintainReviews.removeAll()
+        // 没有任何库存数据时无从判断翻转，按 0 计会误报计划不足（upstream 同口径）。
+        guard let snapshot = currentInventorySnapshot else { return }
+        let isOpen = depotStageOpenPredicate(at: Date.now)
+        for entry in entries {
+            let dispatched = Set(entry.evaluations.compactMap {
+                if case .dispatched = $0.outcome { return $0.index }
+                return nil
+            })
+            for skip in DepotMaintainPlanner.cacheStaleSkips(
+                config: entry.config, dispatchedIndexes: dispatched,
+                inventory: snapshot.items, formulas: FightConfiguration.dropFormulaTable,
+                isStageOpen: isOpen) {
+                let plan = entry.config.plans[skip.index]
+                logWarn("计划\(skip.index + 1)：\(inventoryDropName(plan.dropID)) 识别后库存不足（当前 \(skip.current)/目标 \(plan.dropCount)），预检时库存缓存陈旧已按充足跳过")
+            }
+        }
+    }
+
+    // MARK: 预设（P12.5，upstream RefreshActivityPresetList/AddActivityPresetPlan 同构）
+
+    private static func isKnownDropItem(_ drop: String?) -> Bool {
+        guard let drop, !drop.isEmpty else { return false }
+        return FightConfiguration.dropItems.contains { $0.id == drop }
+    }
+
+    /// 当前进行中且至少含一个已知掉落关卡的活动预设（键与显示名，显示名取
+    /// StageName 缺省回退活动键）。时间口径沿用统一左闭右开 ActivityPeriod.contains
+    /// （与 upstream 端点闭区间的瞬时差异入档 P12-[j]）。
+    func depotActivityPresets(at date: Date = .now) -> [(key: String, display: String)] {
+        guard let activities = stageActivity?.sideStoryStage else { return [] }
+        return activities.compactMap { key, stage in
+            guard let period = stage.Activity, period.contains(date),
+                  let stages = stage.Stages,
+                  stages.contains(where: { Self.isKnownDropItem($0.Drop) })
+            else { return nil }
+            let display = (period.StageName?.isEmpty == false) ? period.StageName! : key
+            return (key, display)
+        }
+    }
+
+    /// 导入指定进行中活动的一对一计划序列（已知掉落关卡，目标数量统一缺省 200；
+    /// 快捷导入不干预运行语义，「活动期间跳过」开启时由设置面提示）。
+    func depotActivityPresetPlans(forKey activityKey: String) -> [(stage: String, dropID: String, count: Int)] {
+        guard let stage = stageActivity?.sideStoryStage?[activityKey] else { return [] }
+        return DepotMaintainPlanner.activityPresetPlans(from: stage.Stages,
+                                                        isKnownDrop: Self.isKnownDropItem)
+    }
+
+    /// 任务级跳过时冻结 runOnce（对齐 appendDailyUserDataUpdate 的跳过语义：
+    /// 未执行的条目不得被同批成功运行消费）。
+    private func skipDepotMaintainRunOnce(task: DailyTask) {
+        guard task.runOnce,
+            let index = dailyRunTasks?.firstIndex(where: { $0.id == task.id }), let frozen = dailyRunTasks?[index]
+        else { return }
+        dailyRunTasks?[index] = DailyTask(id: frozen.id, task: frozen.task, enabled: false, runOnce: frozen.runOnce)
+    }
+}

@@ -20,7 +20,7 @@ print('PASS: 32 real processes race for one occurrence; exactly one claim')
 PYWORKERS
 
 # AT-3: 生产 TaskTimerManager(weak viewModel handoff)单文件编译——定时回调
-# 的 schedule 源路由与 weak 失效静默。HOME 隔离默认 App Support 存储目录。
+# 的 schedule 源路由与 weak 失效静默。测试显式注入临时账本，不读写用户 App Support。
 swiftc -parse-as-library \
     MeoAsstMac/Utils/TaskTimerManager.swift \
     MeoAsstMac/Scheduling/DailyTaskSchedule.swift \

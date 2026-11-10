@@ -35,15 +35,25 @@ final class RecordingHandle {
         switch task {
         case .fight(let config): return try await appendTask(type: .Fight, params: config.params.jsonString())
         case .infrast: return try await appendTask(type: .Fight, params: "{}")
+        case .userdataupdate: throw CocoaError(.coderInvalidValue)
         case .other: return try await appendTask(type: .Fight, params: "{}")
         }
     }
 }
 
 final class MedicineLogHarness {
+    var userDataUpdateRun = UserDataUpdateRun()
+    var appendedAnyTask = false
+    let runID = UUID()
+    let scope = InventoryScope(connection: "fixture", server: "CN", profile: "fixture")
+    func appendDailyUserDataUpdate(task: QueuedTask, config: UserDataUpdateConfiguration, runID: UUID, scope: InventoryScope) async throws -> [Int32] { throw CocoaError(.coderInvalidValue) }
     var tasks: [QueuedTask] = []
     var taskIDMap: [Int32: UUID] = [:]
     var fightTaskParams: [Int32: FightConfiguration.Params] = [:]
+    // P12.4 中途重算会话态（startTasks 冻结目标登记切片引用；运行重置的
+    // DepotMaintain 域行由 run-depot-maintain-dispatch-tests.py 专责，本套件剥离）。
+    var frozenTargetFights: [Int32: FrozenTargetDispatch] = [:]
+    var pendingFrozenTarget: (itemID: String, target: Int)?
     var taskStatus: [UUID: Bool] = [:]
     var handle: RecordingHandle? = RecordingHandle()
     var clientChannel = MAAClientChannel.Official

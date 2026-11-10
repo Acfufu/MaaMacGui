@@ -3,6 +3,42 @@ import Foundation
  @MainActor static func main() async {
   var count=0
   func check(_ value: Bool,_ message: String) { precondition(value,message);count+=1 }
+  if CommandLine.arguments.contains("--accelerated-combat-timeout") {
+   let model=MAAViewModel(); let core=model.handle!
+   try! await model.miniGame(name:"Fixture")
+   model.activeRunHasRoguelike=true; model.roguelikeInCombat=true
+   model.roguelikeDelayAbortUntilCombatComplete=true
+   try! await model.stop()
+   check(core.stopCount == 1 && model.infos.contains("等待战斗结束超时，现在停止。"), "accelerated production deadline stops once on timeout")
+   check(!model.roguelikeWaitingForCombat && model.canStopTasks, "timeout releases stop admission")
+   print("PASS: \(count) accelerated combat-timeout checks (600s production literal asserted by runner)")
+   return
+  }
+  // Actual production startTasks dispatches a copy: period resolution never
+  // edits the saved/frozen preference, and fixed selection keeps its index.
+  do {
+   let directory = FileManager.default.temporaryDirectory.appendingPathComponent("maa-p08-3-\(UUID())")
+   try! FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+   defer { try? FileManager.default.removeItem(at: directory) }
+   let file = directory.appendingPathComponent("plan.json")
+   let data = Data(#"{"plans":[{"name":"timed","period":[["00:00","23:59"]]},{"name":"manual"}]}"#.utf8)
+   try! data.write(to: file)
+   for selection in InfrastConfiguration.PlanSelection.allCases {
+    let model = MAAViewModel(); let core = model.handle!
+    var config = InfrastConfiguration(); config.mode = .custom
+    config.filename = file.path; config.plan_index = 1; config.planSelection = selection
+    model.tasks = [.init(task: .infrast(config))]
+    check(await model.startDailyTasks() == .started, "custom infrastructure starts")
+    check(core.appendedInfrast.count == 1 && core.appendedInfrast[0].plan_index == (selection == .fixed ? 1 : 0), "fixed/automatic index reaches Core boundary")
+    check(core.appendedInfrast[0].params.plan_index == (selection == .fixed ? 1 : 0), "encoded params preserve dispatched index")
+    if case .infrast(let frozen)? = model.dailyRunTasks?.first?.task {
+     check(frozen == config, "period selection leaves frozen preference unchanged")
+    } else { fatalError("missing infrastructure snapshot") }
+    check(model.tasks[0].task == .infrast(config), "period selection leaves saved preference unchanged")
+    check(model.warnings.contains("部分班次未设置时间段，自动选择时无匹配将使用第一个班次。") == (selection == .automatic), "mixed periods warn only for automatic selection")
+    try! await model.stop()
+   }
+  }
   for failStop in [false,true] {
    let model=MAAViewModel();let core=model.handle!
    model.tasks=[.init(task:.fixture),.init(task:.fixture)];core.failAppendAt=2;core.failStop=failStop
@@ -176,6 +212,74 @@ import Foundation
   check(toolRun.status == .busy && toolCore.startCount == 1 && toolCore.appendCount == 1 && !toolRun.canStartTasks, "a started tool run occupies the instance through the shared boundary")
   try? await toolRun.stop()
   check(toolRun.status == .idle && toolRun.canStartTasks && toolRun.dailyRunCoordinator.active == nil && toolCore.stopCount == 1, "stop clears a tool run and leaves no coordinator residue")
+  // G18 延迟停止:miniGame 不经 startTasks 入队,战斗态标志手工置位以驱动共享的
+  // stop() 边界;等待/放行语义归 daily 运行,此处只验证停止路径本身。
+  let g18=MAAViewModel(); let g18Core=g18.handle!
+  try! await g18.miniGame(name:"Fixture")
+  g18.activeRunHasRoguelike=true; g18.roguelikeInCombat=true
+  g18.roguelikeDelayAbortUntilCombatComplete=true
+  let g18Stop=Task { try? await g18.stop() }
+  try! await Task.sleep(for:.milliseconds(1200))
+  check(g18Core.stopCount == 0 && g18.roguelikeWaitingForCombat && g18.infos.contains("肉鸽战斗中：等待当前战斗结束后再停止（最长 10 分钟）。再次点击停止可立即停止。"), "delayed abort holds the stop until combat completes instead of touching Core")
+  check(g18.canStopTasks, "button and hotkey remain enabled while waiting")
+  try? await g18.stop()
+  check(g18.infos.contains("已请求立即停止，不再等待当前战斗结束。"), "second stop request aborts the combat wait")
+  for _ in 0..<50 { if g18Core.stopCount == 1 { break }; try! await Task.sleep(for:.milliseconds(100)) }
+  check(g18Core.stopCount == 1 && !g18.roguelikeWaitingForCombat && g18.status == .idle, "bypassed wait releases the pending stop immediately")
+  check(await g18Stop.value != nil, "the first stop flow returns after the bypass")
+  let g18wait=MAAViewModel(); let g18waitCore=g18wait.handle!
+  try! await g18wait.miniGame(name:"Fixture")
+  g18wait.activeRunHasRoguelike=true; g18wait.roguelikeInCombat=true
+  g18wait.roguelikeDelayAbortUntilCombatComplete=true
+  let waitStop=Task { try? await g18wait.stop() }
+  try! await Task.sleep(for:.milliseconds(300))
+  check(g18wait.roguelikeWaitingForCombat && g18waitCore.stopCount == 0, "wait holds while combat is live")
+  g18wait.roguelikeInCombat=false
+  for _ in 0..<50 { if g18waitCore.stopCount == 1 { break }; try! await Task.sleep(for:.milliseconds(100)) }
+  check(g18waitCore.stopCount == 1 && g18wait.status == .idle && !g18wait.roguelikeWaitingForCombat, "combat completion releases the pending stop")
+  check(await waitStop.value != nil, "combat-release wait flow returns normally")
+  // Exercise current task ownership independently of message decoding.
+  let events=MAAViewModel()
+  let current=DailyTask(task:.roguelike(.init()))
+  events.tasks=[current]; events.taskIDMap=[42:current.id]; events.activeRunHasRoguelike=true
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:41,inCombat:true)
+  events.updateRoguelikeCombat(taskchain:"Copilot",taskID:42,inCombat:true)
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:nil,inCombat:true)
+  check(!events.roguelikeInCombat, "foreign, missing and old task IDs cannot enter combat")
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:42,inCombat:true)
+  check(events.roguelikeInCombat, "current roguelike task enters combat")
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:41,inCombat:false)
+  check(events.roguelikeInCombat, "late combat end cannot release a current battle")
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:42,inCombat:false)
+  check(!events.roguelikeInCombat, "current combat end clears state")
+  events.activeRunHasRoguelike=false
+  events.updateRoguelikeCombat(taskchain:"Roguelike",taskID:42,inCombat:true)
+  check(!events.roguelikeInCombat, "completed run rejects late combat start")
+  for mode in ["cancel", "natural", "nonroguelike", "exit"] {
+   let model=MAAViewModel(); let core=model.handle!
+   model.tasks=[DailyTask(task:.fixture)]
+   check(await model.startDailyTasks() == .started, "boundary fixture starts")
+   model.activeRunHasRoguelike = mode != "nonroguelike"
+   model.roguelikeInCombat=true; model.roguelikeDelayAbortUntilCombatComplete=true
+   if mode == "exit" {
+    await model.prepareForTermination(timeout:1)
+    check(core.stopCount == 1 && !model.roguelikeWaitingForCombat && model.dailyRunCoordinator.active == nil, "exit bypasses combat wait and finishes daily cleanup")
+   } else {
+    let work=Task { try? await model.stop() }
+    try! await Task.sleep(for:.milliseconds(50))
+    if mode == "cancel" { work.cancel() }
+    if mode == "natural" { core.isRunning=false; model.resetStatus() }
+    check(await work.value != nil, "stop boundary returns")
+    check(core.stopCount == 1 && !model.roguelikeWaitingForCombat && !model.activeRunHasRoguelike && !model.roguelikeInCombat, "stop clears combat scope exactly once")
+    check(!model.infos.contains("等待战斗结束超时，现在停止。"), "cancel, natural and foreign paths never claim timeout")
+    if mode == "cancel" { check(model.infos.contains("停止等待已取消，现在停止。"), "cancel has accurate stop message") }
+   }
+  }
+  let g18off=MAAViewModel(); let g18offCore=g18off.handle!
+  try! await g18off.miniGame(name:"Fixture")
+  g18off.activeRunHasRoguelike=true; g18off.roguelikeInCombat=true
+  try? await g18off.stop()
+  check(g18offCore.stopCount == 1 && !g18off.roguelikeWaitingForCombat && g18off.status == .idle, "disabled switch stops immediately even in combat")
   // P04 结果四态:准备期钩子超时按 .timedOut 落账;钩子脚本执行失败按 .failed
   // 落账(A 审 Q1:与"成功/失败/取消/超时"字面一致,不再混入 .cancelled)。
   // startDailyTasks 每次从 hookSettings 重载钩子配置,须在 store 上注入。
@@ -218,6 +322,41 @@ import Foundation
   let admittedID=await freshEntry.requestDailyRun(origin:.schedule)
   check(admittedID != nil && freshEntry.dailyRunCoordinator.active?.id == admittedID, "admitted entry returns the coordinator run ID")
   check(await freshEntry.requestStopRun() == true && freshEntry.dailyRunCoordinator.lastTerminal?.id == admittedID, "the admitted run ID tracks stop routing into the terminal record")
+  do {
+   let empty = MAAViewModel(); empty.tasks = []
+   let core = empty.handle!
+   check(await empty.startDailyTasks() == .started, "empty queue closes through normal coordinator lifecycle")
+   check(core.startCount == 0 && empty.dailyRunCoordinator.lastTerminal?.outcome == .completed, "empty queue does not submit a native empty task list")
+  }
+  // P11.3: native idle precedes callback delivery. The production finish gate
+  // retains ownership until callbacks drain, and missing callbacks fail closed.
+  do {
+   let drain = MAAViewModel(); drain.tasks = [.init(task: .fixture)]
+   check(await drain.startDailyTasks() == .started, "callback-drain fixture starts")
+   drain.userDataUpdateRun.pending = true
+   drain.handle!.isRunning = false
+   for _ in 0..<50 {
+    if drain.userDataCallbackDeadline != nil { break }
+    try? await Task.sleep(for: .milliseconds(20))
+   }
+   check(drain.userDataCallbackDeadline != nil && drain.dailyRunCoordinator.active != nil, "idle Core retains run while data callbacks pending")
+   drain.userDataUpdateRun.pending = false
+   for _ in 0..<50 {
+    if drain.dailyRunCoordinator.active == nil { break }
+    try? await Task.sleep(for: .milliseconds(20))
+   }
+   check(drain.dailyRunCoordinator.lastTerminal?.outcome == .completed, "drained callbacks allow owned run to finish")
+
+   let missing = MAAViewModel(); missing.tasks = [.init(task: .fixture)]
+   check(await missing.startDailyTasks() == .started, "missing-callback fixture starts")
+   missing.userDataUpdateRun.pending = true
+   missing.handle!.isRunning = false
+   for _ in 0..<200 {
+    if missing.dailyRunCoordinator.active == nil { break }
+    try? await Task.sleep(for: .milliseconds(20))
+   }
+   check(missing.dailyRunCoordinator.lastTerminal?.outcome == .failed, "missing callbacks reach failed terminal after bounded grace")
+  }
   print("DailyPreparationTests: \(count) production async assertions passed")
  }
 }

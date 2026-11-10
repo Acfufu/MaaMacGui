@@ -9,14 +9,28 @@ import SwiftUI
 
 struct CopilotView: View {
     let context: CopilotContext
+    @Environment(NewViewModel.self) private var newModel
 
     var body: some View {
         @Bindable var context = context
-        if context.category == .list {
-            if let set = context.copilotSet {
-                switch context.content {
+        VStack(spacing: 10) {
+            mainContent(context: _context)
+            if context.currentRateableCopilotID != nil {
+                ratingRow
+            }
+        }
+    }
+
+    @ViewBuilder private func mainContent(context: Bindable<CopilotContext>) -> some View {
+        if context.wrappedValue.category == .list {
+            if let set = context.wrappedValue.copilotSet {
+                switch context.wrappedValue.content {
                 case .copilot(_, let kind, let copilot):
-                    CopilotConfigView(kind: kind, config: $context.config) {
+                    CopilotConfigView(
+                        kind: kind, config: context.config,
+                        userAdditionalEnabled: context.enableUserAdditional,
+                        operBoxAssistEnabled: context.enableOperBoxAssist
+                    ) {
                         CopilotDescriptionView(pilot: copilot)
                     }
                 case .invalid:
@@ -24,7 +38,11 @@ struct CopilotView: View {
                 case .pending:
                     ProgressView().controlSize(.small)
                 default:
-                    CopilotConfigView(kind: set.kind, config: $context.config) {
+                    CopilotConfigView(
+                        kind: set.kind, config: context.config,
+                        userAdditionalEnabled: context.enableUserAdditional,
+                        operBoxAssistEnabled: context.enableOperBoxAssist
+                    ) {
                         CopilotSetDescriptionView(set: set.data)
                     }
                 }
@@ -32,16 +50,39 @@ struct CopilotView: View {
                 Text("请选择作业项目")
             }
         } else {
-            switch context.content {
+            switch context.wrappedValue.content {
             case .copilot(_, let kind, let copilot):
-                CopilotConfigView(kind: kind, config: $context.config) {
+                CopilotConfigView(
+                    kind: kind, config: context.config,
+                    userAdditionalEnabled: context.enableUserAdditional,
+                    operBoxAssistEnabled: context.enableOperBoxAssist
+                ) {
                     CopilotDescriptionView(pilot: copilot)
                 }
             case .set(let url, let set):
                 Button("激活此作业集") {
                     Task {
-                        await context.updateSet(at: url, set: set)
-                        context.category = .list
+                        // C09/C02：激活失败与部分成员跳过不再静默。
+                        if let listing = await context.wrappedValue.updateSet(at: url, set: set) {
+                            context.wrappedValue.category = .list
+                            if !listing.skipped.isEmpty {
+                                newModel.appendLog(
+                                    .init(
+                                        date: .now,
+                                        content: String(
+                                            localized:
+                                                "作业集已激活，部分成员无法加载：\(listing.skipped.joined(separator: "、"))"
+                                        ),
+                                        color: .warning))
+                            }
+                        } else {
+                            newModel.appendLog(
+                                .init(
+                                    date: .now,
+                                    content: String(
+                                        localized: "作业集无法激活：清单损坏或成员类型不一致。"),
+                                    color: .error))
+                        }
                     }
                 }
                 .buttonStyle(.borderedProminent)
@@ -56,6 +97,24 @@ struct CopilotView: View {
             }
         }
     }
+
+    /// C12 作业站点赞/点踩（会话内对同一作业去重，WPF 同构）。
+    private var ratingRow: some View {
+        HStack(spacing: 16) {
+            Button {
+                Task { await newModel.rateCopilot(true) }
+            } label: {
+                Label("点赞", systemImage: "hand.thumbsup")
+            }
+            Button {
+                Task { await newModel.rateCopilot(false) }
+            } label: {
+                Label("点踩", systemImage: "hand.thumbsdown")
+            }
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+    }
 }
 
 // MARK: - Copilot Config
@@ -64,12 +123,20 @@ private struct CopilotConfigView<D: View>: View {
     let kind: MAACopilot.Kind
 
     @Binding var config: CopilotConfiguration
+    @Binding var userAdditionalEnabled: Bool
+    @Binding var operBoxAssistEnabled: Bool
 
     let description: D
 
-    init(kind: MAACopilot.Kind, config: Binding<CopilotConfiguration>, @ViewBuilder description: () -> D) {
+    init(
+        kind: MAACopilot.Kind, config: Binding<CopilotConfiguration>,
+        userAdditionalEnabled: Binding<Bool>, operBoxAssistEnabled: Binding<Bool>,
+        @ViewBuilder description: () -> D
+    ) {
         self.kind = kind
         self._config = config
+        self._userAdditionalEnabled = userAdditionalEnabled
+        self._operBoxAssistEnabled = operBoxAssistEnabled
         self.description = description()
     }
 
@@ -77,7 +144,9 @@ private struct CopilotConfigView<D: View>: View {
         VStack(spacing: 12) {
             switch kind {
             case .regular:
-                RegularCopilotConfigView(config: $config)
+                RegularCopilotConfigView(
+                    config: $config, userAdditionalEnabled: $userAdditionalEnabled,
+                    operBoxAssistEnabled: $operBoxAssistEnabled)
                 Divider()
             case .sss:
                 SSSCopilotConfigView(config: $config)
@@ -98,6 +167,8 @@ private struct CopilotConfigView<D: View>: View {
 
 private struct RegularCopilotConfigView: View {
     @Binding var config: CopilotConfiguration
+    @Binding var userAdditionalEnabled: Bool
+    @Binding var operBoxAssistEnabled: Bool
 
     var body: some View {
         HStack {
@@ -128,8 +199,61 @@ private struct RegularCopilotConfigView: View {
                 }
             }
             .animation(.default, value: config.support_unit_usage)
+            // C11：一图流/识别数据辅助编队（WPF EnableOperBoxAssist 同构，
+            // 仅在自动编队下生效）。
+            Toggle("使用一图流数据辅助编队", isOn: $operBoxAssistEnabled)
+                .help("自动编队前，按一图流干员练度数据（含技能与模组信息）预匹配作业编队。")
+            // C08 额外自选干员：WPF 同构随自动编队展示（Core 侧
+            // user_additional 仅在 formation=true 时消费）。
+            Toggle("额外自选干员", isOn: $userAdditionalEnabled)
+            if userAdditionalEnabled {
+                UserAdditionalEditor(config: $config)
+            }
         }
         SSSCopilotConfigView(config: $config)
+    }
+}
+
+private struct UserAdditionalEditor: View {
+    @Binding var config: CopilotConfiguration
+
+    var body: some View {
+        VStack(spacing: 6) {
+            ForEach(config.user_additional.indices, id: \.self) { index in
+                HStack {
+                    TextField(
+                        "干员名称",
+                        text: Binding(
+                            get: { config.user_additional[index].name },
+                            set: { config.user_additional[index].name = $0 }
+                        )
+                    )
+                    .frame(maxWidth: 160)
+                    Picker(
+                        "技能等级",
+                        selection: Binding(
+                            get: { config.user_additional[index].skill },
+                            set: { config.user_additional[index].skill = $0 }
+                        )
+                    ) {
+                        ForEach(1...3, id: \.self) { rank in
+                            Text("\(rank)").tag(rank)
+                        }
+                    }
+                    .frame(maxWidth: 84)
+                    Button {
+                        config.user_additional.remove(at: index)
+                    } label: {
+                        Image(systemName: "minus.circle")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("移除")
+                }
+            }
+            Button("添加干员") {
+                config.user_additional.append(.init(name: "", skill: 1))
+            }
+        }
     }
 }
 
