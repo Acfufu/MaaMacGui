@@ -165,6 +165,11 @@ struct FightConfiguration: MAATaskConfiguration {
     /// 恢复）；-1（保留当前）/0（AUTO）与 ≤ 上限值原样透传。clamped=true 时
     /// 调用方补可见日志。
     ///
+    /// WPF 对照（infra-1-R3 2g 裁定：可接受）：WPF 无资源上限概念、不钳制
+    /// （SeriesList 为静态列表 0/10..1/-1，超限存量 7-10 原样下发，WPF 侧
+    /// 潜伏缺陷）——Mac「钳制下发+保存不动」为有意单侧加固 divergence，
+    /// 非对齐缺口。
+    ///
     /// 上限来源：`liveSeriesUpperBound` 由能力快照刷新点（MAAViewModel
     /// coreCapabilities derive）写入——经静态注入而非 VM 属性直引，使
     /// medicine-log/daily-prep/inventory-prep 三个提取套件的 verbatim 切片
