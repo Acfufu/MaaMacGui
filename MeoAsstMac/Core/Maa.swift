@@ -24,6 +24,12 @@ actor MAAProvider {
         }
     }
 
+    func setStaticOption(key: AsstStaticOptionKey, value: String) throws {
+        guard AsstSetStaticOption(key, value).isTrue else {
+            throw MaaCoreError.setStaticOptionFailed
+        }
+    }
+
     func setUserDirectory(path: String) throws {
         guard AsstSetUserDir(path).isTrue else {
             throw MaaCoreError.setUserDirectoryFailed
@@ -350,6 +356,7 @@ enum MAATaskType: String {
 
 enum MaaCoreError: Error {
     case loadResourceFailed
+    case setStaticOptionFailed
     case setUserDirectoryFailed
     case setInstanceOptionFailed
     case appendTaskFailed

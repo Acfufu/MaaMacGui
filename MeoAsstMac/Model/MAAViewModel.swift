@@ -346,6 +346,8 @@ private let profileLoadLogger = Logger(subsystem: "com.hguandl.MeoAsstMac", cate
         }
     }
 
+    @AppStorage("MAAUseWebGPU") var useWebGPU = false
+
     // S04: WPF RuntimeSettings.BlockSleepWithScreenOn 同位。true（缺省）＝任务期间
     // 屏幕常亮（历史行为 NoDisplaySleep）；false＝允许屏幕休眠、系统仍保持唤醒。
     @AppStorage("MAABlockSleepWithScreenOn") var blockSleepWithScreenOn = true {
@@ -771,6 +773,9 @@ extension MAAViewModel {
         guard !isCoreInitialized else { return }
         status = .pending
         try await MAAProvider.shared.setUserDirectory(path: Self.userDirectory.path)
+        if useWebGPU {
+            try await MAAProvider.shared.setStaticOption(key: 2, value: "webgpu:0")
+        }
         try await loadResource(channel: clientChannel)
         status = .idle
         isCoreInitialized = true

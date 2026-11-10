@@ -47,6 +47,13 @@ struct SystemSettingsView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
+            Toggle(isOn: $viewModel.useWebGPU) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("使用WebGPU（实验功能）")
+                    Text("修改后需重启MAA以生效")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
 
             Toggle(isOn: $viewModel.blockSleepWithScreenOn) {
                 VStack(alignment: .leading, spacing: 2) {
