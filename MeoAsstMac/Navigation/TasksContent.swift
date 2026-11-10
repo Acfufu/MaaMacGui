@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TasksContent: View {
     @EnvironmentObject private var viewModel: MAAViewModel
+    @Environment(\.openWindow) private var openWindow
     @Binding var selection: UUID?
 
     var body: some View {
@@ -79,6 +80,16 @@ struct TasksContent: View {
             }
             .help("删除任务")
             .disabled(shouldDisableDeletion)
+        }
+
+        ToolbarItemGroup {
+            // 作战日报（WPF TaskQueueViewModel.OpenDailyReport 同位）。
+            Button {
+                openWindow(id: "daily-report")
+            } label: {
+                Label("作战日报", systemImage: "chart.bar.doc.horizontal")
+            }
+            .help("按日历与柱状图汇总每日作战场次、理智消耗与材料掉落")
         }
 
         ToolbarItemGroup {

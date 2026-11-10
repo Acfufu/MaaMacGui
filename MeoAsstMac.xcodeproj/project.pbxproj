@@ -196,6 +196,12 @@
 		F13600000000000000000002 /* DiagnosticsReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13600000000000000000001 /* DiagnosticsReport.swift */; };
 		F13700000000000000000002 /* DiagnosticsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13700000000000000000001 /* DiagnosticsSettingsView.swift */; };
 		F13800000000000000000002 /* LogCardBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13800000000000000000001 /* LogCardBuilder.swift */; };
+		F15000000000000000000002 /* DailyReportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15000000000000000000001 /* DailyReportModels.swift */; };
+		F15000000000000000000004 /* DailyReportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15000000000000000000003 /* DailyReportStore.swift */; };
+		F15000000000000000000006 /* DailyReportCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15000000000000000000005 /* DailyReportCollector.swift */; };
+		F15000000000000000000008 /* DailyReportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15000000000000000000007 /* DailyReportViewModel.swift */; };
+		F1500000000000000000000A /* DailyReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15000000000000000000009 /* DailyReportView.swift */; };
+		F1500000000000000000000C /* DailyReportMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1500000000000000000000B /* DailyReportMath.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -421,6 +427,12 @@
 		F13600000000000000000001 /* DiagnosticsReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsReport.swift; sourceTree = "<group>"; };
 		F13700000000000000000001 /* DiagnosticsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsSettingsView.swift; sourceTree = "<group>"; };
 		F13800000000000000000001 /* LogCardBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogCardBuilder.swift; sourceTree = "<group>"; };
+		F15000000000000000000001 /* DailyReportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReport/DailyReportModels.swift; sourceTree = "<group>"; };
+		F15000000000000000000003 /* DailyReportStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReport/DailyReportStore.swift; sourceTree = "<group>"; };
+		F15000000000000000000005 /* DailyReportCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReport/DailyReportCollector.swift; sourceTree = "<group>"; };
+		F15000000000000000000007 /* DailyReportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReport/DailyReportViewModel.swift; sourceTree = "<group>"; };
+		F15000000000000000000009 /* DailyReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReportView.swift; sourceTree = "<group>"; };
+		F1500000000000000000000B /* DailyReportMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReport/DailyReportMath.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -561,6 +573,7 @@
 			isa = PBXGroup;
 			children = (
 				83264A3A29EC0F2E0074E33A /* LogView.swift */,
+				F15000000000000000000009 /* DailyReportView.swift */,
 				C20000000000000000000002 /* AnnouncementView.swift */,
 				C10000000000000000000002 /* PeepView.swift */,
 				83264ACA29EC0F2E0074E33A /* EditableTextList.swift */,
@@ -711,6 +724,11 @@
 				F12500000000000000000001 /* StartupAutoRun.swift */,
 				F13600000000000000000001 /* DiagnosticsReport.swift */,
 				F13800000000000000000001 /* LogCardBuilder.swift */,
+				F15000000000000000000001 /* DailyReportModels.swift */,
+				F15000000000000000000003 /* DailyReportStore.swift */,
+				F15000000000000000000005 /* DailyReportCollector.swift */,
+				F15000000000000000000007 /* DailyReportViewModel.swift */,
+				F1500000000000000000000B /* DailyReportMath.swift */,
 				F11400000000000000000001 /* YituliuOperBoxService.swift */,
 				F11500000000000000000001 /* DataExport.swift */,
 				F11700000000000000000001 /* DepotMaintainPlanner.swift */,
@@ -996,6 +1014,12 @@
 				F13500000000000000000002 /* UpdateFeedPolicy.swift in Sources */,
 				F13600000000000000000002 /* DiagnosticsReport.swift in Sources */,
 				F13800000000000000000002 /* LogCardBuilder.swift in Sources */,
+				F15000000000000000000002 /* DailyReportModels.swift in Sources */,
+				F15000000000000000000004 /* DailyReportStore.swift in Sources */,
+				F15000000000000000000006 /* DailyReportCollector.swift in Sources */,
+				F15000000000000000000008 /* DailyReportViewModel.swift in Sources */,
+				F1500000000000000000000A /* DailyReportView.swift in Sources */,
+				F1500000000000000000000C /* DailyReportMath.swift in Sources */,
 				F13700000000000000000002 /* DiagnosticsSettingsView.swift in Sources */,
 				F12700000000000000000002 /* LocalNotificationService.swift in Sources */,
 				F11400000000000000000002 /* YituliuOperBoxService.swift in Sources */,

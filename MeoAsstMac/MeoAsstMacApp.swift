@@ -75,6 +75,12 @@ struct MeoAsstMacApp: App {
         }
         .defaultSize(width: 660, height: 580)
 
+        // 作战日报（WPF DailyReportDialogView 同位；任务列表工具栏按钮 openWindow 唤起）。
+        Window("作战日报", id: "daily-report") {
+            DailyReportView()
+        }
+        .defaultSize(width: 940, height: 680)
+
         Settings {
             TabView {
                 ConnectionSettingsView()

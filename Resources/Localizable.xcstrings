@@ -1,6 +1,1128 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+		"%@ 场" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "%@ 场"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "%@ battles"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "%@회"
+		   }
+		  }
+		 }
+		},
+		"%@ 场.One" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "%@ 场"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "%@ battle"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "%@회"
+		   }
+		  }
+		 }
+		},
+		"95%% 置信区间 %1$@ ~ %2$@ 理智/个\n%4$lld 场共掉落 %3$lld 个" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "95%% 置信区间 {0} ~ %1$@ 理智/个\n%3$lld 场共掉落 %2$@ 个"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "95%% confidence: {0} ~ %1$@ sanity/item\n%2$@ drops in %3$lld battles"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "95%% 신뢰 구간 {0} ~ %1$@ 이성/개\n%3$lld회 동안 %2$@개 드롭"
+		   }
+		  }
+		 }
+		},
+		"上一时段" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "上一时段"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Previous period"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "이전 기간"
+		   }
+		  }
+		 }
+		},
+		"下一时段" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "下一时段"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Next period"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "다음 기간"
+		   }
+		  }
+		 }
+		},
+		"不限制" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "不限制"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Unlimited"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "제한 없음"
+		   }
+		  }
+		 }
+		},
+		"仅列本时段刷过的关卡 · 数据取自 {0} 起的全部记录" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "仅列本时段刷过的关卡 · 数据取自 {0} 起的全部记录"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Stages farmed in this period · data from all records since {0}"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "이 기간에 진행한 스테이지만 표시 · {0}부터의 전체 기록 기준"
+		   }
+		  }
+		 }
+		},
+		"今天" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "今天"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Today"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "오늘"
+		   }
+		  }
+		 }
+		},
+		"作战日报" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "作战日报"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Combat Daily Report"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "작전 일보"
+		   }
+		  }
+		 }
+		},
+		"保留时间" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "保留时间"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Retention"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "보관 기간"
+		   }
+		  }
+		 }
+		},
+		"全部" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "全部"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "All"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "전체"
+		   }
+		  }
+		 }
+		},
+		"关卡排名" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "关卡排名"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Compare"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "스테이지 순위"
+		   }
+		  }
+		 }
+		},
+		"关卡排名 %lld/%lld · 误差 %@" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "关卡排名 {0}/%lld · 误差 %lld"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Rank {0}/%lld · %lld"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "스테이지 순위 {0}/%lld · 오차 %lld"
+		   }
+		  }
+		 }
+		},
+		"关卡排名 %lld/%lld · 误差 %@ · 样本少" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "关卡排名 {0}/%lld · 误差 %lld · 样本少"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Rank {0}/%lld · %lld · small sample"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "스테이지 순위 {0}/%lld · 오차 %lld · 표본 적음"
+		   }
+		  }
+		 }
+		},
+		"关闭" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "关闭"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Close"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "닫기"
+		   }
+		  }
+		 }
+		},
+		"切换后将删除 {0} 至 %@ 共 %@ 天的作战记录，此操作无法撤销。\n是否继续？" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "切换后将删除 {0} 至 %@ 共 %@ 天的作战记录，此操作无法撤销。\n是否继续？"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Switching will delete combat records for %@ day(s) from {0} to %@. This cannot be undone.\nContinue?"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "전환하면 {0}부터 %@까지 %@일간의 작전 기록이 삭제되며, 되돌릴 수 없습니다.\n계속하시겠습니까?"
+		   }
+		  }
+		 }
+		},
+		"单件理智" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "单件理智"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Sanity per item"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "개당 이성"
+		   }
+		  }
+		 }
+		},
+		"历史最优 {0}：%@ 理智/个（误差 %@），本时段未刷" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "历史最优 {0}：%@ 理智/个（误差 %@），本时段未刷"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Best overall: {0}, %@ sanity/item (%@), not farmed in this period"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "전체 기간 최적 {0}: %@ 이성/개 (오차 %@), 이 기간에는 미진행"
+		   }
+		  }
+		 }
+		},
+		"右轴上限 %@" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "右轴上限 %@"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Right axis max %@"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "오른쪽 축 최대 %@"
+		   }
+		  }
+		 }
+		},
+		"周" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "周"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Week"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "주"
+		   }
+		  }
+		 }
+		},
+		"回到包含今日的时段" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "回到包含今日的时段"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Back to the period containing today"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "오늘이 포함된 기간으로 이동"
+		   }
+		  }
+		 }
+		},
+		"场次" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "场次"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Battles"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "횟수"
+		   }
+		  }
+		 }
+		},
+		"平均 {0}/场" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "平均 {0}/场"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "avg {0}/battle"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "평균 {0}/전투"
+		   }
+		  }
+		 }
+		},
+		"年" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "年"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Year"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "년"
+		   }
+		  }
+		 }
+		},
+		"折叠或展开图表" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "折叠或展开图表"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Collapse or expand the chart"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "차트 접기/펼치기"
+		   }
+		  }
+		 }
+		},
+		"按关卡" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "按关卡"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "By stage"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "스테이지별"
+		   }
+		  }
+		 }
+		},
+		"按材料" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "按材料"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "By item"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "재료별"
+		   }
+		  }
+		 }
+		},
+		"掉落种类" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "掉落种类"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Drop kinds"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "드롭 종류"
+		   }
+		  }
+		 }
+		},
+		"日" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "日"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Day"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "일"
+		   }
+		  }
+		 }
+		},
+		"日报数据按游戏日保留，超期自动删除" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "日报数据按游戏日保留，超期自动删除"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Daily report files are kept per game day; expired files are removed automatically"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "일보 데이터는 게임 일 단위로 보관되며, 기한이 지나면 자동으로 삭제됩니다"
+		   }
+		  }
+		 }
+		},
+		"暂无作战记录" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "暂无作战记录"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "No combat records"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "작전 기록이 없습니다"
+		   }
+		  }
+		 }
+		},
+		"月" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "月"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Month"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "월"
+		   }
+		  }
+		 }
+		},
+		"未作战" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "未作战"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "No battles"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "작전 없음"
+		   }
+		  }
+		 }
+		},
+		"柱状图" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "柱状图"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Bars"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "막대"
+		   }
+		  }
+		 }
+		},
+		"每场掉落" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "每场掉落"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Per battle"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "전투당 드롭"
+		   }
+		  }
+		 }
+		},
+		"源石 {0}" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "源石 {0}"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "{0} Originite Prime"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "순오리지늄 {0}"
+		   }
+		  }
+		 }
+		},
+		"热力图" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "热力图"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Heatmap"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "히트맵"
+		   }
+		  }
+		 }
+		},
+		"理智 {0}" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "理智 {0}"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "{0} sanity"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "이성 {0}"
+		   }
+		  }
+		 }
+		},
+		"理智消耗" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "理智消耗"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Sanity used"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "이성 소모"
+		   }
+		  }
+		 }
+		},
+		"继续" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "继续"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Continue"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "계속"
+		   }
+		  }
+		 }
+		},
+		"药剂" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "药剂"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Sanity Potions"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "이성 회복제"
+		   }
+		  }
+		 }
+		},
+		"药剂 %@" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "药剂 %@"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "%@ Sanity Potions"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "이성 회복제 %@"
+		   }
+		  }
+		 }
+		},
+		"药剂 %@.One" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "药剂 %@"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "%@ Sanity Potion"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "이성 회복제 %@"
+		   }
+		  }
+		 }
+		},
+		"药剂 {0} · 源石 %@" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "药剂 {0} · 源石 %@"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Sanity Potions {0} · Originite Prime %@"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "이성 회복제 {0} · 순오리지늄 %@"
+		   }
+		  }
+		 }
+		},
+		"警告" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "警告"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Warning"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "경고"
+		   }
+		  }
+		 }
+		},
+		"趋势" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "趋势"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Trend"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "추이"
+		   }
+		  }
+		 }
+		},
+		"近 1 周" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "近 1 周"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Last week"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "최근 1주"
+		   }
+		  }
+		 }
+		},
+		"近 1 年" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "近 1 年"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Last year"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "최근 1년"
+		   }
+		  }
+		 }
+		},
+		"近 1 日" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "近 1 日"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Last day"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "최근 1일"
+		   }
+		  }
+		 }
+		},
+		"近 1 月" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "近 1 月"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Last month"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "최근 1개월"
+		   }
+		  }
+		 }
+		},
+		"选择日期" : {
+		 "localizations": {
+		  "zh-Hans": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "选择日期"
+		   }
+		  },
+		  "en": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "Pick a date"
+		   }
+		  },
+		  "ko": {
+		   "stringUnit": {
+		    "state": "translated",
+		    "value": "날짜 선택"
+		   }
+		  }
+		 }
+		},
     "上次的列表存档损坏，已按空列表重置。" : {
       "localizations" : {
         "en" : {

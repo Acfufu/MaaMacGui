@@ -51,6 +51,24 @@ public struct HGCalendar: Sendable {
     public func nextReset(after date: Date) -> Date {
         calendar.nextDate(after: date, matching: resetTime, matchingPolicy: .nextTime)!
     }
+
+    /// 游戏日的年月日分量（服务器时区 + 每日 04:00 界；作战日报归档口径）。
+    public func gameDayComponents(for date: Date) -> DateComponents {
+        calendar.dateComponents([.year, .month, .day], from: shifted(date))
+    }
+
+    /// date 在游戏日内的小时（0 起，游戏日 04:00 记 0；作战日报按小时分桶口径）。
+    public func gameDayHour(for date: Date) -> Int {
+        calendar.component(.hour, from: shifted(date))
+    }
+
+    /// 游戏日的规范锚点：该游戏日标签在 UTC 下的当日 00:00。
+    /// 仅用于文件名、排序与区间比较，不参与本地时刻展示。
+    public func startOfGameDay(for date: Date) -> Date {
+        var components = gameDayComponents(for: date)
+        components.timeZone = TimeZone(secondsFromGMT: 0)
+        return Calendar(identifier: .gregorian).date(from: components)!
+    }
 }
 
 extension MAAClientChannel {

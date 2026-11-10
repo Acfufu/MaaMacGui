@@ -1,0 +1,43 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "JBird",
+        "repositoryURL": "https://github.com/vsanthanam/JBird.git",
+        "state": {
+          "branch": null,
+          "revision": "1970578d783d469cd3079216b002a6ef6c16cdc2",
+          "version": "3.0.5"
+        }
+      },
+      {
+        "package": "Sparkle",
+        "repositoryURL": "https://github.com/sparkle-project/Sparkle",
+        "state": {
+          "branch": null,
+          "revision": "ab7d71291238df6e0492143b120c9b696a35f603",
+          "version": "2.10.1"
+        }
+      },
+      {
+        "package": "swift-syntax",
+        "repositoryURL": "https://github.com/swiftlang/swift-syntax.git",
+        "state": {
+          "branch": null,
+          "revision": "050f1a346fbbac0ca2cfb15a95274f7bd1cf0ccf",
+          "version": "604.0.0"
+        }
+      },
+      {
+        "package": "ZIPFoundation",
+        "repositoryURL": "https://github.com/weichsel/ZIPFoundation",
+        "state": {
+          "branch": null,
+          "revision": "22787ffb59de99e5dc1fbfe80b19c97a904ad48d",
+          "version": "0.9.20"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

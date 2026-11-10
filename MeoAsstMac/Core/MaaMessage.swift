@@ -394,6 +394,9 @@ extension MAAViewModel {
             // splitMode: Both 独立卡（TaskQueueViewModel.cs:2932）——Mac 用 .after
             //（收上一卡），无 Both 档。
             logTrace(.stopped, cardSplit: .after)
+            // 作战日报：任务队列停止（手动停止、掉线、强制定时启动）时把所有
+            // 未定稿 session 补结束时刻定稿（WPF OnQueueStopped 同位）。
+            DailyReportCollector.queueStopped()
         }
 
         guard let info = TaskChainMessage(json: message.details, context: "TaskChain") else {
@@ -458,6 +461,19 @@ extension MAAViewModel {
         // 战斗链在钩子内直接返回。
         if info.taskchain == "Fight" {
             Task { await self.processDepotMaintainFight(coreID: info.taskid, code: message.code) }
+        }
+
+        // 作战日报：Fight 链的开始/终态驱动 session 生命周期（WPF OnTaskStatusChanged
+        // 只认 Fight 型队列项同位；Depot 识别等其余链不产生作战记录）。
+        if info.taskchain == "Fight" {
+            switch message.code {
+            case .TaskChainStart:
+                DailyReportCollector.fightChainStarted(taskID: info.taskid)
+            case .TaskChainCompleted, .TaskChainError:
+                DailyReportCollector.fightChainFinished(taskID: info.taskid)
+            default:
+                break
+            }
         }
 
         if info.taskchain == "CloseDown" {
@@ -758,6 +774,11 @@ extension MAAViewModel {
             case "StoneConfirm":
                 logInfo(.stoneUsed(times: process.exec_times))
                 logStore?.stoneUsedTimes += 1
+                // 作战日报：碎石确认先挂账，随该局/该关结算归属。
+                // SubTaskStartMessage 不携带 taskid/taskchain，从原始 details 取。
+                if let taskID: Int32 = try? info.details?["taskid", as: Int32.self] {
+                    DailyReportCollector.stoneConfirm(taskID: taskID)
+                }
 
             case "AbandonAction":
                 logError(.actingCommandError)
@@ -1139,6 +1160,14 @@ extension MAAViewModel {
                         if !delta.isEmpty { logger.debug("Inventory generation=\(String(describing: self.inventory.snapshot?.generation)) run=\(String(describing: self.inventory.runID)) task=\(taskID) delta=\(String(describing: delta))") }
                     } catch { logError(verbatim: error.localizedDescription) }
                 }
+            }
+            // 作战日报：Fight 链的掉落结算驱动 session 聚合（累计快照口径与 WPF 一致）。
+            if info.taskchain == "Fight", let taskID = info.taskid {
+                DailyReportCollector.stageDrops(
+                    taskID: taskID,
+                    stageCode: dropInfo.stage?.stageCode,
+                    curTimes: dropInfo.cur_times,
+                    stats: dropInfo.stats.map { (itemId: $0.itemId, itemName: $0.itemName, quantity: $0.quantity) })
             }
             let drops = dropInfo.stats
                 .sorted {
@@ -1624,6 +1653,10 @@ extension MAAViewModel {
             guard let medicine = UseMedicineDetails(json: info.details, context: info.what) else {
                 return
             }
+            // 作战日报：用药先挂账，随该局/该关结算归属。
+            if let taskID = info.taskid {
+                DailyReportCollector.useMedicine(taskID: taskID, isExpiring: medicine.is_expiring, count: medicine.count)
+            }
             let expiry: String
             if let coreID = info.taskid,
                 let params = fightTaskParams[coreID], params.medicine_expire_days > 0
@@ -1671,6 +1704,10 @@ extension MAAViewModel {
             logStore?.fightReport = nil
             guard let details = FightTimesDetails(json: info.details, context: info.what) else {
                 return
+            }
+            // 作战日报：暂存本局倍率与消耗，等该局 StageDrops 结算再计入。
+            if let taskID = info.taskid {
+                DailyReportCollector.fightTimes(taskID: taskID, series: details.series, sanityCost: details.sanity_cost)
             }
             logStore?.fightReport = NewViewModel.FightReport(
                 sanityCost: details.sanity_cost,
