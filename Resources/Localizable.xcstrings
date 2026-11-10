@@ -1,6 +1,72 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "任务出错: 访问好友" : {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Task error: Visit Friends"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "작업 오류: 친구 방문"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任务出错: 访问好友"
+          }
+        }
+      }
+    },
+    "未在终端待办中找到剿灭入口，可能本周剿灭已完成，跳过剿灭" : {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annihilation entry not found in the Terminal to-do list, possibly already completed this week. Skipped Annihilation"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "터미널 할 일 목록에서 섬멸 작전을 찾을 수 없습니다. 이번 주 섬멸 작전이 이미 완료되었을 수 있습니다. 섬멸 작전을 건너뜁니다"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未在终端待办中找到剿灭入口，可能本周剿灭已完成，跳过剿灭"
+          }
+        }
+      }
+    },
+    "确认要清空全部干员培养计划吗？此操作不可恢复。" : {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear all operator progression plans? This cannot be undone."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모든 오퍼레이터 육성 계획을 지우시겠습니까? 이 작업은 되돌릴 수 없습니다."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确认要清空全部干员培养计划吗？此操作不可恢复。"
+          }
+        }
+      }
+    },
 		"%@ 场" : {
 		 "localizations": {
 		  "zh-Hans": {
@@ -13910,7 +13976,26 @@
       }
     },
     "使用WebGPU（实验功能）" : {
-
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use WebGPU (experimental)"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WebGPU 사용(실험 기능)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用WebGPU（实验功能）"
+          }
+        }
+      }
     },
     "使用多显示器时，请将本窗口与《明日方舟》放置在同一台显示器上。\n基于当前显示器的设定，建议在PlayCover中，将图像设置调整为以下预设之一：" : {},
     "使用人间烟火跨设施组合" : {
@@ -14171,7 +14256,26 @@
       }
     },
     "修改后需重启MAA以生效" : {
-
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restart MAA to apply the change"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "변경 후 MAA를 다시 시작해야 적용됩니다"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改后需重启MAA以生效"
+          }
+        }
+      }
     },
     "停止" : {
       "localizations" : {

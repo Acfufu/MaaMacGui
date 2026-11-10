@@ -49,6 +49,8 @@ struct CustomSettings_Preview: PreviewProvider {
 struct OperProgressSettingsView: View {
     @Binding var config: OperProgressConfiguration
 
+    @State private var showClearConfirmation = false
+
     var body: some View {
         Form {
             Text("干员养成计划按数组顺序执行，可能消耗龙门币、材料与训练时间。请确认目标后再启用任务。")
@@ -63,13 +65,23 @@ struct OperProgressSettingsView: View {
                 .font(.system(.body, design: .monospaced))
                 .frame(minHeight: 220)
                 .accessibilityLabel("养成计划 JSON")
-            Text(verbatim: #"[{"name":"阿米娅","role":"Caster","elite":1},{"name":"阿米娅","role":"Caster","skill_level":7},{"name":"棘刺","skill_mastery":[0,0,3]}]"#)
-                .font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+            // v6.22.0 #19140 同位：清空计划一键化并加二次确认；空计划不弹框。
+            HStack {
+                Spacer()
+                Button("清空计划", role: .destructive) {
+                    showClearConfirmation = true
+                }
+                .disabled((try? config.validatedPlans().isEmpty) ?? true)
+            }
             if let error = validationError {
                 Text(error).foregroundStyle(.red)
                     .fixedSize(horizontal: false, vertical: true)
             }
-        }.padding()
+        }
+        .confirmationDialog("确认要清空全部干员培养计划吗？此操作不可恢复。", isPresented: $showClearConfirmation, titleVisibility: .visible) {
+            Button("清空计划", role: .destructive) { config.plansJSON = "[]" }
+        }
+        .padding()
     }
 
     private var validationError: String? {

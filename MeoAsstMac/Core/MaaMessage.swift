@@ -705,6 +705,16 @@ extension MAAViewModel {
                 logError(.copilotUserAdditionalNameInvalid(name: name))
             }
 
+        case "ProcessTask":
+            // v6.22.0 #19098 同位：访问好友失败被忽略、任务链仍报完成，单独提示
+            //（只认最外层 VisitBegin；SubTaskErrorMessage 不带 taskchain，从原始 details 取）。
+            if info.what != "UnknownTask",
+                let taskchain: String = try? details["taskchain"], taskchain == "Mall",
+                let first: [String] = try? info.details?["first"], first.contains("VisitBegin")
+            {
+                logWarn(verbatim: String(localized: "任务出错: 访问好友"))
+            }
+
         default:
             break
         }
@@ -1728,6 +1738,10 @@ extension MAAViewModel {
                 return
             }
             logInfo(.unableToAgent(stage: stageCode))
+
+        case "AnnihilationEntryNotFound":
+            // v6.22.0 #19098 同位：剿灭入口静默略过时给出界面提示。
+            logInfo(verbatim: String(localized: "未在终端待办中找到剿灭入口，可能本周剿灭已完成，跳过剿灭"))
 
         case "StageQueueMissionCompleted":
             guard let stageCode: String = try? info.details["stage_code"],
