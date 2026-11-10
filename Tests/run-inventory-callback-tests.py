@@ -47,10 +47,21 @@ import Foundation
 
 struct DropItem {
     let itemId: String?
+    let itemName: String?
     let quantity: Int
     let addQuantity: Int
+    // 生产 StageDropItemDetails 含 itemName（作战日报挂点读取）；探针既有构造点经默认 nil 兼容。
+    init(itemId: String?, itemName: String? = nil, quantity: Int, addQuantity: Int) {
+        self.itemId = itemId
+        self.itemName = itemName
+        self.quantity = quantity
+        self.addQuantity = addQuantity
+    }
 }
-struct DropInfo { let stats: [DropItem] }
+struct StageDropStageDetails { let stageCode: String? }
+// 生产分支的作战日报挂点读取 stage/cur_times，探针 stub 与 MaaMessage 的
+// StageDropsDetails 字段面对齐（采集链整体编入本探针）。
+struct DropInfo { let stats: [DropItem]; var stage: StageDropStageDetails?; var cur_times: Int? }
 struct Details { subscript(_ key: String) -> String { get throws { "" } } }
 struct Info {
     let what: String
@@ -82,6 +93,8 @@ final class Probe {
     func logError(_ message: String) {}
     func logError(verbatim message: String) {}
 ''' + invalidate + r'''
+    // 生产 MAAViewModel 为 @MainActor，作战日报采集器同隔离面；探针双倍体保持同标注。
+    @MainActor
     func process(_ info: Info, drops dropInfo: DropInfo = DropInfo(stats: [])) {
         switch info.what {
 ''' + account + r'''
@@ -93,7 +106,7 @@ final class Probe {
 }
 
 @main struct Main {
-    static func main() throws {
+    @MainActor static func main() throws {
         var checks = 0
         func check(_ value: Bool, _ message: String) {
             checks += 1
@@ -169,6 +182,14 @@ with tempfile.TemporaryDirectory(prefix="maa-inventory-callbacks-") as temporary
     (path / "Probe.swift").write_text(probe)
     subprocess.run(
         ["swiftc", "-parse-as-library", str(root / "MeoAsstMac/Model/InventoryTarget.swift"),
+         # 作战日报采集链：生产切片含 DailyReportCollector 挂点，需整体编入
+         # （TestSupport 提供 MAAClientChannel 轻量替身，隔离 StartupConfiguration 依赖链）。
+         str(root / "MeoAsstMac/Utils/HGCalendar.swift"),
+         str(root / "MeoAsstMac/Model/DailyReport/DailyReportModels.swift"),
+         str(root / "MeoAsstMac/Model/DailyReport/DailyReportStore.swift"),
+         str(root / "MeoAsstMac/Model/DailyReport/DailyReportCollector.swift"),
+         str(root / "MeoAsstMac/Model/DailyReport/DailyReportMath.swift"),
+         str(root / "Tests/DailyReportTestSupport.swift"),
          str(path / "Probe.swift"), "-o", str(path / "probe")],
         check=True,
     )
