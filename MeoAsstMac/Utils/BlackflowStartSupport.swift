@@ -4,10 +4,14 @@ import MachO
 import OSLog
 
 /// A development-only protocol attestation, until a released Core capability contract is available.
-/// Matches dev-v2 51dac871d (P02.1 pin) and its resources, never an inferred minimum version.
+/// Matches v6.22.0 (901e01c60, MAA tag 2026-11-09; P02.1 pin 前进批) and its resources,
+/// never an inferred minimum version.
+/// Core 侧备注：本机 RelWithDebInfo arm64 构建，MaaDeps v2.15.1 的 coreml_provider_factory.h
+/// 失配已按 maacore-setup 同款处置剔除（WITH_COREML 分支编译排除）——CoreML EP 不参与本指纹面。
+/// compatibleOTATaskFingerprint 仍钉 2026-10-29 OTA 覆盖层，v6.22.x OTA 内容变更后须重审。
 enum BlackflowStartSupport {
-    static let coreFingerprint = "6c2596a518b5a8112af30bc8c3f0b48bbce2c416e18bfa4518cb107a0caf4823"
-    static let resourceFingerprint = "c4bd5cdb29d7665e28021619828b7d2a6fd46c4389ae61d86a6d9bd67f629ef6"
+    static let coreFingerprint = "99c062825da60ae5ad10fc1f04327b68df8cb93afc87f092901f1e9f6ccff8f3"
+    static let resourceFingerprint = "3d3d6ed89744d1c1da911222cdcc342990d7a80e3ddf1043b46694063cb61639"
     private static let resourcePaths = ["tasks", "roguelike/BlackFlow", "template/Roguelike/BlackFlow"]
 
     private static let logger = Logger(subsystem: "com.hguandl.MeoAsstMac", category: "BlackflowStartSupport")
