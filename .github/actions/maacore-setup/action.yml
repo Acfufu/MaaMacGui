@@ -41,9 +41,23 @@ runs:
         set -euo pipefail
         bash ./.github/scripts/sync-optional-submodules.sh --init --depth 1 src/MaaUtils
         python3 tools/maadeps-download.py arm64-osx
+        # MaaDeps v2.15.1 ships coreml_provider_factory.h but its onnxruntime
+        # 1.29.0 dylib does not export OrtSessionOptionsAppendExecutionProvider_CoreML
+        # (header/lib mismatch; upstream CI only survives via its MaaDeps cache).
+        # OnnxSessions.cpp gates the CoreML call on __has_include of this header,
+        # so disabling the header compiles the branch out instead of failing to link.
+        ort_inc="src/MaaUtils/MaaDeps/vcpkg/installed/maa-arm64-osx/include/onnxruntime"
+        if [ -f "$ort_inc/coreml_provider_factory.h" ]; then
+          mv "$ort_inc/coreml_provider_factory.h" "$ort_inc/coreml_provider_factory.h.disabled"
+        fi
         cmake -B build --preset macos-publish-arm64 -DMAA_HASH_VERSION="${PIN:0:12}"
         cmake --build --preset macos-publish-arm64 --parallel "$(sysctl -n hw.logicalcpu)"
         cmake --install build --config RelWithDebInfo --prefix install-arm64
+        # cmake install copies every onnxruntime dylib shipped in MaaDeps (currently
+        # 1.19.2 and 1.29.0); the link target resolves to the newest via headers,
+        # and the xcframework makefile globs libonnxruntime*.dylib, so any older
+        # leftover makes the packaging step fail with "Ambiguous dylibs".
+        find install-arm64 -name 'libonnxruntime*.dylib' | sort -V | head -n -1 | xargs -r rm -f
         # MAA_DEBUG=1 selects install-arm64 as the dylib source (no lipo);
         # the binaries themselves come from the RelWithDebInfo build above.
         # Explicit targets: the default `all` target also wants
@@ -51,8 +65,8 @@ runs:
         # (cmake -B build-arm64) happens to produce.
         make -f tools/xcframework.makefile MAA_DEBUG=1 \
           build/MaaCore.xcframework build/MaaUtils.xcframework \
-          build/fastdeploy_ppocr.xcframework build/ONNXRuntime.xcframework \
-          build/OpenCV.xcframework
+          build/fastdeploy_ppocr.xcframework build/Dawn.xcframework \
+          build/ONNXRuntime.xcframework build/OpenCV.xcframework
         mkdir -p ../maacore/xcframeworks
         cp -R build/*.xcframework ../maacore/xcframeworks/
 
@@ -64,7 +78,7 @@ runs:
         mkdir -p "$CORE_ROOT/build"
         cp -R "$GITHUB_WORKSPACE/maacore/xcframeworks/"*.xcframework "$CORE_ROOT/build/"
         ln -sfn "$GITHUB_WORKSPACE/maa/resource" "$CORE_ROOT/resource"
-        for fw in MaaCore MaaUtils fastdeploy_ppocr ONNXRuntime OpenCV; do
+        for fw in MaaCore MaaUtils fastdeploy_ppocr Dawn ONNXRuntime OpenCV; do
           test -d "$CORE_ROOT/build/$fw.xcframework" || { echo "::error::missing $fw.xcframework"; exit 1; }
         done
         test -f "$CORE_ROOT/build/MaaCore.xcframework/macos-arm64/libMaaCore.dylib" \
